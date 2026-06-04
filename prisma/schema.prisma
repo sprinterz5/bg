@@ -1,0 +1,443 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum BookSource {
+  GOOGLE_BOOKS
+  OPEN_LIBRARY
+  MANUAL
+}
+
+enum ShelfStatus {
+  READING
+  READ
+  WANT_TO_READ
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  REMOVED
+}
+
+enum ReviewStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  REMOVED
+}
+
+enum ModerationStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum StoryStatus {
+  ACTIVE
+  EXPIRED
+  DELETED
+}
+
+enum LikeTargetType {
+  ARTICLE
+  REVIEW
+  STORY
+  NOTE
+}
+
+enum NoteTargetType {
+  ARTICLE
+  REVIEW
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  SHARE_BOOK
+  SHARE_ARTICLE
+  SHARE_REVIEW
+  SYSTEM
+}
+
+enum ModerationTargetType {
+  ARTICLE
+  REVIEW
+}
+
+enum ModerationAction {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REMOVED
+}
+
+enum ExploreTargetType {
+  ARTICLE
+  REVIEW
+}
+
+enum MediaKind {
+  AVATAR
+  ARTICLE_COVER
+  STORY_IMAGE
+  CHAT_ATTACHMENT
+  BOOK_COVER_CACHE
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  username     String    @unique
+  displayName  String?
+  bio          String?   @db.Text
+  avatarUrl    String?
+  passwordHash String?
+  appleUserId  String?   @unique
+  role         UserRole  @default(USER)
+  interests    String[]  @default([])
+  lastSeenAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  authoredArticles Article[]
+  authoredReviews  Review[]
+  shelfItems       ShelfItem[]
+  notes            Note[]
+  stories          Story[]
+  storyViews       StoryView[]
+  likes            Like[]
+  refreshTokens    RefreshToken[]
+  mediaAssets      MediaAsset[]
+
+  following Follow[] @relation("UserFollowing")
+  followers Follow[] @relation("UserFollowers")
+
+  conversationMemberships ConversationMember[]
+  sentMessages            Message[]
+  moderationActions       ModerationEvent[]    @relation("ModeratorActions")
+
+  @@index([username])
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Follow {
+  id          String   @id @default(uuid()) @db.Uuid
+  followerId  String   @db.Uuid
+  followingId String   @db.Uuid
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
+}
+
+model Book {
+  id             String     @id @default(uuid()) @db.Uuid
+  googleBooksId  String?    @unique
+  openLibraryKey String?    @unique
+  isbn10         String?
+  isbn13         String?    @unique
+  title          String
+  subtitle       String?
+  authors        String[]   @default([])
+  description    String?    @db.Text
+  thumbnailUrl   String?
+  language       String?
+  publishedDate  String?
+  publisher      String?
+  pageCount      Int?
+  categories     String[]   @default([])
+  source         BookSource @default(MANUAL)
+  rawJson        Json?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  shelfItems ShelfItem[]
+  reviews    Review[]
+  stories    Story[]
+  messages   Message[]
+
+  @@index([title])
+  @@index([isbn10])
+  @@index([isbn13])
+  @@index([createdAt])
+}
+
+model ShelfItem {
+  id              String      @id @default(uuid()) @db.Uuid
+  userId          String      @db.Uuid
+  bookId          String      @db.Uuid
+  status          ShelfStatus
+  rating          Int?
+  progressPage    Int?
+  progressPercent Int?
+  privateNote     String?     @db.Text
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([userId, status])
+  @@index([bookId])
+}
+
+model Article {
+  id                 String           @id @default(uuid()) @db.Uuid
+  authorId           String           @db.Uuid
+  title              String
+  slug               String           @unique
+  subtitle           String?
+  excerpt            String?          @db.Text
+  body               String           @db.Text
+  coverImageUrl      String?
+  tags               String[]         @default([])
+  status             ArticleStatus    @default(DRAFT)
+  moderationStatus   ModerationStatus @default(PENDING)
+  moderationReason   String?          @db.Text
+  readingTimeMinutes Int              @default(1)
+  publishedAt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+
+  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  notes  Note[]
+
+  @@index([authorId, createdAt])
+  @@index([status, moderationStatus, publishedAt])
+  @@index([publishedAt])
+}
+
+model Review {
+  id                 String           @id @default(uuid()) @db.Uuid
+  authorId           String           @db.Uuid
+  bookId             String           @db.Uuid
+  title              String
+  body               String           @db.Text
+  rating             Int?
+  tags               String[]         @default([])
+  status             ReviewStatus     @default(DRAFT)
+  moderationStatus   ModerationStatus @default(PENDING)
+  moderationReason   String?          @db.Text
+  readingTimeMinutes Int              @default(1)
+  publishedAt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+
+  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  notes  Note[]
+
+  @@index([authorId, createdAt])
+  @@index([bookId])
+  @@index([status, moderationStatus, publishedAt])
+  @@index([publishedAt])
+}
+
+model Note {
+  id           String         @id @default(uuid()) @db.Uuid
+  userId       String         @db.Uuid
+  targetType   NoteTargetType
+  articleId    String?        @db.Uuid
+  reviewId     String?        @db.Uuid
+  selectedText String         @db.Text
+  noteText     String         @db.Text
+  anchorStart  Int?
+  anchorEnd    Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  review  Review?  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([articleId])
+  @@index([reviewId])
+}
+
+model Story {
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String      @db.Uuid
+  bookId        String?     @db.Uuid
+  mediaUrl      String
+  mediaMimeType String
+  caption       String?
+  status        StoryStatus @default(ACTIVE)
+  expiresAt     DateTime
+  createdAt     DateTime    @default(now())
+  deletedAt     DateTime?
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book  Book?       @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  views StoryView[]
+
+  @@index([userId, createdAt])
+  @@index([status, expiresAt])
+}
+
+model StoryView {
+  id       String   @id @default(uuid()) @db.Uuid
+  storyId  String   @db.Uuid
+  viewerId String   @db.Uuid
+  viewedAt DateTime @default(now())
+
+  story  Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer User  @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, viewerId])
+  @@index([viewerId, viewedAt])
+}
+
+model Like {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @db.Uuid
+  targetType LikeTargetType
+  targetId   String         @db.Uuid
+  createdAt  DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetType, targetId])
+}
+
+model Conversation {
+  id        String           @id @default(uuid()) @db.Uuid
+  type      ConversationType @default(DIRECT)
+  title     String?
+  directKey String?          @unique
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@index([updatedAt])
+}
+
+model ConversationMember {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @db.Uuid
+  userId         String    @db.Uuid
+  joinedAt       DateTime  @default(now())
+  lastReadAt     DateTime?
+  mutedUntil     DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId, joinedAt])
+}
+
+model Message {
+  id              String      @id @default(uuid()) @db.Uuid
+  conversationId  String      @db.Uuid
+  senderId        String      @db.Uuid
+  type            MessageType @default(TEXT)
+  body            String?     @db.Text
+  sharedBookId    String?     @db.Uuid
+  sharedArticleId String?     @db.Uuid
+  sharedReviewId  String?     @db.Uuid
+  createdAt       DateTime    @default(now())
+  editedAt        DateTime?
+  deletedAt       DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sharedBook   Book?        @relation(fields: [sharedBookId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+}
+
+model ModerationEvent {
+  id          String               @id @default(uuid()) @db.Uuid
+  targetType  ModerationTargetType
+  targetId    String               @db.Uuid
+  action      ModerationAction
+  reason      String?              @db.Text
+  moderatorId String?              @db.Uuid
+  createdAt   DateTime             @default(now())
+
+  moderator User? @relation("ModeratorActions", fields: [moderatorId], references: [id], onDelete: SetNull)
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+model ExploreItem {
+  id               String            @id @default(uuid()) @db.Uuid
+  targetType       ExploreTargetType
+  targetId         String            @db.Uuid
+  score            Float             @default(0)
+  moderationStatus ModerationStatus  @default(PENDING)
+  reason           String?           @db.Text
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@unique([targetType, targetId])
+  @@index([moderationStatus, score])
+}
+
+model MediaAsset {
+  id         String    @id @default(uuid()) @db.Uuid
+  ownerId    String?   @db.Uuid
+  kind       MediaKind
+  url        String
+  storageKey String
+  mimeType   String
+  byteSize   Int
+  width      Int?
+  height     Int?
+  checksum   String?
+  createdAt  DateTime  @default(now())
+
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, createdAt])
+  @@index([kind, createdAt])
+}

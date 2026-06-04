@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: puzzle-postgres
+    environment:
+      POSTGRES_USER: puzzle
+      POSTGRES_PASSWORD: puzzle
+      POSTGRES_DB: puzzle
+    ports:
+      - "5432:5432"
+    volumes:
+      - puzzle-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U puzzle -d puzzle"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: puzzle-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - puzzle-redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  puzzle-postgres-data:
+  puzzle-redis-data:

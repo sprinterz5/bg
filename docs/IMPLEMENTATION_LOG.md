@@ -1,0 +1,109 @@
+# Puzzle Backend Implementation Log
+
+## 2026-06-04
+
+- Confirmed workspace was empty.
+- Found system `node.exe` in PATH was blocked and `npm` was not available.
+- Downloaded a portable official Node.js runtime into `.tools/node`.
+- Installed backend dependencies locally with npm.
+- Downgraded Prisma from `7.8.0` to `6.19.3` because `npm audit` reported a moderate vulnerability in the Prisma 7 dev dependency chain. Audit is clean after the downgrade.
+- Started backend foundation:
+  - `package.json` scripts
+  - `tsconfig.json`
+  - `.env.example`
+  - `docker-compose.yml` for PostgreSQL and Redis
+  - Prisma schema for users, books, shelves, articles, reviews, notes, stories, follows, likes, chats, moderation, Explore, media, and refresh tokens
+- Generated Prisma Client with Prisma `6.19.3`.
+- Generated SQL migration at `prisma/migrations/0001_init/migration.sql`.
+- Implemented Fastify core:
+  - env validation
+  - Prisma plugin
+  - Redis plugin with graceful degradation when Redis is unavailable
+  - JWT auth middleware
+  - centralized error handler
+  - Swagger UI
+  - local media static serving
+  - health check
+- Implemented REST modules:
+  - auth, including register/login/refresh/logout/Sign in with Apple
+  - user profile and follow/unfollow
+  - book search/import via Google Books with Open Library fallback
+  - shelves
+  - articles and publishing
+  - reviews and publishing
+  - notes
+  - likes
+  - feed
+  - media upload
+  - stories
+  - chats
+  - Explore
+  - moderation queue and approve/reject
+- Implemented Socket.io realtime:
+  - JWT handshake auth
+  - user rooms
+  - conversation rooms
+  - `message:new`, `conversation:created`, `conversation:read`, and `typing` events
+- Added `README.md`.
+- Added separate frontend guide at `docs/FRONTEND_GUIDE.md`.
+- Ran `npm run typecheck`; TypeScript check passed.
+- Ran `prisma validate`; Prisma schema is valid.
+- Ran `npm run build`; TypeScript build passed.
+- Ran `npm audit --audit-level=moderate`; audit passed with `0 vulnerabilities`.
+- Ran compiled app smoke-test (`buildApp -> ready -> close`); passed. Redis warning is expected when Redis is not running locally.
+- Added Vitest smoke test at `test/app.test.ts`.
+- Ran `npm test`; `1` test file passed.
+
+## 2026-06-04 Docker Follow-Up
+
+- Verified Docker Desktop is available:
+  - Docker `29.5.2`
+  - Docker Compose `v5.1.4`
+- Ran `docker compose up -d`.
+- Pulled and started:
+  - `postgres:16-alpine`
+  - `redis:7-alpine`
+- Verified container health:
+  - PostgreSQL `pg_isready` accepts connections.
+  - Redis responds with `PONG`.
+- Fixed UTF-8 BOM in `prisma/migrations/0001_init/migration.sql`; Prisma shadow DB rejected the BOM before the SQL comment.
+- Applied migration `0001_init` to live local PostgreSQL with `prisma migrate dev`.
+- Verified live API health:
+  - `GET /health`
+  - `database: true`
+  - `redis: true`
+- Added `prisma/seed.ts` and `npm run db:seed`.
+- Seeded dev database with:
+  - 4 users
+  - 4 books
+  - shelves
+  - follows
+  - approved article
+  - approved review
+  - Explore items
+  - note
+  - active story
+  - direct conversation and shared article message
+- Added live integration test at `test/api.integration.test.ts`.
+- Integration scenario covers:
+  - registration
+  - shelf update
+  - article creation
+  - article publishing
+  - moderator approval
+  - note creation
+  - feed
+  - Explore
+  - direct conversation
+  - shared article message
+- Updated test scripts:
+  - `npm test` for app smoke test
+  - `npm run test:integration` for live PostgreSQL/Redis API flow
+  - `npm run test:all` for all tests
+- Re-ran checks:
+  - `npm run typecheck`
+  - `npm run build`
+  - `prisma validate`
+  - `npm test`
+  - `npm run test:integration`
+  - `npm audit --audit-level=moderate`
