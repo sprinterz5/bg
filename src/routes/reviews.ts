@@ -12,9 +12,8 @@ const reviewCreateSchema = z.object({
   tags: z.array(z.string().min(1).max(40)).max(20).default([])
 });
 
-const reviewUpdateSchema = reviewCreateSchema.partial().extend({
-  status: z.nativeEnum(ReviewStatus).optional()
-});
+// `status` is intentionally excluded — use /publish for state transitions.
+const reviewUpdateSchema = reviewCreateSchema.partial();
 
 export const reviewRoutes: FastifyPluginAsync = async (app) => {
   app.post("/reviews", { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -105,16 +104,18 @@ export const reviewRoutes: FastifyPluginAsync = async (app) => {
       throw reply.notFound("Review not found");
     }
 
+    const visibleFieldChanged =
+      body.title !== undefined ||
+      body.body !== undefined ||
+      body.rating !== undefined ||
+      body.tags !== undefined;
+
     return app.prisma.review.update({
       where: { id },
       data: {
         ...body,
-        ...(body.body
-          ? {
-              readingTimeMinutes: readingTimeMinutes(body.body),
-              moderationStatus: review.status === "PUBLISHED" ? "PENDING" : review.moderationStatus
-            }
-          : {})
+        ...(body.body ? { readingTimeMinutes: readingTimeMinutes(body.body) } : {}),
+        ...(visibleFieldChanged && review.status === "PUBLISHED" ? { moderationStatus: "PENDING" } : {})
       },
       include: { book: true }
     });

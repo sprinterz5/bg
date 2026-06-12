@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { createNotification } from "../services/notificationService.js";
 import { publicUserSelect } from "../utils/users.js";
 
 const updateProfileSchema = z.object({
@@ -62,6 +63,25 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
       throw reply.badRequest("You cannot follow yourself");
     }
 
+    // Blocked users cannot follow each other (in either direction).
+    const block = await app.prisma.userBlock.findFirst({
+      where: {
+        OR: [
+          { blockerId: request.user.sub, blockedId: id },
+          { blockerId: id, blockedId: request.user.sub }
+        ]
+      },
+      select: { blockerId: true }
+    });
+    if (block) {
+      throw reply.forbidden("Follow is not allowed");
+    }
+
+    const existing = await app.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId: request.user.sub, followingId: id } },
+      select: { followerId: true }
+    });
+
     await app.prisma.follow.upsert({
       where: {
         followerId_followingId: {
@@ -75,6 +95,20 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
         followingId: id
       }
     });
+
+    // Send follow notification only on first follow, not on repeated calls.
+    if (!existing) {
+      await createNotification(app, {
+        userId: id,
+        type: "FOLLOW",
+        actorType: "USER",
+        actorId: request.user.sub,
+        targetType: "USER",
+        targetId: request.user.sub,
+        title: "New follower",
+        body: `${request.user.username} started following you.`
+      });
+    }
 
     return { ok: true };
   });

@@ -7,3 +7,5 @@ coverage/
 .tools/
 storage/uploads/*
 !storage/uploads/.gitkeep
+storage/uploads-test/
+backups/

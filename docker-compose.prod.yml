@@ -1,0 +1,56 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookgram-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-bookgram}:${POSTGRES_PASSWORD:-bookgram}@postgres:5432/${POSTGRES_DB:-bookgram}?schema=public
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "4000:4000"
+    volumes:
+      - bookgram-media:/app/storage/uploads
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: bookgram-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bookgram}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bookgram}
+      POSTGRES_DB: ${POSTGRES_DB:-bookgram}
+    volumes:
+      - bookgram-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bookgram} -d ${POSTGRES_DB:-bookgram}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: bookgram-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - bookgram-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  bookgram-postgres-data:
+  bookgram-redis-data:
+  bookgram-media:

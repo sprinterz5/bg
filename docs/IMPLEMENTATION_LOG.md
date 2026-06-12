@@ -1,4 +1,395 @@
-# Puzzle Backend Implementation Log
+# Bookgram Backend Implementation Log
+
+## 2026-06-12 Username Availability
+
+- Added shared username normalization and availability rules:
+  - lowercase normalization
+  - format validation
+  - reserved/service username blocklist
+  - availability suggestions
+- Added `GET /auth/username-availability`.
+- Updated registration to use normalized lowercase usernames.
+- Updated login to normalize username lookup.
+- Updated Apple signup to use the same username validation rules.
+- Added integration coverage for available, reserved, taken, and uppercase-normalized usernames.
+
+## 2026-06-12 R2 Runtime Media Delivery
+
+- Verified current Cloudflare R2 credentials with a live put/head/delete smoke check against `bookgram-media`.
+- Added `MEDIA_PUBLIC_BASE_URL` as an optional media URL override.
+- Updated media URL generation:
+  - `MEDIA_PUBLIC_BASE_URL` is preferred when set
+  - `PUBLIC_MEDIA_URL` remains the compatible fallback
+- Changed runtime media delivery:
+  - `LOCAL` still serves `storage/uploads` through Fastify static at `/media/...`
+  - `R2` and `S3` now expose `/media/...` through a backend proxy that reads from object storage
+- Verified backend proxy with a live R2 object:
+  - put temporary object in R2
+  - requested it through `GET /media/...`
+  - received `200`
+  - verified response body
+  - deleted temporary object
+- Kept multipart `POST /media` as the default upload path so image compression, thumbnail generation, and moderation hooks cannot be bypassed.
+- Added `docs/R2_MEDIA_SETUP.md`.
+
+## 2026-06-12 Media Moderation Foundation and DB Hardening
+
+- Added media moderation database foundation:
+  - `MediaModerationStatus`
+  - `MediaModerationProvider`
+  - `MediaAsset.moderationStatus`
+  - `MediaAsset.moderationProvider`
+  - `MediaAsset.moderationScore`
+  - `MediaAsset.moderationReason`
+  - `MediaAsset.moderatedAt`
+  - `MediaModerationEvent`
+- Added media moderation provider abstraction:
+  - `DISABLED`
+  - `LOCAL_STUB`
+  - `OPENAI`
+  - `GOOGLE_VISION`
+  - `AWS_REKOGNITION`
+  - `HIVE`
+- Current default remains safe for MVP:
+  - `MEDIA_MODERATION_PROVIDER=DISABLED`
+  - `MEDIA_MODERATION_DEFAULT_STATUS=APPROVED`
+- Added moderation endpoints:
+  - `GET /media/moderation/readiness`
+  - `GET /media/moderation/queue`
+  - `PATCH /media/:id/moderation`
+  - `POST /media/moderation/jobs/scan`
+- Uploads now create/update media moderation state and event rows.
+- Added cleanup job foundation:
+  - removes expired idempotency keys
+  - removes old finished job runs
+  - exposed as `POST /moderation/jobs/cleanup`
+  - scheduled as `cleanup` in the background runner
+- Added hot indexes:
+  - article public-feed filter index with `deletedAt`
+  - review public-feed filter index with `deletedAt`
+  - feed event per-user event-type index
+  - media moderation queue index
+- Applied migration:
+  - `20260612081100_media_moderation_and_hot_indexes`
+- Extended integration tests for media moderation readiness, queue, manual decision, and scan job.
+- Re-ran:
+  - `npm run typecheck`
+  - `npm run build`
+  - `npm run test:all`
+  - `npm run docs:openapi`
+  - `npm audit --audit-level=moderate`
+
+## 2026-06-12 AI Deployment Preparation
+
+- Added Prisma migration `20260612055841_ai_foundation`.
+- Added AI embedding enums and storage:
+  - `AiEmbeddingTargetType`
+  - `AiEmbeddingStatus`
+  - `AiEmbedding`
+- Added AI provider abstraction:
+  - `DISABLED`
+  - `LOCAL_HASH`
+  - `OPENAI_COMPATIBLE`
+- Added local deterministic hash embedding provider for dev/test without paid keys.
+- Added OpenAI-compatible embeddings HTTP mode for future real deployment.
+- Added AI embedding backfill service:
+  - builds embedding input for articles, reviews, and books
+  - hashes input text to avoid unnecessary regeneration
+  - writes `PENDING`, `READY`, and `FAILED` embedding rows
+  - records provider/model/dimensions/error metadata
+- Added routes:
+  - `GET /ai/readiness`
+  - `GET /ai/embeddings`
+  - `POST /ai/jobs/embeddings`
+- Added CLI:
+  - `npm run jobs:ai-embeddings`
+- Added background runner integration:
+  - `ai-embedding-backfill`
+  - controlled by `AI_ENABLED`, `AI_PROVIDER`, and `JOB_AI_EMBEDDINGS_*`.
+- Added documentation:
+  - `docs/AI_DEPLOYMENT_PREP.md`
+- Extended integration coverage for the local AI embedding pipeline.
+
+## 2026-06-12 Reliability, Counters, and Mobile Contracts
+
+- Added Prisma migration `20260612052720_optimization_foundation`.
+- Added `IdempotencyKey` storage for safe mobile retries on write endpoints.
+- Added `ContentCounter` as a normalized fast counter table for likes, comments, bookmarks, shares, reports, and views.
+- Added `JobRun` history for background/admin jobs.
+- Added endpoint-specific Redis rate limit helper and applied it to auth writes, search, feed events, media uploads, comments, reports, and sharing.
+- Added request timing plugin:
+  - logs request duration
+  - warns on slow requests at 300ms+
+- Added idempotency support to:
+  - `POST /comments`
+  - `POST /reports`
+  - `POST /stories`
+  - `POST /share`
+  - `POST /conversations/:id/messages`
+  - `POST /media`
+- Added local-safe direct upload contract:
+  - `POST /media/upload-url`
+  - returns `501 direct_upload_not_available` while `LOCAL` storage is active
+  - returns fallback instructions to use multipart `POST /media`
+  - reserves the same route for future R2/S3 presigned uploads
+- Feed presentation now reads from `ContentCounter` first and falls back to `ContentScore`.
+- Background/manual moderation jobs now write run history through `runTrackedJob`.
+- Added admin endpoint:
+  - `GET /admin/job-runs`
+- Extended integration coverage for:
+  - idempotent comments
+  - idempotent shares
+  - normalized counters
+  - local `/media/upload-url` contract
+  - job run history
+- Re-ran:
+  - `npm run typecheck`
+  - `npm run build`
+  - `npm run test:all`
+  - `npm run docs:openapi`
+
+## 2026-06-11 Social Foundation and Algorithms
+
+- Renamed package metadata to Bookgram.
+- Added and migrated Prisma foundation models for:
+  - comments and replies
+  - bookmarks/saves
+  - user block and mute
+  - behavior-derived content scores
+  - book similarity graph
+  - device tokens for future APNs push
+- Added content scoring service:
+  - tracks impressions, opens, completions, dwell time, likes, saves, hides, shares, comments, and reports
+  - derives quality, engagement, trending, and spam scores
+- Connected feed events, likes, bookmarks, comments, and reports to `ContentScore`.
+- Added feed ranking services:
+  - `behavioral_ranking_v2`
+  - `cold_start_v1`
+  - block/mute exclusion from feed
+- Added APIs:
+  - `GET /comments`
+  - `POST /comments`
+  - `PATCH /comments/:id`
+  - `DELETE /comments/:id`
+  - `GET /me/bookmarks`
+  - `POST /bookmarks/toggle`
+  - `GET /me/blocks`
+  - `POST /users/:id/block`
+  - `DELETE /users/:id/block`
+  - `GET /me/mutes`
+  - `POST /users/:id/mute`
+  - `DELETE /users/:id/mute`
+  - `POST /device-tokens`
+  - `DELETE /device-tokens`
+  - `GET /books/:id/similar`
+  - `POST /books/:id/similar/recompute`
+- Added book similarity service based on shared authors, categories, language, and publisher.
+- Ran TypeScript typecheck directly through local portable Node:
+  - `.\.tools\node\node.exe .\node_modules\typescript\bin\tsc --noEmit`
+
+## 2026-06-11 Ranking, Safety, and Social Intelligence
+
+- Upgraded internal search from plain contains results to ranked results:
+  - exact/prefix/contains text scoring
+  - author/book/category/tag scoring
+  - content quality/trending boost
+  - spam penalty
+  - block/mute filtering
+  - response includes `algorithm: "text_relevance_quality_v1"`
+- Upgraded Explore ranking:
+  - moderation-approved content only
+  - interest boost
+  - freshness boost
+  - `ContentScore` quality/trending boost
+  - spam penalty
+  - light author-diversity penalty
+  - response includes `algorithm: "moderated_quality_trending_diversity_v1"`
+- Upgraded story ordering:
+  - hides blocked/muted users
+  - unseen stories rank above seen stories
+  - mutual follows rank higher
+  - stories tied to books in current user's shelf rank higher
+  - fresh stories rank higher
+  - response includes `orderingScore`
+- Added chat safety:
+  - blocked users cannot create direct conversations
+  - blocked conversations are hidden from list/messages
+  - message sending is blocked if either side has blocked the other
+  - Redis message rate limit: 30/minute and 500/day per user
+- Upgraded book similarity:
+  - still uses shared authors/categories/language/publisher
+  - now also uses shared shelf users and shared review users
+- Extended integration test coverage for:
+  - comments
+  - bookmarks
+  - book similarity recompute
+  - device tokens
+  - mute/block
+  - blocked direct conversation
+- Verified:
+  - Prisma validate
+  - TypeScript typecheck
+  - TypeScript build
+  - Vitest suite
+
+## 2026-06-11 Email and Push Foundation
+
+- Added development email transport service:
+  - logs email payloads
+  - keeps async provider-like contract for future SMTP/Resend
+- Added auth endpoints:
+  - `POST /auth/email/request-verification`
+  - `POST /auth/email/verify`
+  - `POST /auth/password/forgot`
+  - `POST /auth/password/reset`
+- Registration now creates an email verification token and sends a verification email.
+- Dev/test responses expose one-time tokens as `devEmailVerificationToken` / `devPasswordResetToken`.
+- Production responses do not expose raw tokens.
+- Password reset revokes active refresh-token sessions.
+- Added push delivery foundation:
+  - `DeviceToken` storage already exists
+  - notifications now look up device tokens
+  - `PUSH_DELIVERY_MODE=LOG` logs push payloads in dev
+  - APNs env placeholders added for later real delivery
+- Extended integration coverage for email verification and password reset.
+
+## 2026-06-11 Search Index Foundation
+
+- Added PostgreSQL migration `20260611110500_search_indexes`.
+- Enables `pg_trgm`.
+- Adds GIN trigram search indexes for:
+  - users
+  - books
+  - articles
+  - reviews
+- Current `/search` endpoint keeps the same response contract and already returns `algorithm: "text_relevance_quality_v1"`.
+- The new indexes prepare the backend for fast fuzzy/full-text search without requiring a SwiftUI API change.
+
+## 2026-06-11 Anti-Spam Scoring Job
+
+- Added anti-spam scoring service:
+  - scans published approved/pending articles and reviews
+  - updates `ContentScore.spamScore`
+  - reduces quality/trending scores when risk is high
+  - sends high-risk content back to Explore moderation by setting `ExploreItem.moderationStatus=PENDING`
+- Signals used in MVP:
+  - unverified author email
+  - very new account
+  - low-effort/short body
+  - high link density
+  - duplicate tags
+  - repeated characters
+  - duplicate titles
+  - high author post velocity in 24 hours
+  - open reports
+  - hide/report rates
+  - positive engagement partially offsets risk
+- Added moderator endpoint:
+  - `POST /moderation/jobs/spam-score`
+- Added CLI job:
+  - `npm run jobs:spam-score`
+  - local portable equivalent: `.\.tools\node\node.exe .\node_modules\tsx\dist\cli.mjs src/jobs/spamScore.ts`
+- Extended integration test coverage for the spam scoring job.
+
+## 2026-06-11 Background Jobs and R2/S3 Media Adapter
+
+- Added optional background job runner:
+  - disabled by default
+  - enabled with `JOB_RUNNER_ENABLED=true`
+  - Redis locks prevent duplicate job execution across multiple backend instances
+  - supports `JOB_RUN_ON_STARTUP`
+- Scheduled jobs:
+  - `spam-score`
+  - `maintenance`
+- Added maintenance service:
+  - expires old active stories
+  - recomputes recent book similarities
+- Added moderator endpoint:
+  - `POST /moderation/jobs/maintenance`
+- Added R2/S3-compatible media storage adapter using `@aws-sdk/client-s3`.
+- Media provider modes now supported:
+  - `LOCAL`
+  - `R2`
+  - `S3`
+- Added R2/S3 env keys:
+  - `MEDIA_REGION`
+  - `MEDIA_ENDPOINT`
+  - `MEDIA_ACCESS_KEY_ID`
+  - `MEDIA_SECRET_ACCESS_KEY`
+- Added home server deployment guide:
+  - `docs/HOME_SERVER_DEPLOYMENT.md`
+
+## 2026-06-11 Admin Ops API and Fuzzy Search Planner
+
+- Added admin/ops routes:
+  - `GET /admin` internal HTML dashboard
+  - `GET /admin/stats`
+  - `GET /admin/users`
+  - `GET /admin/content-scores`
+  - `PATCH /admin/users/:id/role`
+- Admin stats expose:
+  - user totals and verification/activity counts
+  - pending moderation counts
+  - open reports
+  - media storage totals
+  - average quality/engagement/trending/spam scores
+- Content score endpoint serializes BigInt dwell time safely for JSON.
+- Added trigram-backed fuzzy search planner:
+  - users
+  - books
+  - articles
+  - reviews
+- `/search` now returns `algorithm: "trigram_text_relevance_quality_v2"`.
+- Existing contains-based search remains as fallback/additional candidate source.
+- Extended integration test coverage for admin stats/content scores.
+
+## 2026-06-11 Production Packaging and OpenAPI Export
+
+- Added production Docker artifacts:
+  - `Dockerfile`
+  - `docker-compose.prod.yml`
+  - `.dockerignore`
+- Added PowerShell backup/restore scripts:
+  - `scripts/backup-postgres.ps1`
+  - `scripts/restore-postgres.ps1`
+- Added deployment notes:
+  - `docs/PRODUCTION_DEPLOYMENT.md`
+- Added OpenAPI export script:
+  - `npm run docs:openapi`
+  - output `docs/openapi.json`
+
+## 2026-06-12 Home Surface and Frontend-Friendly Feed Contracts
+
+- Added feed presentation enrichment:
+  - `media`
+  - `viewer`
+  - `counts`
+- Feed cards now expose:
+  - `viewer.liked`
+  - `viewer.bookmarked`
+  - `counts.likes`
+  - `counts.comments`
+  - `counts.bookmarks`
+  - `counts.shares`
+  - normalized media object for article covers and book covers
+- Added Reading Now service/routes:
+  - `GET /reading-now/me`
+  - `GET /reading-now/friends`
+- Added Home aggregation endpoint:
+  - `GET /home`
+  - returns viewer, unread notifications, reading now, and feed payload
+- Added story book-search helper:
+  - `GET /stories/book-candidates?q=`
+  - intended flow: search/import book, then create story with `bookId`
+- Added share contract:
+  - `POST /share`
+  - records share feed event
+  - optionally creates a share message in a conversation
+- Extended integration tests for:
+  - reading now friends
+  - home aggregation
+  - feed media/viewer/count fields
+  - share endpoint
 
 ## 2026-06-04
 
@@ -107,3 +498,85 @@
   - `npm test`
   - `npm run test:integration`
   - `npm audit --audit-level=moderate`
+
+## 2026-06-04 SwiftUI Handoff and Mobile Sessions
+
+- Added mobile session management endpoints:
+  - `GET /auth/sessions`
+  - `DELETE /auth/sessions/:id`
+  - `POST /auth/logout-all`
+- These manage refresh-token device sessions for iOS/mobile, not browser cookie sessions.
+- Updated integration test to cover active sessions and `logout-all`.
+- Added Mac/SwiftUI agent handoff:
+  - `docs/MAC_SWIFTUI_AGENT_HANDOFF.md`
+- The handoff includes:
+  - backend run instructions for Windows host
+  - Mac VM base URL notes
+  - seed accounts
+  - auth/token flow
+  - enum list
+  - endpoint catalog
+  - realtime Socket.io events
+  - suggested SwiftUI implementation order
+  - minimal DTO list
+  - known backend gaps
+  - home server notes
+
+## 2026-06-04 Product Safety, Events, Notifications, Search
+
+- Added Prisma models/enums for:
+  - reports
+  - feed events
+  - notifications
+  - media storage provider metadata
+- Applied migration:
+  - `20260604135438_product_safety_events_notifications`
+- Added report API:
+  - `POST /reports`
+  - `GET /me/reports`
+  - `GET /reports`
+  - `PATCH /reports/:id`
+- Extended moderation queue to include open/under-review reports.
+- Added feed events API:
+  - `POST /feed/events`
+  - `GET /me/feed-events/summary`
+- Added notifications API:
+  - `GET /notifications`
+  - `GET /notifications/unread-count`
+  - `POST /notifications/:id/read`
+  - `POST /notifications/read-all`
+- Added Socket.io event:
+  - `notification:new`
+- Backend now creates notifications for:
+  - follows
+  - messages
+  - moderation approval/rejection
+  - report resolution
+- Added internal search API:
+  - `GET /search?q=&type=all|users|books|articles|reviews`
+- Updated media storage to explicitly record provider/bucket metadata.
+- Current media provider remains `LOCAL`; `R2` and `S3` are reserved for later migration.
+- Updated Mac SwiftUI handoff with new endpoints and gaps.
+
+## 2026-06-06 Media Pipeline
+
+- Installed media dependencies:
+  - `sharp`
+  - `file-type`
+- Added Prisma media variants:
+  - `MediaVariant`
+  - `MediaVariantKind`
+- Applied migration:
+  - `20260606145309_media_variants_pipeline`
+- Reworked local media storage:
+  - checks actual file bytes with `file-type`
+  - accepts JPEG, PNG, and WebP only
+  - re-encodes images to WebP through Sharp
+  - strips metadata by not preserving image metadata
+  - bounds max image dimensions by media kind
+  - creates WebP thumbnail variants
+  - stores width, height, byte size, provider, bucket, storage key
+- Added `UnsupportedMediaTypeError` and maps unsupported uploads to `400 Bad Request`.
+- Added media service test:
+  - `test/mediaService.test.ts`
+- Added `vitest.config.ts` for stable test/hook timeouts after adding image dependencies.

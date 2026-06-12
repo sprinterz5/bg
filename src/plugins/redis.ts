@@ -7,7 +7,9 @@ export const redisPlugin = fp(async (app) => {
     lazyConnect: true,
     maxRetriesPerRequest: 1,
     enableReadyCheck: true,
-    retryStrategy: () => null
+    // Reconnect with exponential backoff; give up after 10 consecutive failures so
+    // a genuinely-gone Redis server doesn't spin forever.
+    retryStrategy: (times) => (times > 10 ? null : Math.min(times * 200, 3000))
   });
 
   redis.on("error", (error) => {

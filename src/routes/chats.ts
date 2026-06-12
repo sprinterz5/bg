@@ -1,6 +1,9 @@
 import { MessageType } from "@prisma/client";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { createNotification } from "../services/notificationService.js";
+import { getBlockedIds } from "../services/blockService.js";
+import { withIdempotency } from "../services/idempotencyService.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
 
 const directConversationSchema = z.object({
@@ -33,16 +36,56 @@ async function ensureConversationMember(app: FastifyInstance, conversationId: st
   });
 }
 
+async function hasBlockBetween(app: FastifyInstance, userA: string, userB: string) {
+  return Boolean(
+    await app.prisma.userBlock.findFirst({
+      where: {
+        OR: [
+          { blockerId: userA, blockedId: userB },
+          { blockerId: userB, blockedId: userA }
+        ]
+      },
+      select: { id: true }
+    })
+  );
+}
+
+async function assertChatRateLimit(app: FastifyInstance, userId: string, reply: any) {
+  const minuteKey = `rate:chat:${userId}:minute`;
+  const dayKey = `rate:chat:${userId}:day`;
+  const [minuteCount, dayCount] = await Promise.all([
+    app.redis.incr(minuteKey).catch(() => 1),
+    app.redis.incr(dayKey).catch(() => 1)
+  ]);
+
+  if (minuteCount === 1) {
+    await app.redis.expire(minuteKey, 60).catch(() => undefined);
+  }
+  if (dayCount === 1) {
+    await app.redis.expire(dayKey, 24 * 60 * 60).catch(() => undefined);
+  }
+
+  if (minuteCount > 30 || dayCount > 500) {
+    throw reply.tooManyRequests("Message rate limit exceeded");
+  }
+}
+
 function directKey(a: string, b: string) {
   return [a, b].sort().join(":");
 }
 
 export const chatRoutes: FastifyPluginAsync = async (app) => {
   app.get("/conversations", { preHandler: [app.authenticate] }, async (request) => {
+    const blockedIds = await getBlockedIds(app, request.user.sub);
     return app.prisma.conversation.findMany({
       where: {
         members: {
           some: { userId: request.user.sub }
+        },
+        NOT: {
+          members: {
+            some: { userId: { in: [...blockedIds] } }
+          }
         }
       },
       orderBy: { updatedAt: "desc" },
@@ -67,6 +110,9 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
     const otherUser = await app.prisma.user.findUnique({ where: { id: body.userId } });
     if (!otherUser) {
       throw reply.notFound("User not found");
+    }
+    if (await hasBlockBetween(app, request.user.sub, body.userId)) {
+      throw reply.forbidden("Conversation is not available");
     }
 
     const key = directKey(request.user.sub, body.userId);
@@ -95,6 +141,16 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
     if (!member) {
       throw reply.notFound("Conversation not found");
     }
+    const blockedIds = await getBlockedIds(app, request.user.sub);
+    if (blockedIds.size > 0) {
+      const blockedMember = await app.prisma.conversationMember.findFirst({
+        where: { conversationId: id, userId: { in: [...blockedIds] } },
+        select: { id: true }
+      });
+      if (blockedMember) {
+        throw reply.notFound("Conversation not found");
+      }
+    }
 
     const { limit, cursor } = getPagination(request.query);
     const messages = await app.prisma.message.findMany({
@@ -112,11 +168,27 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/conversations/:id/messages", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const result = await withIdempotency(request, reply, async () => {
     const { id } = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = messageSchema.parse(request.body);
     const member = await ensureConversationMember(app, id, request.user.sub);
     if (!member) {
       throw reply.notFound("Conversation not found");
+    }
+    await assertChatRateLimit(app, request.user.sub, reply);
+
+    const recipientsForSafety = await app.prisma.conversationMember.findMany({
+      where: {
+        conversationId: id,
+        userId: { not: request.user.sub }
+      },
+      select: { userId: true }
+    });
+    const blockedRecipient = await Promise.all(
+      recipientsForSafety.map((recipient) => hasBlockBetween(app, request.user.sub, recipient.userId))
+    );
+    if (blockedRecipient.some(Boolean)) {
+      throw reply.forbidden("Conversation is not available");
     }
 
     if (body.type === "TEXT" && !body.body) {
@@ -158,7 +230,35 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
     });
 
     app.io.to(`conversation:${id}`).emit("message:new", message);
-    return reply.status(201).send(message);
+
+    const recipients = await app.prisma.conversationMember.findMany({
+      where: {
+        conversationId: id,
+        userId: { not: request.user.sub }
+      },
+      select: { userId: true }
+    });
+
+    await Promise.all(
+      recipients.map((recipient) =>
+        createNotification(app, {
+          userId: recipient.userId,
+          type: "MESSAGE",
+          actorType: "USER",
+          actorId: request.user.sub,
+          targetType: "CONVERSATION",
+          targetId: id,
+          title: "New message",
+          body: body.type === "TEXT" ? body.body : "Shared something with you.",
+          data: { messageId: message.id, messageType: message.type }
+        })
+      )
+    );
+
+      return { statusCode: 201, body: message };
+    });
+
+    return reply.status(result.statusCode ?? 201).send(result.body);
   });
 
   app.post("/conversations/:id/read", { preHandler: [app.authenticate] }, async (request, reply) => {

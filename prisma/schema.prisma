@@ -57,6 +57,33 @@ enum LikeTargetType {
   REVIEW
   STORY
   NOTE
+  COMMENT
+}
+
+enum CommentTargetType {
+  ARTICLE
+  REVIEW
+}
+
+enum BookmarkTargetType {
+  ARTICLE
+  REVIEW
+  BOOK
+  NOTE
+}
+
+enum ContentScoreTargetType {
+  ARTICLE
+  REVIEW
+}
+
+enum ContentCounterTargetType {
+  ARTICLE
+  REVIEW
+  STORY
+  NOTE
+  COMMENT
+  BOOK
 }
 
 enum NoteTargetType {
@@ -102,6 +129,124 @@ enum MediaKind {
   BOOK_COVER_CACHE
 }
 
+enum ReportTargetType {
+  USER
+  ARTICLE
+  REVIEW
+  STORY
+  MESSAGE
+  NOTE
+  COMMENT
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  HATE
+  SEXUAL_CONTENT
+  VIOLENCE
+  COPYRIGHT
+  AI_SLOP
+  MISINFORMATION
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportResolution {
+  CONTENT_REMOVED
+  USER_WARNED
+  USER_SUSPENDED
+  NO_VIOLATION
+  DUPLICATE
+  OTHER
+}
+
+enum FeedEventType {
+  IMPRESSION
+  OPEN
+  READ_PROGRESS
+  DWELL_TIME
+  LIKE
+  SAVE
+  HIDE
+  SHARE
+  BOOKMARK
+  COMMENT
+}
+
+enum FeedEventTargetType {
+  ARTICLE
+  REVIEW
+  BOOK
+  STORY
+}
+
+enum NotificationType {
+  FOLLOW
+  LIKE
+  COMMENT
+  COMMENT_REPLY
+  NOTE_REPLY
+  MESSAGE
+  STORY_VIEW
+  MODERATION_APPROVED
+  MODERATION_REJECTED
+  REPORT_RESOLVED
+  BOOKMARK
+  SYSTEM
+}
+
+enum NotificationActorType {
+  USER
+  SYSTEM
+}
+
+enum NotificationTargetType {
+  USER
+  ARTICLE
+  REVIEW
+  BOOK
+  STORY
+  MESSAGE
+  REPORT
+  CONVERSATION
+  COMMENT
+  SYSTEM
+}
+
+enum MediaStorageProvider {
+  LOCAL
+  R2
+  S3
+}
+
+enum MediaVariantKind {
+  THUMBNAIL
+  PREVIEW
+}
+
+enum MediaModerationStatus {
+  PENDING
+  APPROVED
+  FLAGGED
+  REJECTED
+}
+
+enum MediaModerationProvider {
+  DISABLED
+  LOCAL_STUB
+  OPENAI
+  GOOGLE_VISION
+  AWS_REKOGNITION
+  HIVE
+}
+
 model User {
   id           String    @id @default(uuid()) @db.Uuid
   email        String    @unique
@@ -118,6 +263,12 @@ model User {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
+  emailVerified      Boolean   @default(false)
+  emailVerifyToken   String?
+  emailVerifyExpires DateTime?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+
   authoredArticles Article[]
   authoredReviews  Review[]
   shelfItems       ShelfItem[]
@@ -127,6 +278,12 @@ model User {
   likes            Like[]
   refreshTokens    RefreshToken[]
   mediaAssets      MediaAsset[]
+  reportsFiled     Report[]       @relation("ReportsFiled")
+  reportsModerated Report[]       @relation("ReportsModerated")
+  mediaModerations MediaModerationEvent[] @relation("MediaModerators")
+  feedEvents       FeedEvent[]
+  notifications    Notification[] @relation("UserNotifications")
+  notificationActs Notification[] @relation("NotificationActors")
 
   following Follow[] @relation("UserFollowing")
   followers Follow[] @relation("UserFollowers")
@@ -134,6 +291,14 @@ model User {
   conversationMemberships ConversationMember[]
   sentMessages            Message[]
   moderationActions       ModerationEvent[]    @relation("ModeratorActions")
+
+  comments       Comment[]
+  bookmarks      Bookmark[]
+  blocksGiven    UserBlock[] @relation("BlocksGiven")
+  blocksReceived UserBlock[] @relation("BlocksReceived")
+  mutesGiven     UserMute[]  @relation("MutesGiven")
+  mutesReceived  UserMute[]  @relation("MutesReceived")
+  deviceTokens   DeviceToken[]
 
   @@index([username])
   @@index([createdAt])
@@ -189,15 +354,19 @@ model Book {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
-  shelfItems ShelfItem[]
-  reviews    Review[]
-  stories    Story[]
-  messages   Message[]
+  shelfItems  ShelfItem[]
+  reviews     Review[]
+  stories     Story[]
+  messages    Message[]
+  similarFrom BookSimilarity[] @relation("SimilarFrom")
+  similarTo   BookSimilarity[] @relation("SimilarTo")
 
   @@index([title])
   @@index([isbn10])
   @@index([isbn13])
   @@index([createdAt])
+  @@index([authors], type: Gin)
+  @@index([categories], type: Gin)
 }
 
 model ShelfItem {
@@ -246,7 +415,9 @@ model Article {
 
   @@index([authorId, createdAt])
   @@index([status, moderationStatus, publishedAt])
+  @@index([status, moderationStatus, deletedAt, publishedAt])
   @@index([publishedAt])
+  @@index([tags], type: Gin)
 }
 
 model Review {
@@ -273,7 +444,9 @@ model Review {
   @@index([authorId, createdAt])
   @@index([bookId])
   @@index([status, moderationStatus, publishedAt])
+  @@index([status, moderationStatus, deletedAt, publishedAt])
   @@index([publishedAt])
+  @@index([tags], type: Gin)
 }
 
 model Note {
@@ -424,9 +597,11 @@ model ExploreItem {
 }
 
 model MediaAsset {
-  id         String    @id @default(uuid()) @db.Uuid
-  ownerId    String?   @db.Uuid
+  id         String               @id @default(uuid()) @db.Uuid
+  ownerId    String?              @db.Uuid
   kind       MediaKind
+  provider   MediaStorageProvider @default(LOCAL)
+  bucket     String?
   url        String
   storageKey String
   mimeType   String
@@ -434,10 +609,348 @@ model MediaAsset {
   width      Int?
   height     Int?
   checksum   String?
-  createdAt  DateTime  @default(now())
+  moderationStatus MediaModerationStatus @default(PENDING)
+  moderationProvider MediaModerationProvider @default(DISABLED)
+  moderationScore Float?
+  moderationReason String? @db.Text
+  moderatedAt DateTime?
+  createdAt  DateTime             @default(now())
 
-  owner User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  owner    User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  variants MediaVariant[]
+  moderationEvents MediaModerationEvent[]
 
   @@index([ownerId, createdAt])
   @@index([kind, createdAt])
+  @@index([provider, storageKey])
+  @@index([moderationStatus, createdAt])
+}
+
+model MediaVariant {
+  id           String               @id @default(uuid()) @db.Uuid
+  mediaAssetId String               @db.Uuid
+  kind         MediaVariantKind
+  provider     MediaStorageProvider @default(LOCAL)
+  bucket       String?
+  url          String
+  storageKey   String
+  mimeType     String
+  byteSize     Int
+  width        Int?
+  height       Int?
+  createdAt    DateTime             @default(now())
+
+  mediaAsset MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([mediaAssetId, kind])
+  @@index([provider, storageKey])
+}
+
+model Report {
+  id            String            @id @default(uuid()) @db.Uuid
+  reporterId    String            @db.Uuid
+  targetType    ReportTargetType
+  targetId      String            @db.Uuid
+  reason        ReportReason
+  details       String?           @db.Text
+  status        ReportStatus      @default(OPEN)
+  resolution    ReportResolution?
+  moderatorId   String?           @db.Uuid
+  moderatorNote String?           @db.Text
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  resolvedAt    DateTime?
+
+  reporter  User  @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  moderator User? @relation("ReportsModerated", fields: [moderatorId], references: [id], onDelete: SetNull)
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@index([status, createdAt])
+  @@index([moderatorId])
+}
+
+model MediaModerationEvent {
+  id        String                  @id @default(uuid()) @db.Uuid
+  mediaId   String                  @db.Uuid
+  provider  MediaModerationProvider
+  status    MediaModerationStatus
+  score     Float?
+  reason    String?                 @db.Text
+  rawJson   Json?
+  moderatorId String?               @db.Uuid
+  createdAt DateTime                @default(now())
+
+  media     MediaAsset              @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  moderator User?                   @relation("MediaModerators", fields: [moderatorId], references: [id], onDelete: SetNull)
+
+  @@index([mediaId, createdAt])
+  @@index([status, createdAt])
+  @@index([provider, createdAt])
+}
+
+model FeedEvent {
+  id         String              @id @default(uuid()) @db.Uuid
+  userId     String              @db.Uuid
+  eventType  FeedEventType
+  targetType FeedEventTargetType
+  targetId   String              @db.Uuid
+  source     String?
+  dwellMs    Int?
+  progress   Int?
+  metadata   Json?
+  createdAt  DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, eventType, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([eventType, createdAt])
+}
+
+model Notification {
+  id         String                 @id @default(uuid()) @db.Uuid
+  userId     String                 @db.Uuid
+  type       NotificationType
+  actorType  NotificationActorType  @default(SYSTEM)
+  actorId    String?                @db.Uuid
+  targetType NotificationTargetType
+  targetId   String?
+  title      String
+  body       String?                @db.Text
+  data       Json?
+  readAt     DateTime?
+  createdAt  DateTime               @default(now())
+
+  user  User  @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("NotificationActors", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt, createdAt])
+  @@index([type, createdAt])
+  @@index([targetType, targetId])
+}
+
+// ─── Comments ────────────────────────────────────────
+
+model Comment {
+  id         String            @id @default(uuid()) @db.Uuid
+  userId     String            @db.Uuid
+  targetType CommentTargetType
+  targetId   String            @db.Uuid
+  parentId   String?           @db.Uuid
+  body       String            @db.Text
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  deletedAt  DateTime?
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  children Comment[] @relation("CommentReplies")
+
+  @@index([targetType, targetId, createdAt])
+  @@index([parentId])
+  @@index([userId, createdAt])
+}
+
+// ─── Bookmarks / Saves ──────────────────────────────
+
+model Bookmark {
+  id         String             @id @default(uuid()) @db.Uuid
+  userId     String             @db.Uuid
+  targetType BookmarkTargetType
+  targetId   String             @db.Uuid
+  createdAt  DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId, createdAt])
+}
+
+// ─── Block / Mute ───────────────────────────────────
+
+model UserBlock {
+  id        String   @id @default(uuid()) @db.Uuid
+  blockerId String   @db.Uuid
+  blockedId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  blocker User @relation("BlocksGiven", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+model UserMute {
+  id        String   @id @default(uuid()) @db.Uuid
+  muterId   String   @db.Uuid
+  mutedId   String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  muter User @relation("MutesGiven", fields: [muterId], references: [id], onDelete: Cascade)
+  muted User @relation("MutesReceived", fields: [mutedId], references: [id], onDelete: Cascade)
+
+  @@unique([muterId, mutedId])
+  @@index([mutedId])
+}
+
+// ─── Content Scoring ────────────────────────────────
+
+model ContentScore {
+  id              String                @id @default(uuid()) @db.Uuid
+  targetType      ContentScoreTargetType
+  targetId        String                @db.Uuid
+  qualityScore    Float                 @default(0)
+  engagementScore Float                 @default(0)
+  trendingScore   Float                 @default(0)
+  spamScore       Float                 @default(0)
+  impressions     Int                   @default(0)
+  opens           Int                   @default(0)
+  completions     Int                   @default(0)
+  totalDwellMs    BigInt                @default(0)
+  likes           Int                   @default(0)
+  saves           Int                   @default(0)
+  hides           Int                   @default(0)
+  shares          Int                   @default(0)
+  comments        Int                   @default(0)
+  reports         Int                   @default(0)
+  updatedAt       DateTime              @updatedAt
+  createdAt       DateTime              @default(now())
+
+  @@unique([targetType, targetId])
+  @@index([qualityScore])
+  @@index([trendingScore])
+}
+
+// ─── Book Similarity Graph ──────────────────────────
+
+model BookSimilarity {
+  id        String   @id @default(uuid()) @db.Uuid
+  bookAId   String   @db.Uuid
+  bookBId   String   @db.Uuid
+  score     Float
+  reasons   String[] @default([])
+  updatedAt DateTime @updatedAt
+
+  bookA Book @relation("SimilarFrom", fields: [bookAId], references: [id], onDelete: Cascade)
+  bookB Book @relation("SimilarTo", fields: [bookBId], references: [id], onDelete: Cascade)
+
+  @@unique([bookAId, bookBId])
+  @@index([bookAId, score(sort: Desc)])
+  @@index([bookBId, score(sort: Desc)])
+}
+
+// ─── Device Tokens (Push) ───────────────────────────
+
+enum Platform {
+  IOS
+  ANDROID
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum JobRunStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum AiEmbeddingTargetType {
+  ARTICLE
+  REVIEW
+  BOOK
+}
+
+enum AiEmbeddingStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  token     String   @unique
+  platform  Platform
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model IdempotencyKey {
+  id           String            @id @default(uuid()) @db.Uuid
+  userId       String            @db.Uuid
+  key          String
+  method       String
+  path         String
+  requestHash  String
+  status       IdempotencyStatus @default(IN_PROGRESS)
+  responseCode Int?
+  responseBody Json?
+  createdAt    DateTime          @default(now())
+  expiresAt    DateTime
+
+  @@unique([userId, key])
+  @@index([expiresAt])
+  @@index([userId, createdAt])
+}
+
+model ContentCounter {
+  id          String                   @id @default(uuid()) @db.Uuid
+  targetType  ContentCounterTargetType
+  targetId    String                   @db.Uuid
+  likes       Int                      @default(0)
+  comments    Int                      @default(0)
+  bookmarks   Int                      @default(0)
+  shares      Int                      @default(0)
+  reports     Int                      @default(0)
+  views       Int                      @default(0)
+  updatedAt   DateTime                 @updatedAt
+  createdAt   DateTime                 @default(now())
+
+  @@unique([targetType, targetId])
+  @@index([targetType, targetId])
+}
+
+model JobRun {
+  id         String       @id @default(uuid()) @db.Uuid
+  name       String
+  status     JobRunStatus @default(RUNNING)
+  payload    Json?
+  result     Json?
+  error      String?      @db.Text
+  startedAt  DateTime     @default(now())
+  finishedAt DateTime?
+  durationMs Int?
+
+  @@index([name, startedAt])
+  @@index([status, startedAt])
+}
+
+model AiEmbedding {
+  id          String                @id @default(uuid()) @db.Uuid
+  targetType  AiEmbeddingTargetType
+  targetId    String                @db.Uuid
+  provider    String
+  model       String
+  dimensions  Int
+  inputHash   String
+  vector      Json?
+  textPreview String?               @db.Text
+  status      AiEmbeddingStatus     @default(PENDING)
+  error       String?               @db.Text
+  embeddedAt  DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@unique([targetType, targetId, model])
+  @@index([targetType, targetId])
+  @@index([model, status, updatedAt])
 }

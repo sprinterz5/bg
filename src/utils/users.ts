@@ -12,6 +12,7 @@ export const publicUserSelect = {
 export const privateUserSelect = {
   ...publicUserSelect,
   email: true,
+  emailVerified: true,
   appleUserId: true,
   lastSeenAt: true
 } as const;

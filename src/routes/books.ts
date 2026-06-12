@@ -7,6 +7,7 @@ import {
   searchBookCandidates,
   upsertBook
 } from "../services/bookService.js";
+import { getSimilarBooks, recomputeSimilarBooks } from "../services/bookSimilarityService.js";
 
 const searchSchema = z.object({
   q: z.string().min(1).max(200)
@@ -43,6 +44,29 @@ export const bookRoutes: FastifyPluginAsync = async (app) => {
 
     const book = await upsertBook(app, candidate);
     return reply.status(201).send(book);
+  });
+
+  app.get("/books/:id/similar", async (request, reply) => {
+    const { id } = z.object({ id: z.string().uuid() }).parse(request.params);
+    const { limit } = z.object({ limit: z.coerce.number().int().min(1).max(50).default(10) }).parse(request.query);
+    const book = await app.prisma.book.findUnique({ where: { id }, select: { id: true } });
+    if (!book) {
+      throw reply.notFound("Book not found");
+    }
+
+    const data = await getSimilarBooks(app, id, limit);
+    return { data: data ?? [] };
+  });
+
+  app.post("/books/:id/similar/recompute", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id } = z.object({ id: z.string().uuid() }).parse(request.params);
+    const { limit } = z.object({ limit: z.coerce.number().int().min(1).max(50).default(25) }).parse(request.query);
+    const data = await recomputeSimilarBooks(app, id, limit);
+    if (!data) {
+      throw reply.notFound("Book not found");
+    }
+
+    return { data };
   });
 
   app.get("/books/:id", async (request, reply) => {

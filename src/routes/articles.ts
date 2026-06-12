@@ -14,9 +14,9 @@ const articleCreateSchema = z.object({
   tags: z.array(z.string().min(1).max(40)).max(20).default([])
 });
 
-const articleUpdateSchema = articleCreateSchema.partial().extend({
-  status: z.nativeEnum(ArticleStatus).optional()
-});
+// `status` is intentionally excluded — state transitions go through /publish
+// and /unpublish endpoints so they always produce a ModerationEvent.
+const articleUpdateSchema = articleCreateSchema.partial();
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -101,17 +101,23 @@ export const articleRoutes: FastifyPluginAsync = async (app) => {
       throw reply.notFound("Article not found");
     }
 
+    // Any change to a user-visible field on a published article must re-enter
+    // the moderation queue — prevents bait-and-switch after initial approval.
+    const visibleFieldChanged =
+      body.title !== undefined ||
+      body.subtitle !== undefined ||
+      body.excerpt !== undefined ||
+      body.body !== undefined ||
+      body.coverImageUrl !== undefined ||
+      body.tags !== undefined;
+
     const updated = await app.prisma.article.update({
       where: { id },
       data: {
         ...body,
         ...(body.title ? { slug: makeSlug(body.title) } : {}),
-        ...(body.body
-          ? {
-              readingTimeMinutes: readingTimeMinutes(body.body),
-              moderationStatus: article.status === "PUBLISHED" ? "PENDING" : article.moderationStatus
-            }
-          : {})
+        ...(body.body ? { readingTimeMinutes: readingTimeMinutes(body.body) } : {}),
+        ...(visibleFieldChanged && article.status === "PUBLISHED" ? { moderationStatus: "PENDING" } : {})
       }
     });
 
