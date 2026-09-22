@@ -1,11 +1,27 @@
+# Dependencies / build output (matched at any depth)
 node_modules/
 dist/
-.env
-.DS_Store
-*.log
 coverage/
+
+# Secrets
+.env
+
+# Portable Node runtime (shared by backend and mobile)
 .tools/
-storage/uploads/*
-!storage/uploads/.gitkeep
-storage/uploads-test/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Backend runtime data
+apps/backend/storage/uploads/*
+!apps/backend/storage/uploads/.gitkeep
+apps/backend/storage/uploads-test/
 backups/
+
+# Local AI-assistant config (kept out of the repo)
+.claude/
+CLAUDE.md
+AGENTS.md
