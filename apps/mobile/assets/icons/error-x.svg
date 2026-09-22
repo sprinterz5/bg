@@ -1,0 +1,11 @@
+<svg width="15" height="15" viewBox="0.50 0.50 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="emojione:cross-mark-button" clip-path="url(#clip0_0_23)">
+<path id="Vector" d="M15.5 13C15.5 14.375 14.375 15.5 13 15.5H3C1.625 15.5 0.5 14.375 0.5 13V3C0.5 1.625 1.625 0.5 3 0.5H13C14.375 0.5 15.5 1.625 15.5 3V13Z" fill="#FF5A79"/>
+<path id="Vector_2" d="M12.5 5.3L10.7 3.5L8 6.2L5.3 3.5L3.5 5.3L6.2 8L3.5 10.7L5.3 12.5L8 9.8L10.7 12.5L12.5 10.7L9.8 8L12.5 5.3Z" fill="white"/>
+</g>
+<defs>
+<clipPath id="clip0_0_23">
+<rect width="16" height="16" fill="white"/>
+</clipPath>
+</defs>
+</svg>
