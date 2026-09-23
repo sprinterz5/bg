@@ -5,6 +5,7 @@ dist
 *.log
 coverage
 .tools
-storage/uploads
+storage/uploads/*
+!storage/uploads/.gitkeep
 storage/uploads-test
 docs/*.tmp
