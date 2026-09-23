@@ -2,6 +2,17 @@ import { Image, type ImageStyle } from 'expo-image';
 import type { StyleProp } from 'react-native';
 
 const icons = {
+  // TEMP: cut from the 1x Figma screenshot until SVGs are exported.
+  profileSettings: require('@/assets/icons/tmp-profile-settings.png'),
+  compose: require('@/assets/icons/tmp-compose.png'),
+  profileEmptyBio: require('@/assets/icons/tmp-profile-empty-bio.png'),
+  profileEmptyWrite: require('@/assets/icons/tmp-profile-empty-write.png'),
+  searchField: require('@/assets/icons/search-field.svg'),
+  searchFilter: require('@/assets/icons/search-filter.svg'),
+  searchClear: require('@/assets/icons/search-clear.svg'),
+  searchBack: require('@/assets/icons/search-back.svg'),
+  searchSuggestion: require('@/assets/icons/search-suggestion.svg'),
+  chipPlus: require('@/assets/icons/chip-plus.svg'),
   back: require('@/assets/icons/back.svg'),
   google: require('@/assets/icons/google.png'),
   apple: require('@/assets/icons/apple.png'),
@@ -40,6 +51,11 @@ const icons = {
   pickerNextActive: require('@/assets/icons/picker-next-active.svg'),
   newArticleBack: require('@/assets/icons/newarticle-back.svg'),
   tabHome: require('@/assets/icons/tab-home.svg'),
+  tabHomeInactive: require('@/assets/icons/tab-home-inactive.svg'),
+  tabPlusActive: require('@/assets/icons/tab-plus-active.svg'),
+  tabSearchActive: require('@/assets/icons/tab-search-active.svg'),
+  tabProfileActive: require('@/assets/icons/tab-profile-active.svg'),
+  profileTabArticles: require('@/assets/icons/profile-tab-articles.svg'),
   tabPlus: require('@/assets/icons/tab-plus.svg'),
   tabChat: require('@/assets/icons/tab-chat.svg'),
   tabSearch: require('@/assets/icons/tab-search.svg'),

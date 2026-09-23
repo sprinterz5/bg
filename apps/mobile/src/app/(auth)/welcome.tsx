@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -10,6 +9,7 @@ import { socialSignIn } from '@/mock/api';
 import { useSession } from '@/state/session';
 import { colors, fonts } from '@/theme';
 import { AnimatedText, Text } from '@/components/text';
+import { push } from '@/lib/nav';
 
 type Provider = 'google' | 'apple';
 
@@ -24,7 +24,7 @@ export default function Welcome() {
     try {
       await socialSignIn(provider);
       resetDraft({ provider });
-      router.push('/name');
+      push('/name');
     } finally {
       setPending(null);
     }
@@ -67,7 +67,7 @@ export default function Welcome() {
       </View>
 
       <Animated.View entering={FadeIn.delay(500).duration(500)} style={[styles.bottom, { paddingBottom: insets.bottom + 18 }]}>
-        <PressableScale onPress={() => router.push('/login')} style={styles.usernameLink} accessibilityRole="button">
+        <PressableScale onPress={() => push('/login')} style={styles.usernameLink} accessibilityRole="button">
           <Text style={styles.at}>@</Text>
           <Text style={styles.usernameText}>Log in by username</Text>
           <Icon name="chevronRight" width={7} height={12} tintColor={colors.textGray} />

@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Raw Figma exports waiting to be sorted into assets/
+assets/icons/_inbox/

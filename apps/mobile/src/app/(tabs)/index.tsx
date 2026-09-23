@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
@@ -13,6 +12,7 @@ import { FOLLOWING_STORIES, WELCOME_STORY, type Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { Text } from '@/components/text';
+import { push } from '@/lib/nav';
 
 const STORIES = [WELCOME_STORY, ...FOLLOWING_STORIES];
 
@@ -44,11 +44,11 @@ export default function Home() {
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <PressableScale haptic onPress={() => router.push('/story/new')} hitSlop={8} accessibilityLabel="New story" style={styles.headerBtn}>
+              <PressableScale haptic onPress={() => push('/story/new')} hitSlop={8} accessibilityLabel="New story" style={styles.headerBtn}>
                 <Icon name="plus" width={43} />
               </PressableScale>
               <Text style={styles.logo}>Bookgram</Text>
-              <PressableScale haptic onPress={() => router.push('/notifications')} hitSlop={8} accessibilityLabel="Notifications" style={styles.headerBtn}>
+              <PressableScale haptic onPress={() => push('/notifications')} hitSlop={8} accessibilityLabel="Notifications" style={styles.headerBtn}>
                 <Icon name="heartHeader" width={24.3} height={21.3} />
               </PressableScale>
             </View>

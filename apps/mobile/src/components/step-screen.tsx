@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
@@ -9,6 +8,7 @@ import { colors } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { Text } from '@/components/text';
+import { back } from '@/lib/nav';
 
 type Props = {
   title: string;
@@ -47,7 +47,7 @@ export function StepScreen({
     <View style={[styles.root, { paddingTop: insets.top + (showBack ? 18 : titleTop), paddingHorizontal: gutter }]}>
       {showBack ? (
         <View style={styles.backRow}>
-          <PressableScale onPress={() => router.back()} hitSlop={14} accessibilityLabel="Back" style={styles.back}>
+          <PressableScale onPress={() => back()} hitSlop={14} accessibilityLabel="Back" style={styles.back}>
             <Icon name="back" width={19} height={17} />
           </PressableScale>
         </View>

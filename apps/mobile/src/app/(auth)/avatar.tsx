@@ -1,6 +1,5 @@
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Linking, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, LinearTransition } from 'react-native-reanimated';
@@ -9,6 +8,7 @@ import { PrimaryButton } from '@/components/primary-button';
 import { StepScreen } from '@/components/step-screen';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
+import { push } from '@/lib/nav';
 
 const AVATAR = 149;
 
@@ -37,7 +37,7 @@ export default function AvatarStep() {
   const next = () => {
     if (!uri) return;
     updateDraft({ avatarUri: uri });
-    router.push('/interests');
+    push('/interests');
   };
 
   return (

@@ -1,7 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import * as MediaLibrary from 'expo-media-library/legacy';
-import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -13,6 +12,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { useFeed } from '@/state/feed';
 import { colors } from '@/theme';
 import { Text } from '@/components/text';
+import { back } from '@/lib/nav';
 
 // Figma 3120:1438 (nothing selected) and 3123:1812 (selected). Cells 129x230, gap 1.5.
 const GAP = 1.5;
@@ -61,7 +61,7 @@ export default function CoverPicker() {
       // keep the library uri; expo-image can render it
     }
     updateDraft({ coverUri: uri });
-    router.back();
+    back();
   };
 
   return (
@@ -70,7 +70,7 @@ export default function CoverPicker() {
 
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.titleRow}>
-          <PressableScale onPress={() => router.back()} hitSlop={12} accessibilityLabel="Close" style={styles.close}>
+          <PressableScale onPress={() => back()} hitSlop={12} accessibilityLabel="Close" style={styles.close}>
             <Icon name="pickerClose" width={18} />
           </PressableScale>
           <Text style={styles.title}>Choose a cover</Text>

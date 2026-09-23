@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -6,6 +5,7 @@ import { BigInput } from '@/components/big-input';
 import { PrimaryButton } from '@/components/primary-button';
 import { StepScreen } from '@/components/step-screen';
 import { useSession } from '@/state/session';
+import { push } from '@/lib/nav';
 
 export default function NameStep() {
   const { draft, updateDraft } = useSession();
@@ -15,7 +15,7 @@ export default function NameStep() {
   const next = () => {
     if (!valid) return;
     updateDraft({ name: name.trim() });
-    router.push('/username');
+    push('/username');
   };
 
   return (

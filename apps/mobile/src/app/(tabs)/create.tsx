@@ -1,5 +1,4 @@
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
@@ -12,6 +11,7 @@ import { pickCover } from '@/lib/pick-cover';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { Text, TextInput } from '@/components/text';
+import { push } from '@/lib/nav';
 
 // Figma 3114:465 (empty) and 3116:1136 (cover + text). Design status bar = 47.
 const COVER_BOTTOM = 161; // y 208 - 47
@@ -85,7 +85,7 @@ export default function CreateArticle() {
       <PressableScale
         haptic
         disabled={!canPost}
-        onPress={() => router.push('/new-article')}
+        onPress={() => push('/new-article')}
         scaleTo={0.94}
         accessibilityRole="button"
         accessibilityState={{ disabled: !canPost }}

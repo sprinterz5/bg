@@ -1,5 +1,4 @@
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -17,6 +16,7 @@ import { INTERESTS, INTERESTS_MAX, INTERESTS_MIN } from '@/mock/data';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
 import { AnimatedText, Text } from '@/components/text';
+import { push } from '@/lib/nav';
 
 export default function InterestsStep() {
   const { draft, updateDraft } = useSession();
@@ -56,7 +56,7 @@ export default function InterestsStep() {
   const next = () => {
     if (!valid) return;
     updateDraft({ interests: selected });
-    router.push('/ready');
+    push('/ready');
   };
 
   return (

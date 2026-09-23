@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -7,6 +6,7 @@ import { FieldMessage } from '@/components/field-message';
 import { PrimaryButton } from '@/components/primary-button';
 import { StepScreen } from '@/components/step-screen';
 import { useSession } from '@/state/session';
+import { push } from '@/lib/nav';
 
 const isPasswordValid = (p: string) => p.length >= 6 && /[a-z]/i.test(p) && /\d/.test(p);
 
@@ -18,7 +18,7 @@ export default function PasswordStep() {
   const next = () => {
     if (!valid) return;
     updateDraft({ password });
-    router.push('/password-confirm');
+    push('/password-confirm');
   };
 
   return (

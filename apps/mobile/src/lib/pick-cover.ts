@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library/legacy';
-import { router } from 'expo-router';
+import { push } from '@/lib/nav';
 
 /**
  * Opens the design's own "Choose a cover" grid when the photo library is readable.
@@ -10,7 +10,7 @@ export async function pickCover(onPicked: (uri: string) => void) {
   try {
     const permission = await MediaLibrary.requestPermissionsAsync(false, ['photo']);
     if (permission.granted) {
-      router.push('/cover-picker');
+      push('/cover-picker');
       return;
     }
   } catch {

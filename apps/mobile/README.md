@@ -38,8 +38,9 @@ Figma file `Pmz1oSWfWGmewyNAWMmn8e` ("AutoLayouts finals"), section `3193:1049`.
 | Home | feed `3138:570`, scrolled `3101:643` | built |
 | Article reader | page 1 `3110:157`, page 2+ `3110:311` | built |
 | Create article | editor empty `3114:465` (x 9325), cover picker `3120:1438` (x 9807) / selected `3123:1812` (x 10289), editor with cover `3116:1136` (x 10771), "New article" `3128:459` (x 11269) / typing `3128:560` (x 11794), Home "Posting..." `3129:743` (x 12290) | built |
-| Explore / search | feed `3163:1520` (x 12791), empty `3154:579` (x 13291), suggestions `3158:793` (x 13802), profile results `3159:1041` (x 14313), suggestions `3160:1291` (x 14788), article results `3170:2017` (x 15344) | todo |
-| Profiles | other user `3167:1542` (x 15904) + scrolled `3169:1832` (x 16444), own empty `3184:982` (x 17024), Followers `3184:1274` (x 17560), Following `3185:1524` (x 18178) | todo |
+| Explore / search | feed `3163:1520` (x 12791), empty `3154:579` (x 13291), suggestions `3158:793` (x 13802), profile results `3159:1041` (x 14313), suggestions `3160:1291` (x 14788), article results `3170:2017` (x 15344) | built |
+| Profiles | other user `3167:1542` (x 15904), own empty `3169:1832` (x 16444), Followers `3184:982` (x 17024), Following `3184:1274` (x 17560) | built |
+| Chats tab | own username + compose, search, people list `3185:1524` (x 18178) | built (purpose to confirm) |
 
 ## Structure
 
@@ -71,4 +72,8 @@ src/
 - **Home** — scrolling header, stories card with next/prev, post cards with like pop and filled-heart state, pull to refresh.
 - **Article reader** — paginated body, scroll-driven page-1 → page-2 transition, glass author card with follow toggle, page dots, bottom action bar.
 - **Create article** — editor with cover placeholder, cover grid picker, "New article" screen, publish with "Posting..." progress row and feed insert.
+- **Explore & search** — topic chips, explore feed, search mode with Articles/Profiles switch, query suggestions, profile and article results, animated field/back/Exit transitions, Android back handling.
+- **Profiles** — other user's profile (follow toggle, article list, liked tab), own empty profile with empty-state cards, Followers / Following lists with search and follow buttons.
+- **Chats tab** — list screen from the last frame: centred username, compose button, search, people with Following buttons.
+- **Tab bar & motion** — active/inactive tab icons with crossfade, new like animation (filled heart grows out of the outline, counter rolls), navigation lock against double taps and back presses mid-transition.
 - **Android polish** — EAS development build (edge-to-edge status bar, full media access), Inter in place of SF Pro, cover-picker Next button kept above the navigation bar, `bookgram` brand avatar from Figma.

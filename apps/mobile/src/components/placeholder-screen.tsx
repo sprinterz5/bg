@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +6,7 @@ import { colors } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { Text } from '@/components/text';
+import { back } from '@/lib/nav';
 
 type Props = { title: string; note?: string; showBack?: boolean };
 
@@ -15,7 +15,7 @@ export function PlaceholderScreen({ title, note = 'Coming soon', showBack = fals
   return (
     <View style={[styles.root, { paddingTop: insets.top + 12 }]}>
       {showBack ? (
-        <PressableScale onPress={() => router.back()} hitSlop={14} accessibilityLabel="Back" style={styles.back}>
+        <PressableScale onPress={() => back()} hitSlop={14} accessibilityLabel="Back" style={styles.back}>
           <Icon name="back" width={19} height={17} />
         </PressableScale>
       ) : null}

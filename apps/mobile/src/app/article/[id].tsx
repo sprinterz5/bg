@@ -1,9 +1,9 @@
 import { BlurTargetView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthorAvatar } from '@/components/author-row';
 import { Glass } from '@/components/glass';
 import { Icon, type IconName } from '@/components/icon';
+import { LikeButton } from '@/components/like-button';
 import { PlaceholderScreen } from '@/components/placeholder-screen';
 import { PressableScale } from '@/components/pressable-scale';
 import { paginateLines } from '@/lib/paginate';
@@ -25,6 +26,7 @@ import type { Article } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { AnimatedText, Text } from '@/components/text';
+import { back } from '@/lib/nav';
 
 // Values from Figma frames 3110:157 (page 1) and 3110:311 (page 2); design status bar = 47.
 const LINE_HEIGHT = 23;
@@ -53,6 +55,7 @@ function Reader({ article }: { article: Article }) {
   const insets = useSafeAreaInsets();
   const targetRef = useRef<View>(null);
   const scrollX = useSharedValue(0);
+  const blurOn = useAndroidSafeBlur();
 
   const [lines, setLines] = useState<string[] | null>(null);
   const [titleH, setTitleH] = useState<number | null>(null);
@@ -156,7 +159,7 @@ function Reader({ article }: { article: Article }) {
       ) : null}
 
       <Animated.View style={[styles.card, cardStyle]}>
-        <Glass blurTarget={targetRef} style={styles.glassFill}>
+        <Glass blurTarget={targetRef} blur={blurOn} style={styles.glassFill}>
           <View style={[styles.cardRow, { width: CARD_W_2 - 14 }]}>
             <View style={styles.author}>
               <AuthorAvatar author={article.author} size={32} />
@@ -176,21 +179,21 @@ function Reader({ article }: { article: Article }) {
         </Glass>
       </Animated.View>
 
-      <PressableScale onPress={() => router.back()} hitSlop={10} scaleTo={0.9} accessibilityLabel="Close" style={[styles.close, { top: top + 2 }]}>
+      <PressableScale onPress={() => back()} hitSlop={10} scaleTo={0.9} accessibilityLabel="Close" style={[styles.close, { top: top + 2 }]}>
         <Icon name="readerClose" width={33} />
       </PressableScale>
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments)} />
-        <BarItem
-          icon={liked ? 'readerLikeFilled' : 'readerLike'}
-          w={23.5}
-          h={19.75}
-          label={String(article.likes + (liked ? 1 : 0))}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setLiked((v) => !v);
-          }}
+        <LikeButton
+          liked={liked}
+          onToggle={() => setLiked((v) => !v)}
+          count={article.likes + (liked ? 1 : 0)}
+          icons={{ off: 'readerLike', on: 'readerLikeFilled' }}
+          width={23.5}
+          height={19.75}
+          style={styles.barItem}
+          countStyle={styles.barText}
         />
         <BarItem icon="readerShare" w={16.4} h={16.4} label={String(article.shares)} />
         <PressableScale onPress={() => setSaved((v) => !v)} hitSlop={10} accessibilityLabel="Bookmark">
@@ -199,6 +202,24 @@ function Reader({ article }: { article: Article }) {
       </View>
     </View>
   );
+}
+
+/** On Android the blur view is attached only after the open transition; the white tint underneath keeps the card looking the same meanwhile. */
+function useAndroidSafeBlur() {
+  const navigation = useNavigation();
+  const [on, setOn] = useState(Platform.OS !== 'android');
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const offEnd = navigation.addListener('transitionEnd' as never, (e: { data?: { closing?: boolean } }) => {
+      if (!e.data?.closing) setOn(true);
+    });
+    return () => {
+      offEnd();
+    };
+  }, [navigation]);
+
+  return on;
 }
 
 type PageProps = {

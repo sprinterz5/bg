@@ -66,6 +66,10 @@ const bookgram: Author = { username: 'bookgram', avatar: require('@/assets/icons
 const sam: Author = { username: 'sam_altman', avatar: require('@/assets/mock/avatar-sam.png'), subtitle: 'Suggested' };
 const nori: Author = { username: 'j_nori_k', avatar: require('@/assets/mock/avatar-nori.png'), subtitle: 'Suggested' };
 
+const mx: Author = { username: 'fintech_notes', avatar: require('@/assets/mock/avatar-fintech.png'), subtitle: 'Suggested' };
+const gadgets: Author = { username: 'gadget.daily', avatar: require('@/assets/mock/avatar-gadget.png'), subtitle: 'Suggested' };
+const stevejobs01: Author = { username: 'stevejobs.01', avatar: require('@/assets/mock/avatar-stevejobs01.png'), subtitle: 'His fans' };
+
 export const BOOKGRAM_AUTHOR = bookgram;
 
 export const WELCOME_STORY: Story = {
@@ -160,4 +164,225 @@ export const FEED: Post[] = [
     shares: 80,
     articleId: 'timcook',
   },
+];
+
+ARTICLES.tinkov = {
+  id: 'tinkov',
+  author: mx,
+  cover: require('@/assets/mock/explore-tinkov.png'),
+  title: 'How Tinkov Managed to Recreate his Tinkov Bank in Mexico',
+  likes: 1312,
+  comments: 204,
+  shares: 96,
+  body: [
+    'Plata launched in Mexico with a familiar playbook: no branches, a credit card as the entry product and an app that does everything a branch would.',
+    'The team behind it had built the same model once before. They knew which parts of a digital bank matter on day one and which can wait for years.',
+    'The result is a company that grew faster in its first year than most local banks did in a decade, under a new name “Plata”.',
+  ],
+};
+
+ARTICLES.iphoneDuo = {
+  id: 'iphoneDuo',
+  author: gadgets,
+  cover: require('@/assets/mock/explore-iphone.png'),
+  title: 'Why iPhone Duo is The Best Foldable of the whole market',
+  likes: 987,
+  comments: 311,
+  shares: 58,
+  body: [
+    'Most foldables ask you to change how you use a phone. The Duo does not: folded, it is simply an iPhone.',
+    'Unfolded, the crease is barely visible and apps resize without a pause. It feels less like a gadget and more like a small tablet you always carry.',
+    'That is why it will be a tremendous success in terms of sales: it removes the compromise instead of selling it as a feature.',
+  ],
+};
+
+ARTICLES.stevePresentations = {
+  id: 'stevePresentations',
+  author: stevejobs01,
+  cover: require('@/assets/mock/explore-steve-presentations.png'),
+  title: 'How Steve Does such Great Presentations. Explaining through the analysis of his products release performances',
+  likes: 4210,
+  comments: 640,
+  shares: 377,
+  body: [
+    'Every keynote followed the same structure: one headline, three points, and a single moment the audience would repeat afterwards.',
+    'The slides were almost empty. A photo, a number, a few words. The story lived in what he said, not in what was on screen.',
+    'And he rehearsed for weeks. What looked effortless on stage was the most prepared hour of the year.',
+  ],
+};
+
+ARTICLES.steveIve = {
+  id: 'steveIve',
+  author: stevejobs01,
+  cover: require('@/assets/mock/explore-habits.png'),
+  title: 'All the 7 Extraordinary Habits Steve Practiced as a teenager and in his 20s',
+  likes: 3380,
+  comments: 512,
+  shares: 290,
+  body: [
+    'Long walks instead of meeting rooms. Saying no to almost everything. Reading design magazines the way others read the news.',
+    'Most of the habits look simple on paper. What made them extraordinary was that he kept them for decades.',
+    'And how this is connected with the products we use today is easier to see than you might think.',
+  ],
+};
+
+/** Figma 3163:1520 — Explore topics row ("+" sits after the selected topic). */
+export const EXPLORE_TOPICS = ['For You', 'Books', 'Science', 'Health', 'History', 'Philosophy'] as const;
+
+export type ExplorePost = {
+  id: string;
+  image: ImageSourcePropType;
+  title: string;
+  /** Leading words in bold, like "How Tinkov" in the design. */
+  lead: string;
+  rest: string;
+  timeAgo: string;
+  articleId: string;
+};
+
+export const EXPLORE_FEED: ExplorePost[] = [
+  {
+    id: 'e1',
+    image: require('@/assets/mock/explore-tinkov.png'),
+    title: 'How Tinkov Managed to Recreate his Tinkov Bank in Mexico',
+    lead: 'How Tinkov',
+    rest: ' managed to recreate his Tinkov Bank model in Mexico so successfully under a new name “Plata”',
+    timeAgo: '1 week ago',
+    articleId: 'tinkov',
+  },
+  {
+    id: 'e2',
+    image: require('@/assets/mock/explore-iphone.png'),
+    title: 'Why iPhone Duo is The Best Foldable of the whole market',
+    lead: 'Why iPhone',
+    rest: ' Duo is the best foldable of the whole market and why it will be a tremendous success in terms of sales',
+    timeAgo: '2 days ago',
+    articleId: 'iphoneDuo',
+  },
+  {
+    id: 'e3',
+    image: require('@/assets/mock/explore-steve-presentations.png'),
+    title: 'How Steve Does such Great Presentations. Explaining through the analysis',
+    lead: 'How Steve',
+    rest: ' does such great presentations. Explaining through the analysis of his products release performances',
+    timeAgo: '1 week ago',
+    articleId: 'stevePresentations',
+  },
+];
+
+/** Figma 3170:2017 — article results for "Steve Jobs". */
+export const SEARCH_ARTICLES: ExplorePost[] = [
+  EXPLORE_FEED[2],
+  {
+    id: 'r2',
+    image: require('@/assets/mock/explore-habits.png'),
+    title: 'All the 7 Extraordinary Habits Steve Practiced as a teenager',
+    lead: 'All the',
+    rest: ' 7 extraordinary habits Steve practiced as a teenager and in his 20s. And how this is connected with the products we use today',
+    timeAgo: '2 days ago',
+    articleId: 'steveIve',
+  },
+  ...EXPLORE_FEED.slice(0, 2),
+];
+
+/** Figma 3158:793 — query completions. */
+export const SEARCH_SUGGESTIONS = [
+  'Steve Jobs',
+  'Steve Jobs` genius',
+  'Steve Jobs` habits',
+  'Steve Jobs biography review',
+  'Steve Jobs speech Stanford',
+  'Steve Jobs and his diet',
+  'Steve Jobs and the iPhone',
+  'Tinkov bank',
+  'Tinkov Plata Mexico',
+  'iPhone Duo',
+  'iPhone Duo review',
+];
+
+/** Figma 3159:1041 — profile results. */
+export const SEARCH_PROFILES: Author[] = [
+  stevejobs01,
+  { username: 'oleg_tinkov', avatar: require('@/assets/mock/avatar-tinkov.png'), subtitle: 'Oleg Tinkov' },
+  { username: 'stevie_live', avatar: require('@/assets/mock/avatar-stevie-live.png'), subtitle: 'Unofficial store' },
+  { username: 'steven._', avatar: require('@/assets/mock/avatar-steven.png'), subtitle: 'bibibi' },
+  { username: 'steven_fans', avatar: require('@/assets/mock/avatar-steven-fans.png'), subtitle: 'Official fan acc' },
+  { username: 'jobs.quotes', avatar: require('@/assets/mock/avatar-jobs-quotes.png'), subtitle: 'In his words...' },
+  { username: 'jobsie_mini', avatar: require('@/assets/mock/avatar-jobsie-mini.png'), subtitle: 'apple fans' },
+  sam,
+  nori,
+];
+
+/** Figma 3167:1542 — someone else's profile. */
+export type ProfilePost = {
+  id: string;
+  image: ImageSourcePropType;
+  title: string;
+  likes: string;
+  timeAgo: string;
+  articleId?: string;
+};
+
+export type Profile = {
+  username: string;
+  name: string;
+  avatar: ImageSourcePropType | null;
+  articles: number;
+  followers: string;
+  following: number;
+  bio: string[];
+  posts: ProfilePost[];
+};
+
+const tinkovProfile: Profile = {
+  username: 'oleg_tinkov',
+  name: 'Oleg Tinkov',
+  avatar: require('@/assets/mock/avatar-tinkov.png'),
+  articles: 42,
+  followers: '1,5M',
+  following: 20,
+  bio: ['Owner at Plata - “Banco Plata”', 'Grandpa, father and husband 👨‍🦳', 'Love cycling 🚵, and cycling again. And money 💴 a bit.'],
+  posts: [
+    {
+      id: 't1',
+      image: require('@/assets/mock/thumb-plata.png'),
+      title: 'How Tinkov managed to recreate his Tinkov Bank model in Mexico so successfully under a new name “Plata”',
+      likes: '1.2K',
+      timeAgo: '5 days ago',
+      articleId: 'tinkov',
+    },
+    { id: 't2', image: require('@/assets/mock/thumb-bill.png'), title: 'Which 12 books Bill recommends to read. His most favourite ones!', likes: '20', timeAgo: '2 weeks ago' },
+    { id: 't3', image: require('@/assets/mock/thumb-yacht.png'), title: 'Why “La Datcha” luxury rents is my favourite work for the past 10 years.', likes: '200', timeAgo: '1 month ago' },
+    { id: 't4', image: require('@/assets/mock/thumb-nyc.png'), title: 'What 2 years of living in New York taught me about business', likes: '45', timeAgo: '2 months ago' },
+  ],
+};
+
+/** Profile by username; unknown users get an empty profile built from their search entry. */
+export function getProfile(username: string): Profile {
+  if (username === tinkovProfile.username) return tinkovProfile;
+  const author = SEARCH_PROFILES.find((a) => a.username === username);
+  return {
+    username,
+    name: author?.subtitle ?? username,
+    avatar: author?.avatar ?? null,
+    articles: 0,
+    followers: '0',
+    following: 0,
+    bio: [],
+    posts: [],
+  };
+}
+
+/** Figma 3184:1274 / 3185:1524 — Followers / Following rows (subtitle "robertus" as in the design). */
+export type Connection = { username: string; subtitle: string; avatar: ImageSourcePropType; following: boolean };
+
+export const CONNECTIONS: Connection[] = [
+  { username: 'jobsie_popsi', subtitle: 'robertus', avatar: require('@/assets/mock/f-jobsie-popsi.png'), following: false },
+  { username: 'kamida.pg', subtitle: 'robertus', avatar: require('@/assets/mock/f-kamida.png'), following: false },
+  { username: 'working_01', subtitle: 'robertus', avatar: require('@/assets/mock/f-working01.png'), following: false },
+  { username: 'maximus.', subtitle: 'robertus', avatar: require('@/assets/mock/f-maximus.png'), following: false },
+  { username: 'olegtinkov', subtitle: 'robertus', avatar: require('@/assets/mock/f-olegtinkov.png'), following: true },
+  { username: 'the_stranger', subtitle: 'robertus', avatar: require('@/assets/mock/f-stranger.png'), following: true },
+  { username: 'michoel10', subtitle: 'robertus', avatar: require('@/assets/mock/f-michoel.png'), following: true },
+  { username: 'michael_dimarrt', subtitle: 'robertus', avatar: require('@/assets/mock/f-dimarrt.png'), following: true },
 ];

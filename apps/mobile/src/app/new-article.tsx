@@ -12,6 +12,7 @@ import { useFeed } from '@/state/feed';
 import { useSession } from '@/state/session';
 import { colors, motion } from '@/theme';
 import { AnimatedText, Text, TextInput } from '@/components/text';
+import { back } from '@/lib/nav';
 
 // Figma 3128:459 (empty) and 3128:560 (typing). Design status bar = 47.
 const HEADER_H = 58; // hairline at y 105
@@ -50,7 +51,7 @@ export default function NewArticle() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <PressableScale onPress={() => router.back()} hitSlop={8} scaleTo={0.9} accessibilityLabel="Back" style={styles.back}>
+        <PressableScale onPress={() => back()} hitSlop={8} scaleTo={0.9} accessibilityLabel="Back" style={styles.back}>
           <Icon name="newArticleBack" width={43} />
         </PressableScale>
         <Text style={styles.title}>New article</Text>

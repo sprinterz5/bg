@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -10,6 +9,7 @@ import { USERNAME_PATTERN, checkUsernameAvailable, normalizeUsername } from '@/m
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
 import { Text } from '@/components/text';
+import { push } from '@/lib/nav';
 
 type Status = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
@@ -35,7 +35,7 @@ export default function UsernameStep() {
   const next = () => {
     if (status !== 'available') return;
     updateDraft({ username });
-    router.push('/password');
+    push('/password');
   };
 
   return (

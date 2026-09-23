@@ -1,6 +1,5 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
 import { memo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { type SharedValue, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
@@ -9,8 +8,10 @@ import type { Post } from '@/mock/data';
 import { colors, fonts } from '@/theme';
 import { AuthorRow } from './author-row';
 import { Icon, type IconName } from './icon';
+import { LikeButton } from './like-button';
 import { PressableScale } from './pressable-scale';
 import { Text } from '@/components/text';
+import { push } from '@/lib/nav';
 
 function formatCount(n: number) {
   return n >= 10000 ? `${(n / 1000).toFixed(n >= 100000 ? 0 : 1)}k` : String(n);
@@ -19,18 +20,12 @@ function formatCount(n: number) {
 export const PostCard = memo(function PostCard({ post }: { post: Post }) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
-  const likePop = useSharedValue(1);
   const savePop = useSharedValue(1);
 
-  const pop = (v: typeof likePop) => {
+  const pop = (v: typeof savePop) => {
     v.value = withSequence(withSpring(1.28, { damping: 8, stiffness: 400 }), withSpring(1, { damping: 10, stiffness: 300 }));
   };
 
-  const toggleLike = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setLiked((v) => !v);
-    pop(likePop);
-  };
   const toggleSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSaved((v) => !v);
@@ -38,7 +33,7 @@ export const PostCard = memo(function PostCard({ post }: { post: Post }) {
   };
 
   const saveStyle = useAnimatedStyle(() => ({ transform: [{ scale: savePop.value }] }));
-  const openArticle = () => router.push({ pathname: '/article/[id]', params: { id: post.articleId } });
+  const openArticle = () => push({ pathname: '/article/[id]', params: { id: post.articleId } });
 
   return (
     <View style={styles.card}>
@@ -55,7 +50,16 @@ export const PostCard = memo(function PostCard({ post }: { post: Post }) {
 
       <View style={styles.actions}>
         <View style={styles.actionsLeft}>
-          <Action icon={liked ? 'postLikeFilled' : 'postLike'} w={21} h={19} count={post.likes + (liked ? 1 : 0)} onPress={toggleLike} pop={likePop} label={liked ? 'Unlike' : 'Like'} />
+          <LikeButton
+            liked={liked}
+            onToggle={() => setLiked((v) => !v)}
+            count={post.likes + (liked ? 1 : 0)}
+            format={formatCount}
+            icons={{ off: 'postLike', on: 'postLikeFilled' }}
+            width={21}
+            height={19}
+            countStyle={styles.count}
+          />
           <Action icon="postComment" w={20} h={19} count={post.comments} onPress={openArticle} label="Comments" />
           <Action icon="postShare" w={16.5} h={15.5} count={post.shares} onPress={() => {}} label="Share" />
         </View>
