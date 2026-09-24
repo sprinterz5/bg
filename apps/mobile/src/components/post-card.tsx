@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   action: { flexDirection: 'row', alignItems: 'center', gap: 7, transform: [{ translateY: -0.3 }] },
   bookmark: { transform: [{ translateY: -1 }] },
   count: { fontSize: 12, fontWeight: '600', color: colors.text },
-  captionBlock: { paddingHorizontal: 12, gap: 7.6, marginTop: 10.2 },
+  captionBlock: { paddingHorizontal: 12, gap: 6.75, marginTop: 10.2 },
   caption: { fontSize: 13, lineHeight: 16, color: colors.text },
   captionUser: { fontWeight: '600' },
   time: { fontSize: 11.5, lineHeight: 16, color: colors.textSubtle },

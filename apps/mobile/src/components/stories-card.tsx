@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   captionBlock: { flex: 1, paddingLeft: 11, paddingRight: 10, paddingTop: 12 },
   caption: { fontSize: 13, lineHeight: 16, color: colors.text },
   more: { color: colors.textSubtle },
-  time: { marginTop: 14, fontSize: 12, lineHeight: 16, color: colors.textSubtle },
+  time: { marginTop: 13.9, fontSize: 12, lineHeight: 16, color: colors.textSubtle },
   pill: { width: 87, height: 37, marginTop: 7, marginRight: 7, borderRadius: 18.5, backgroundColor: '#FFFFFF' },
   // heart 26.8x23.8 at (13.1, 6.88), comment 24.75x24.05 at (50.1, 6.6) inside the pill
   like: { position: 'absolute', left: 13.1, top: 6.88 },

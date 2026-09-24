@@ -36,7 +36,7 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
 
 const styles = StyleSheet.create({
 // Section 7 Explore (x 2650): 227 media, chip 263x47 at 8.5 / 7.5 from the bottom, caption 7.5 under the media.
-  card: { paddingBottom: 23.8 },
+  card: { paddingBottom: 24.2 },
   media: { height: 227, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   titleChip: {
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   titleText: { fontFamily: fonts.display, fontSize: 17, lineHeight: 19, color: colors.text },
-  captionBlock: { paddingHorizontal: 15, marginTop: 7.5, gap: 4.2 },
+  captionBlock: { paddingHorizontal: 15, marginTop: 7.6, gap: 3.75 },
   caption: { fontSize: 13, lineHeight: 16, color: colors.text },
   lead: { fontWeight: '600' },
   time: { fontSize: 12, lineHeight: 16, color: colors.textSubtle },

@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   logo: { fontFamily: fonts.logo, fontSize: 39, lineHeight: 46, color: colors.text, letterSpacing: 0.4, transform: [{ translateX: -2.5 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
-  storiesGap: { marginBottom: 41.5 },
+  storiesGap: { marginBottom: 41.8 },
   postingGap: { marginBottom: 32 },
-  separator: { height: 37 },
+  separator: { height: 37.9 },
 });
