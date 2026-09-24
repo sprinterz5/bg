@@ -1,14 +1,27 @@
-import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 import type { SessionUser, SignupDraft } from '@/state/session';
 import { ApiError, api, clearTokens, getStoredRefreshToken, refreshSession, saveTokens } from './api';
 import { uploadImage } from './media';
 
-// OAuth client ids are public. The ID token's audience is the web client; the backend accepts all three.
-GoogleSignin.configure({
-  webClientId: '380177386353-ea8l9fgsp80j3lkg8gden0f2dchgci8s.apps.googleusercontent.com',
-  iosClientId: '380177386353-prjvke8s4u7dtftpsv8d9h2v2jcaj318.apps.googleusercontent.com',
-});
+/** Expo Go has no Google Sign-In native module: requiring it there crashes the app at startup. */
+export const googleSignInAvailable = Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
+
+type GoogleModule = typeof import('@react-native-google-signin/google-signin');
+let google: GoogleModule | null = null;
+
+function getGoogle(): GoogleModule {
+  if (!googleSignInAvailable) throw new Error('Google sign-in works only in the Bookgram dev build, not in Expo Go');
+  if (!google) {
+    google = require('@react-native-google-signin/google-signin') as GoogleModule;
+    // OAuth client ids are public. The ID token's audience is the web client; the backend accepts all three.
+    google.GoogleSignin.configure({
+      webClientId: '380177386353-ea8l9fgsp80j3lkg8gden0f2dchgci8s.apps.googleusercontent.com',
+      iosClientId: '380177386353-prjvke8s4u7dtftpsv8d9h2v2jcaj318.apps.googleusercontent.com',
+    });
+  }
+  return google;
+}
 
 // Same rule as the backend (usernameService): a–z, 0–9, _ and . — no dot at either end, no double dots.
 export const USERNAME_PATTERN = /^(?!\.)(?!.*\.\.)[a-z0-9_.]{3,30}(?<!\.)$/;
@@ -31,6 +44,7 @@ export type SocialResult = { kind: 'cancelled' } | { kind: 'signedIn'; user: Ses
 export async function socialSignIn(provider: 'google' | 'apple'): Promise<SocialResult> {
   if (provider === 'apple') throw new Error('Sign in with Apple is not set up yet');
 
+  const { GoogleSignin, isSuccessResponse } = getGoogle();
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const res = await GoogleSignin.signIn();
   if (!isSuccessResponse(res)) return { kind: 'cancelled' };
@@ -100,5 +114,5 @@ export async function logout() {
   const refreshToken = await getStoredRefreshToken();
   if (refreshToken) await api('/auth/logout', { body: { refreshToken } }).catch(() => {});
   await clearTokens();
-  await GoogleSignin.signOut().catch(() => {});
+  if (googleSignInAvailable) await getGoogle().GoogleSignin.signOut().catch(() => {});
 }
