@@ -21,7 +21,7 @@ export default function Chat() {
         {user?.username ?? ''}
       </Text>
       <PressableScale hitSlop={10} scaleTo={0.88} accessibilityLabel="New message" style={styles.compose}>
-        <Icon name="compose" width={26} />
+        <Icon name="compose" width={24.25} />
       </PressableScale>
     </View>
   );
@@ -37,8 +37,8 @@ export default function Chat() {
 }
 
 const styles = StyleSheet.create({
-  // title centred on design y 74.5, search field starts at y 109
+  // title centred 2.65px left of the screen centre, compose (24.25 with stroke) at x 351.9 / y 60.9; search field starts at y 109
   header: { height: 62, paddingBottom: 6, alignItems: 'center', justifyContent: 'center' },
-  title: { maxWidth: 240, fontSize: 21, lineHeight: 26, fontWeight: '700', color: colors.text },
-  compose: { position: 'absolute', right: 14, top: 12 },
+  title: { maxWidth: 240, fontSize: 21, lineHeight: 26, fontWeight: '700', color: colors.text, transform: [{ translateX: -2.65 }] },
+  compose: { position: 'absolute', right: 13.875, top: 13.875 },
 });

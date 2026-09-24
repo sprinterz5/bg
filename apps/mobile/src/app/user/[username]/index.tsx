@@ -23,11 +23,11 @@ export default function UserProfile() {
   const header = (
     <View>
       <ProfileSummary {...profile} />
-      <ProfileButtons spaced={profile.bio.length > 0}>
+      <ProfileButtons marginTop={profile.bio.length > 0 ? 17 : 28}>
         <ProfileButton label={following ? 'Following' : 'Follow'} primary={!following} onPress={() => setFollowing((v) => !v)} />
         <ProfileButton label="Message" />
       </ProfileButtons>
-      <ProfileTabs tab={tab} onChange={setTab} />
+      <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
     </View>
   );
 
@@ -65,5 +65,5 @@ const styles = StyleSheet.create({
   header: { height: PROFILE_HEADER_H, flexDirection: 'row', alignItems: 'center', paddingLeft: 24 },
   back: { width: 12, height: 20 },
   title: { marginLeft: 28, marginRight: 24, flex: 1, fontSize: 21, lineHeight: 26, fontWeight: '700', color: colors.text },
-  listHeader: { marginBottom: 17 },
+  listHeader: { marginBottom: 18 },
 });
