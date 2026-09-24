@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useState } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
@@ -36,7 +37,7 @@ export default function Home() {
   );
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <View style={styles.root}>
       <Animated.FlatList
         data={posts}
         keyExtractor={(p) => p.id}
@@ -44,12 +45,12 @@ export default function Home() {
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <PressableScale haptic onPress={() => push('/story/new')} hitSlop={8} accessibilityLabel="New story" style={styles.headerBtn}>
+              <PressableScale haptic onPress={() => push('/story/new')} hitSlop={8} accessibilityLabel="New story" style={styles.plus}>
                 <Icon name="plus" width={43} />
               </PressableScale>
               <Text style={styles.logo}>Bookgram</Text>
-              <PressableScale haptic onPress={() => push('/notifications')} hitSlop={8} accessibilityLabel="Notifications" style={styles.headerBtn}>
-                <Icon name="heartHeader" width={24.3} height={21.3} />
+              <PressableScale haptic onPress={() => push('/notifications')} hitSlop={8} accessibilityLabel="Notifications" style={styles.bell}>
+                <Icon name="headerBell" width={20} height={23} />
               </PressableScale>
             </View>
             <Animated.View entering={FadeInDown.duration(380)}>
@@ -60,9 +61,16 @@ export default function Home() {
         }
         ItemSeparatorComponent={Separator}
         ListHeaderComponentStyle={publishing ? styles.postingGap : styles.storiesGap}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} progressViewOffset={insets.top} />}
+      />
+      {/* Content scrolls under the status bar and fades out there (69px in the frame = status bar + 22). */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={['#FFFDFD', 'rgba(255,254,254,0.9)', 'rgba(255,255,255,0)']}
+        locations={[0, 0.5, 1]}
+        style={[styles.fade, { height: insets.top + 22 }]}
       />
     </View>
   );
@@ -72,18 +80,15 @@ const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    height: 52,
-    marginBottom: 27,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 6,
-  },
-  headerBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  logo: { fontFamily: fonts.logo, fontSize: 39, lineHeight: 46, color: colors.text, letterSpacing: 0.4 },
+  // Section 7 home: plus centred at (25.5, 75), logo centred 2.5px left of the screen centre,
+  // bell 20x23 centred at (361, 74.8); the first card's avatar is at y 126.4.
+  header: { height: 56, marginBottom: 23.4, alignItems: 'center', justifyContent: 'center' },
+  plus: { position: 'absolute', left: 3, top: 5.5 },
+  bell: { position: 'absolute', right: 19, top: 16.3 },
+  logo: { fontFamily: fonts.logo, fontSize: 39, lineHeight: 46, color: colors.text, letterSpacing: 0.4, transform: [{ translateX: -2.5 }] },
+  fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
-  storiesGap: { marginBottom: 48 },
+  storiesGap: { marginBottom: 41.5 },
   postingGap: { marginBottom: 32 },
-  separator: { height: 36 },
+  separator: { height: 37 },
 });

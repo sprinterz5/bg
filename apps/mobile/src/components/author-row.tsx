@@ -29,7 +29,7 @@ export function AuthorRow({ author, showMenu = false, onMenu }: Props) {
         <View>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{author.username}</Text>
-            {author.verified ? <Icon name="verified" width={15} /> : null}
+            {author.verified ? <Icon name="verified" width={17} /> : null}
           </View>
           <Text style={styles.subtitle}>{author.subtitle}</Text>
         </View>
@@ -46,7 +46,8 @@ export function AuthorRow({ author, showMenu = false, onMenu }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 },
+  // Avatar 32 at x 10, name at x 50.6 (section 7).
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10 },
   left: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   name: { fontSize: 13, fontWeight: '700', color: colors.text },

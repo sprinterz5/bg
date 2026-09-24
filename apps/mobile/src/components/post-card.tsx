@@ -37,7 +37,7 @@ export const PostCard = memo(function PostCard({ post }: { post: Post }) {
 
   return (
     <View style={styles.card}>
-      <AuthorRow author={post.author} showMenu />
+      <AuthorRow author={post.author} />
 
       <PressableScale scaleTo={0.985} onPress={openArticle} accessibilityRole="button" accessibilityLabel={post.title} style={styles.media}>
         <Image source={post.image} style={styles.image} contentFit="cover" transition={200} />
@@ -58,12 +58,13 @@ export const PostCard = memo(function PostCard({ post }: { post: Post }) {
             icons={{ off: 'postLike', on: 'postLikeFilled' }}
             width={21}
             height={19}
+            gap={5}
+            style={styles.like}
             countStyle={styles.count}
           />
-          <Action icon="postComment" w={20} h={19} count={post.comments} onPress={openArticle} label="Comments" />
           <Action icon="postShare" w={16.5} h={15.5} count={post.shares} onPress={() => {}} label="Share" />
         </View>
-        <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'}>
+        <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
           <Animated.View style={saveStyle}>
             <Icon name="postBookmark" width={17.75} height={19.75} tintColor={saved ? colors.primary : undefined} />
           </Animated.View>
@@ -105,18 +106,21 @@ function Action({ icon, w, h, count, onPress, label, tint, pop }: ActionProps) {
 }
 
 const styles = StyleSheet.create({
-  card: { gap: 8 },
-  media: { height: 236, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
+// Section 7 (x 534). From the avatar top: media 227 tall at +42.9; action row centred 19.7 below the media;
+// caption 10.2 under the row, time 7.6 under the caption. Comment count and the ⋯ menu are gone.
+  card: {},
+  media: { height: 227, marginTop: 10.9, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   titleChip: {
     position: 'absolute',
-    left: 9,
-    bottom: 13,
-    maxWidth: 262,
+    left: 7.5,
+    bottom: 5.8,
+    width: 263,
+    height: 47,
+    justifyContent: 'center',
     paddingHorizontal: 7,
-    paddingVertical: 5,
-    borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.86)',
+    borderRadius: 13.5,
+    backgroundColor: 'rgba(255,255,255,0.8)',
     borderWidth: 1,
     borderColor: '#FFFFFF',
   },
@@ -125,14 +129,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingLeft: 12,
-    paddingRight: 16,
-    marginTop: 2,
+    height: 22,
+    paddingLeft: 11,
+    paddingRight: 15.6,
+    marginTop: 8.7,
   },
-  actionsLeft: { flexDirection: 'row', alignItems: 'center', gap: 20 },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  actionsLeft: { flexDirection: 'row', alignItems: 'center' },
+  // share icon starts at x 100.44 whatever the like count is
+  like: { width: 89.44 },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 7, transform: [{ translateY: -0.3 }] },
+  bookmark: { transform: [{ translateY: -1 }] },
   count: { fontSize: 12, fontWeight: '600', color: colors.text },
-  captionBlock: { paddingHorizontal: 12, gap: 6, marginTop: 4 },
+  captionBlock: { paddingHorizontal: 12, gap: 7.6, marginTop: 10.2 },
   caption: { fontSize: 13, lineHeight: 16, color: colors.text },
   captionUser: { fontWeight: '600' },
   time: { fontSize: 11.5, lineHeight: 16, color: colors.textSubtle },

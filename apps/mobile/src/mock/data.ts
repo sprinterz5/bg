@@ -34,7 +34,7 @@ export type Story = {
   id: string;
   author: Author;
   image: ImageSourcePropType;
-  caption: { bold: string; rest: string };
+  caption: string;
   timeAgo: string;
 };
 
@@ -62,12 +62,12 @@ export type Article = {
   shares: number;
 };
 
-const bookgram: Author = { username: 'bookgram', avatar: require('@/assets/icons/bookgram-avatar-bg.svg'), subtitle: 'Bookgram', verified: true };
-const sam: Author = { username: 'sam_altman', avatar: require('@/assets/mock/avatar-sam.png'), subtitle: 'Suggested' };
-const nori: Author = { username: 'j_nori_k', avatar: require('@/assets/mock/avatar-nori.png'), subtitle: 'Suggested' };
+const bookgram: Author = { username: 'bookgram', avatar: require('@/assets/mock/avatar-bookgram.jpg'), subtitle: 'Bookgram', verified: true };
+const sam: Author = { username: 'sam_altman', avatar: require('@/assets/mock/avatar-sam.png'), subtitle: 'Recommended' };
+const nori: Author = { username: 'j_nori_k', avatar: require('@/assets/mock/avatar-nori.png'), subtitle: 'Recommended' };
 
-const mx: Author = { username: 'fintech_notes', avatar: require('@/assets/mock/avatar-fintech.png'), subtitle: 'Suggested' };
-const gadgets: Author = { username: 'gadget.daily', avatar: require('@/assets/mock/avatar-gadget.png'), subtitle: 'Suggested' };
+const mx: Author = { username: 'fintech_notes', avatar: require('@/assets/mock/avatar-fintech.png'), subtitle: 'Recommended' };
+const gadgets: Author = { username: 'gadget.daily', avatar: require('@/assets/mock/avatar-gadget.png'), subtitle: 'Recommended' };
 const stevejobs01: Author = { username: 'stevejobs.01', avatar: require('@/assets/mock/avatar-stevejobs01.png'), subtitle: 'His fans' };
 
 export const BOOKGRAM_AUTHOR = bookgram;
@@ -75,8 +75,8 @@ export const BOOKGRAM_AUTHOR = bookgram;
 export const WELCOME_STORY: Story = {
   id: 'welcome',
   author: bookgram,
-  image: require('@/assets/mock/story-hello.jpg'),
-  caption: { bold: 'Follow', rest: ' people to see their everyday stories.' },
+  image: require('@/assets/mock/story-jobs.jpg'),
+  caption: 'On this day of honoring Steve Jobs` legacy as a relentless innovator, pursuer of perfection and the person who made computers personal.',
   timeAgo: '4 hours ago',
 };
 
@@ -85,14 +85,14 @@ export const FOLLOWING_STORIES: Story[] = [
     id: 's1',
     author: sam,
     image: require('@/assets/mock/post-spiderman.jpg'),
-    caption: { bold: 'sam_altman', rest: ' Morning pages before the first meeting.' },
+    caption: 'Morning pages before the first meeting.',
     timeAgo: '2 hours ago',
   },
   {
     id: 's2',
     author: nori,
     image: require('@/assets/mock/post-timcook.jpg'),
-    caption: { bold: 'j_nori_k', rest: ' Rewatching this interview for the third time.' },
+    caption: 'Rewatching this interview for the third time.',
     timeAgo: '6 hours ago',
   },
 ];
