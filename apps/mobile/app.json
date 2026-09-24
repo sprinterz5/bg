@@ -21,15 +21,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "app.bookgram.android",
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-        "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_MEDIA_VIDEO",
-        "android.permission.READ_MEDIA_AUDIO"
-      ]
+      "permissions": []
     },
     "web": {
       "output": "static",
@@ -48,20 +40,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Bookgram needs access to your photos to set a profile picture."
-        }
-      ],
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "Bookgram needs access to your photos to choose article covers.",
-          "savePhotosPermission": false,
-          "isAccessMediaLocationEnabled": false
+          "photosPermission": "Bookgram needs access to your photos to set a profile picture and article covers."
         }
       ],
       [
         "@react-native-google-signin/google-signin",
-        { "iosUrlScheme": "com.googleusercontent.apps.380177386353-prjvke8s4u7dtftpsv8d9h2v2jcaj318" }
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.380177386353-prjvke8s4u7dtftpsv8d9h2v2jcaj318"
+        }
       ],
       "expo-secure-store"
     ],
