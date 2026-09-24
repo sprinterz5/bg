@@ -108,6 +108,10 @@ function Reader({ article }: { article: Article }) {
   const titleStyle = useAnimatedStyle(() => ({
     opacity: interpolate(scrollX.value, [0, W * 0.45], [1, 0], Extrapolation.CLAMP),
   }));
+  // Section 7: on page 2+ the close button sits 9.5px higher (design y 38.5 instead of 48).
+  const closeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(scrollX.value, [0, W], [0, -9.5], Extrapolation.CLAMP) }],
+  }));
 
   const toggleFollow = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -179,9 +183,11 @@ function Reader({ article }: { article: Article }) {
         </Glass>
       </Animated.View>
 
-      <PressableScale onPress={() => back()} hitSlop={10} scaleTo={0.9} accessibilityLabel="Close" style={[styles.close, { top: top + 2 }]}>
-        <Icon name="readerClose" width={33} />
-      </PressableScale>
+      <Animated.View style={[styles.close, { top: top + 1 }, closeStyle]}>
+        <PressableScale onPress={() => back()} hitSlop={10} scaleTo={0.9} accessibilityLabel="Close">
+          <Icon name="readerClose" width={33} />
+        </PressableScale>
+      </Animated.View>
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments)} />

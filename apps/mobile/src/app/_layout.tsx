@@ -61,7 +61,6 @@ export default function RootLayout() {
             <Stack.Screen name="article/[id]" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
             <Stack.Screen name="story/new" options={{ presentation: 'modal' }} />
             <Stack.Screen name="notifications" />
-            <Stack.Screen name="cover-picker" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: '#000000' } }} />
             <Stack.Screen name="new-article" />
           </Stack>
         </FeedProvider>
