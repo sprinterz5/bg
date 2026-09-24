@@ -18,6 +18,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { FeedProvider } from '@/state/feed';
 import { SessionProvider } from '@/state/session';
+import { DesignOverlay } from '@/components/design-overlay';
 import { colors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -48,6 +49,7 @@ export default function RootLayout() {
         <SessionProvider>
         <FeedProvider>
           <StatusBar style="dark" />
+          <DesignOverlay>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -63,6 +65,7 @@ export default function RootLayout() {
             <Stack.Screen name="notifications" />
             <Stack.Screen name="new-article" />
           </Stack>
+          </DesignOverlay>
         </FeedProvider>
         </SessionProvider>
       </SafeAreaProvider>
