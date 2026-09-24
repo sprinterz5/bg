@@ -19,8 +19,8 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.bg },
       }}>
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="create" />
       <Tabs.Screen name="chat" />
+      <Tabs.Screen name="create" />
       <Tabs.Screen name="search" />
       <Tabs.Screen name="profile" />
     </Tabs>

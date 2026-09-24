@@ -1,6 +1,6 @@
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,27 +8,58 @@ import { colors, motion } from '@/theme';
 import { Icon, type IconName } from './icon';
 import { PressableScale } from './pressable-scale';
 
-type TabIcon = { icon: IconName; w: number; h: number; dx?: number };
+// Figma (section 7, Explore frame): icons sit in a 340px row that starts 22.88 from the left, so they
+// are NOT on equal columns. cx / cy are each glyph's centre: x from the screen's left edge (design width
+// 390, scaled on other widths), y from the hairline on top of the bar.
+type Glyph = { icon: IconName; w: number; h: number; cx: number; cy: number };
 
-// Figma: the selected tab uses the filled / heavier variant. Chat has only one variant in the design.
-// Profile icons are exported inside differently sized frames, so dx lines their glyphs up.
-const TAB_ICONS: Record<string, { label: string; off: TabIcon; on: TabIcon }> = {
-  index: { label: 'Home', off: { icon: 'tabHomeInactive', w: 20.6, h: 20.6 }, on: { icon: 'tabHome', w: 20.6, h: 20.6 } },
-  create: { label: 'New article', off: { icon: 'tabPlus', w: 20.9, h: 20.9 }, on: { icon: 'tabPlusActive', w: 22, h: 22 } },
-  chat: { label: 'Chats', off: { icon: 'tabChat', w: 22.4, h: 21.7 }, on: { icon: 'tabChat', w: 22.4, h: 21.7 } },
-  search: { label: 'Search', off: { icon: 'tabSearch', w: 22.3, h: 21.3 }, on: { icon: 'tabSearchActive', w: 23.15, h: 22.15 } },
-  profile: { label: 'Profile', off: { icon: 'tabProfile', w: 55, h: 30.75 }, on: { icon: 'tabProfileActive', w: 29, h: 29, dx: 10.5 } },
+const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
+  index: {
+    label: 'Home',
+    off: { icon: 'tabHomeInactive', w: 22.99, h: 22, cx: 33.5, cy: 24.75 },
+    on: { icon: 'tabHome', w: 23, h: 22, cx: 34.5, cy: 24.75 },
+  },
+  // The messages icon has a single variant in the design.
+  chat: {
+    label: 'Messages',
+    off: { icon: 'tabMessages', w: 23.42, h: 22.64, cx: 112.03, cy: 25.9 },
+    on: { icon: 'tabMessages', w: 23.42, h: 22.64, cx: 112.03, cy: 25.9 },
+  },
+  create: {
+    label: 'New article',
+    off: { icon: 'tabCreate', w: 25.5, h: 25.5, cx: 192.63, cy: 26.25 },
+    on: { icon: 'tabCreateActive', w: 26.5, h: 26.5, cx: 193.13, cy: 26.25 },
+  },
+  search: {
+    label: 'Search',
+    off: { icon: 'tabSearch', w: 23, h: 23, cx: 272.13, cy: 25.63 },
+    on: { icon: 'tabSearchActive', w: 24, h: 24, cx: 272.13, cy: 25.63 },
+  },
+  // No new selected profile icon yet: the old filled one, its glyph centred where the outline one is.
+  profile: {
+    label: 'Profile',
+    off: { icon: 'tabProfile', w: 26, h: 24.88, cx: 350.88, cy: 25.32 },
+    on: { icon: 'tabProfileActive', w: 29, h: 29, cx: 351.88, cy: 25.67 },
+  },
 };
+
+const BAR_H = 47; // hairline → where the home indicator area starts (81 - 34 in the frame)
+const TAB_W = 64;
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const k = width / 390;
+  // iPhone: the 34px home indicator inset. Android 3-button nav reports 0–48; keep a small gap either way.
+  const bottom = Platform.OS === 'ios' ? insets.bottom : Math.max(insets.bottom, 12);
 
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+    <View style={[styles.bar, { height: BAR_H + bottom }]}>
       {state.routes.map((route, index) => {
-        const meta = TAB_ICONS[route.name];
+        const meta = TABS[route.name];
         if (!meta) return null;
         const focused = state.index === index;
+        const cx = meta.off.cx * k;
 
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -44,8 +75,8 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
             accessibilityRole="tab"
             accessibilityState={{ selected: focused }}
             accessibilityLabel={meta.label}
-            style={styles.tab}>
-            <TabGlyph meta={meta} focused={focused} />
+            style={[styles.tab, { left: cx - TAB_W / 2 }]}>
+            <TabGlyph meta={meta} focused={focused} k={k} />
           </PressableScale>
         );
       })}
@@ -53,7 +84,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   );
 }
 
-function TabGlyph({ meta, focused }: { meta: (typeof TAB_ICONS)[string]; focused: boolean }) {
+function TabGlyph({ meta, focused, k }: { meta: (typeof TABS)[string]; focused: boolean; k: number }) {
   const on = useSharedValue(focused ? 1 : 0);
   useEffect(() => {
     on.value = withTiming(focused ? 1 : 0, { duration: motion.fast });
@@ -61,27 +92,27 @@ function TabGlyph({ meta, focused }: { meta: (typeof TAB_ICONS)[string]; focused
   const onStyle = useAnimatedStyle(() => ({ opacity: on.value }));
   const offStyle = useAnimatedStyle(() => ({ opacity: 1 - on.value }));
 
+  // Glyph position inside the tab: the tab is centred on the "off" glyph's x.
+  const place = (g: Glyph) => ({ left: TAB_W / 2 + (g.cx - meta.off.cx) * k - g.w / 2, top: g.cy - g.h / 2 });
+
   return (
-    <View style={styles.glyph}>
-      <Animated.View style={[styles.layer, offStyle]}>
-        <Icon name={meta.off.icon} width={meta.off.w} height={meta.off.h} style={meta.off.dx ? { transform: [{ translateX: meta.off.dx }] } : undefined} />
+    <>
+      <Animated.View style={[styles.layer, place(meta.off), offStyle]}>
+        <Icon name={meta.off.icon} width={meta.off.w} height={meta.off.h} />
       </Animated.View>
-      <Animated.View style={[styles.layer, onStyle]}>
-        <Icon name={meta.on.icon} width={meta.on.w} height={meta.on.h} style={meta.on.dx ? { transform: [{ translateX: meta.on.dx }] } : undefined} />
+      <Animated.View style={[styles.layer, place(meta.on), onStyle]}>
+        <Icon name={meta.on.icon} width={meta.on.w} height={meta.on.h} />
       </Animated.View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  glyph: { width: 56, height: 32 },
-  layer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
   bar: {
-    flexDirection: 'row',
     backgroundColor: colors.bg,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.hairline,
-    paddingTop: 10,
+    borderTopWidth: 0.35,
+    borderTopColor: '#E5E5E5',
   },
-  tab: { flex: 1, height: 34, alignItems: 'center', justifyContent: 'center' },
+  tab: { position: 'absolute', top: 0, width: TAB_W, height: BAR_H },
+  layer: { position: 'absolute' },
 });
