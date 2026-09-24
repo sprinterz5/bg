@@ -6,7 +6,7 @@ import { BigInput } from '@/components/big-input';
 import { FieldMessage } from '@/components/field-message';
 import { PrimaryButton } from '@/components/primary-button';
 import { StepScreen } from '@/components/step-screen';
-import { loginWithUsername, normalizeUsername } from '@/mock/api';
+import { loginWithUsername, normalizeUsername } from '@/lib/auth';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
 import { Text, TextInput } from '@/components/text';
@@ -24,7 +24,7 @@ export default function Login() {
     if (!valid || loading) return;
     setLoading(true);
     setError(false);
-    const user = await loginWithUsername(username, password);
+    const user = await loginWithUsername(username, password).catch(() => null);
     setLoading(false);
     if (!user) return setError(true);
     signIn(user);

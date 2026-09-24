@@ -6,7 +6,8 @@ import { useSession } from '@/state/session';
 import { colors } from '@/theme';
 
 export default function TabsLayout() {
-  const { user } = useSession();
+  const { user, ready } = useSession();
+  if (!ready) return null; // checking the stored session
   if (!user) return <Redirect href="/welcome" />;
 
   return (

@@ -58,7 +58,12 @@
           "savePhotosPermission": false,
           "isAccessMediaLocationEnabled": false
         }
-      ]
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        { "iosUrlScheme": "com.googleusercontent.apps.380177386353-prjvke8s4u7dtftpsv8d9h2v2jcaj318" }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

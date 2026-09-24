@@ -14,5 +14,6 @@ export const privateUserSelect = {
   email: true,
   emailVerified: true,
   appleUserId: true,
+  googleUserId: true,
   lastSeenAt: true
 } as const;

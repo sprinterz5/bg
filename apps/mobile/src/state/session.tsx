@@ -1,4 +1,6 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+import { logout, restoreSession } from '@/lib/auth';
 
 export type SessionUser = {
   id: string;
@@ -10,6 +12,8 @@ export type SessionUser = {
 
 export type SignupDraft = {
   provider: 'google' | 'apple' | null;
+  /** Provider ID token from the first step; sent again with the signup fields. */
+  identityToken: string | null;
   name: string;
   username: string;
   password: string;
@@ -19,6 +23,7 @@ export type SignupDraft = {
 
 const emptyDraft: SignupDraft = {
   provider: null,
+  identityToken: null,
   name: '',
   username: '',
   password: '',
@@ -28,6 +33,8 @@ const emptyDraft: SignupDraft = {
 
 type SessionContextValue = {
   user: SessionUser | null;
+  /** False until the stored session has been checked on app start. */
+  ready: boolean;
   draft: SignupDraft;
   updateDraft: (patch: Partial<SignupDraft>) => void;
   resetDraft: (patch?: Partial<SignupDraft>) => void;
@@ -39,16 +46,27 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    restoreSession()
+      .then((u) => u && setUser(u))
+      .catch(() => {})
+      .finally(() => setReady(true));
+  }, []);
   const [draft, setDraft] = useState<SignupDraft>(emptyDraft);
 
   const updateDraft = useCallback((patch: Partial<SignupDraft>) => setDraft((d) => ({ ...d, ...patch })), []);
   const resetDraft = useCallback((patch?: Partial<SignupDraft>) => setDraft({ ...emptyDraft, ...patch }), []);
   const signIn = useCallback((u: SessionUser) => setUser(u), []);
-  const signOut = useCallback(() => setUser(null), []);
+  const signOut = useCallback(() => {
+    setUser(null);
+    logout();
+  }, []);
 
   const value = useMemo(
-    () => ({ user, draft, updateDraft, resetDraft, signIn, signOut }),
-    [user, draft, updateDraft, resetDraft, signIn, signOut],
+    () => ({ user, ready, draft, updateDraft, resetDraft, signIn, signOut }),
+    [user, ready, draft, updateDraft, resetDraft, signIn, signOut],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

@@ -13,6 +13,8 @@ const envSchema = z.object({
   ACCESS_TOKEN_TTL: z.string().default("15m"),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
   APPLE_CLIENT_ID: z.string().optional().default(""),
+  // Comma-separated OAuth client ids whose Google ID tokens we accept (web, iOS, Android).
+  GOOGLE_CLIENT_IDS: z.string().optional().default(""),
   GOOGLE_BOOKS_API_KEY: z.string().optional().default(""),
   OPEN_LIBRARY_BASE_URL: z.string().url().default("https://openlibrary.org"),
   EMAIL_PROVIDER: z.enum(["LOG", "RESEND"]).default("LOG"),

@@ -6,7 +6,8 @@ import { publicUserSelect } from "../utils/users.js";
 const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(80).optional(),
   bio: z.string().max(1000).optional(),
-  avatarUrl: z.string().url().optional(),
+  // An AVATAR asset the user uploaded via POST /media; null removes the avatar. Arbitrary URLs are not accepted.
+  avatarMediaId: z.string().uuid().nullable().optional(),
   interests: z.array(z.string().min(1).max(40)).max(20).optional()
 });
 
@@ -48,11 +49,24 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
     return user;
   });
 
-  app.patch("/users/me", { preHandler: [app.authenticate] }, async (request) => {
-    const body = updateProfileSchema.parse(request.body);
+  app.patch("/users/me", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { avatarMediaId, ...body } = updateProfileSchema.parse(request.body);
+    let avatarUrl: string | null | undefined;
+    if (avatarMediaId === null) {
+      avatarUrl = null;
+    } else if (avatarMediaId) {
+      const asset = await app.prisma.mediaAsset.findFirst({
+        where: { id: avatarMediaId, ownerId: request.user.sub, kind: "AVATAR", moderationStatus: { not: "REJECTED" } },
+        select: { url: true }
+      });
+      if (!asset) {
+        throw reply.badRequest("Unknown avatar media");
+      }
+      avatarUrl = asset.url;
+    }
     return app.prisma.user.update({
       where: { id: request.user.sub },
-      data: body,
+      data: { ...body, ...(avatarUrl !== undefined ? { avatarUrl } : {}) },
       select: publicUserSelect
     });
   });

@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { completeSignup } from '@/mock/api';
+import { completeSignup } from '@/lib/auth';
 import { useSession } from '@/state/session';
 import { colors, fonts } from '@/theme';
 import { AnimatedText } from '@/components/text';
@@ -19,12 +19,7 @@ export default function Ready() {
 
     let cancelled = false;
     const started = Date.now();
-    completeSignup({
-      name: draft.name,
-      username: draft.username,
-      avatarUri: draft.avatarUri,
-      interests: draft.interests,
-    }).then((user) => {
+    completeSignup(draft).then((user) => {
       const remaining = Math.max(0, MIN_SPLASH_MS - (Date.now() - started));
       setTimeout(() => {
         if (cancelled) return;
@@ -32,6 +27,12 @@ export default function Ready() {
         resetDraft();
         router.replace('/(tabs)');
       }, remaining);
+    }, (e) => {
+      if (cancelled) return;
+      // Username taken meanwhile, provider token expired or no network: start over from the provider sheet.
+      Alert.alert('Could not create the account', e instanceof Error ? e.message : 'Try again.');
+      resetDraft();
+      router.replace('/welcome');
     });
     return () => {
       cancelled = true;

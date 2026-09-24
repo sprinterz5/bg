@@ -14,6 +14,11 @@ import { privateUserSelect } from "../utils/users.js";
 
 const refreshSecret = new TextEncoder().encode(env.JWT_REFRESH_SECRET);
 const appleJwks = createRemoteJWKSet(new URL("https://appleid.apple.com/auth/keys"));
+const googleJwks = createRemoteJWKSet(new URL("https://www.googleapis.com/oauth2/v3/certs"));
+const googleClientIds = env.GOOGLE_CLIENT_IDS.split(",").map((id) => id.trim()).filter(Boolean);
+
+// Letters, digits, _ and . (case-insensitive); a dot cannot start or end the name or repeat.
+const USERNAME_FORMAT = /^(?!\.)(?!.*\.\.)[a-zA-Z0-9_.]+(?<!\.)$/;
 
 const registerSchema = z.object({
   email: z.string().email().transform((value) => value.toLowerCase()),
@@ -21,7 +26,7 @@ const registerSchema = z.object({
     .string()
     .min(3)
     .max(32)
-    .regex(/^[a-zA-Z0-9_]+$/)
+    .regex(USERNAME_FORMAT)
     .transform(normalizeUsername),
   displayName: z.string().min(1).max(80).optional(),
   password: z.string().min(8).max(200),
@@ -58,18 +63,30 @@ const usernameAvailabilitySchema = z.object({
   username: z.string().min(1).max(80)
 });
 
-const appleSchema = z.object({
+// Sign-in with Apple / Google. Accounts are only created through these providers: the first call
+// (token only) tells the app whether the account exists; for a new one the app collects name,
+// username, password and interests, then calls again with the same token plus those fields.
+const socialSchema = z.object({
   identityToken: z.string().min(1),
   username: z
     .string()
     .min(3)
     .max(32)
-    .regex(/^[a-zA-Z0-9_]+$/)
+    .regex(USERNAME_FORMAT)
     .transform(normalizeUsername)
     .optional(),
   displayName: z.string().min(1).max(80).optional(),
+  // Optional: lets the user also log in by username. The signup screen asks for at least 6 characters.
+  password: z.string().min(6).max(200).optional(),
   interests: z.array(z.string().min(1).max(40)).max(20).default([])
 });
+
+type SocialIdentity = {
+  provider: "apple" | "google";
+  subject: string;
+  email?: string;
+  emailVerified: boolean;
+};
 
 async function signRefreshToken(user: { id: string; username: string; role: string }) {
   return new SignJWT({
@@ -246,78 +263,127 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { user: safeUser, ...tokens };
   });
 
-  app.post("/auth/apple", async (request, reply) => {
+  async function socialSignIn(identity: SocialIdentity, body: z.infer<typeof socialSchema>, request: any, reply: any) {
+    const providerField = identity.provider === "apple" ? "appleUserId" : "googleUserId";
+    // Only use the email as a secondary lookup key when the provider has verified it.
+    // An unverified-email assertion must not be allowed to take over a pre-existing account.
+    const verifiedEmail = identity.emailVerified ? identity.email : undefined;
+
+    let user = await app.prisma.user.findFirst({
+      where: {
+        OR: [
+          { [providerField]: identity.subject },
+          ...(verifiedEmail ? [{ email: verifiedEmail }] : [])
+        ]
+      },
+      select: privateUserSelect
+    });
+
+    if (user) {
+      if (!user[providerField]) {
+        user = await app.prisma.user.update({
+          where: { id: user.id },
+          data: { [providerField]: identity.subject },
+          select: privateUserSelect
+        });
+      }
+      const tokens = await issueTokens(app, user, request);
+      return { signupRequired: false, user, ...tokens };
+    }
+
+    if (!body.username) {
+      // New person: the app runs the signup steps and calls again with the same token.
+      return { signupRequired: true, email: identity.email ?? null };
+    }
+
+    const usernameValidationReason = validateUsername(body.username);
+    if (usernameValidationReason) {
+      const availability = await checkUsernameAvailability(app.prisma, body.username);
+      return reply.status(409).send({ error: "username_unavailable", ...availability });
+    }
+
+    const passwordHash = body.password ? await argon2.hash(body.password) : undefined;
+    user = await app.prisma.user.create({
+      data: {
+        email: identity.email ?? `${identity.subject}@${identity.provider}.local`,
+        username: body.username,
+        displayName: body.displayName,
+        passwordHash,
+        [providerField]: identity.subject,
+        emailVerified: identity.emailVerified,
+        interests: body.interests
+      },
+      select: privateUserSelect
+    }).catch((error) => {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        throw reply.conflict("Email or username is already taken");
+      }
+      throw error;
+    });
+
+    const tokens = await issueTokens(app, user, request);
+    return { signupRequired: false, user, ...tokens };
+  }
+
+  app.post("/auth/apple", { preHandler: [authWriteLimit] }, async (request, reply) => {
     if (!env.APPLE_CLIENT_ID) {
       throw reply.internalServerError("APPLE_CLIENT_ID is not configured");
     }
 
-    const body = appleSchema.parse(request.body);
+    const body = socialSchema.parse(request.body);
     const { payload } = await jwtVerify(body.identityToken, appleJwks, {
       issuer: "https://appleid.apple.com",
       audience: env.APPLE_CLIENT_ID
+    }).catch(() => {
+      throw reply.unauthorized("Invalid Apple identity token");
     });
 
     if (!payload.sub) {
       throw reply.unauthorized("Invalid Apple identity token");
     }
 
-    const rawEmail = typeof payload.email === "string" ? payload.email.toLowerCase() : undefined;
-    // Only use the email as a secondary lookup key when Apple has verified it.
-    // An unverified-email Apple assertion must not be allowed to take over a
-    // pre-existing password account.
-    const emailVerifiedByApple = payload.email_verified === true;
-    const email = emailVerifiedByApple ? rawEmail : undefined;
-    const appleUserId = payload.sub;
-
-    let user = await app.prisma.user.findFirst({
-      where: {
-        OR: [
-          { appleUserId },
-          ...(email ? [{ email }] : [])
-        ]
+    // Apple sends the email only on the first authorization (possibly a private relay address).
+    return socialSignIn(
+      {
+        provider: "apple",
+        subject: payload.sub,
+        email: typeof payload.email === "string" ? payload.email.toLowerCase() : undefined,
+        emailVerified: payload.email_verified === true || payload.email_verified === "true"
       },
-      select: privateUserSelect
-    });
+      body,
+      request,
+      reply
+    );
+  });
 
-    if (!user) {
-      const generatedUsername = `reader_${appleUserId.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10)}`;
-      const username = body.username ?? generatedUsername;
-      const usernameValidationReason = validateUsername(username);
-      if (usernameValidationReason) {
-        throw reply.conflict("Username is not available");
-      }
-
-      const usernameTaken = await app.prisma.user.findUnique({ where: { username } });
-      if (usernameTaken) {
-        throw reply.conflict("Username is already taken");
-      }
-
-      user = await app.prisma.user.create({
-        data: {
-          email: rawEmail ?? `${appleUserId}@apple.local`,
-          username,
-          displayName: body.displayName,
-          appleUserId,
-          emailVerified: payload.email_verified === true,
-          interests: body.interests
-        },
-        select: privateUserSelect
-      }).catch((error) => {
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-          throw reply.conflict("Email or username is already taken");
-        }
-        throw error;
-      });
-    } else if (!user.appleUserId) {
-      user = await app.prisma.user.update({
-        where: { id: user.id },
-        data: { appleUserId },
-        select: privateUserSelect
-      });
+  app.post("/auth/google", { preHandler: [authWriteLimit] }, async (request, reply) => {
+    if (!googleClientIds.length) {
+      throw reply.internalServerError("GOOGLE_CLIENT_IDS is not configured");
     }
 
-    const tokens = await issueTokens(app, user, request);
-    return { user, ...tokens };
+    const body = socialSchema.parse(request.body);
+    const { payload } = await jwtVerify(body.identityToken, googleJwks, {
+      issuer: ["https://accounts.google.com", "accounts.google.com"],
+      audience: googleClientIds
+    }).catch(() => {
+      throw reply.unauthorized("Invalid Google ID token");
+    });
+
+    if (!payload.sub) {
+      throw reply.unauthorized("Invalid Google ID token");
+    }
+
+    return socialSignIn(
+      {
+        provider: "google",
+        subject: payload.sub,
+        email: typeof payload.email === "string" ? payload.email.toLowerCase() : undefined,
+        emailVerified: payload.email_verified === true || payload.email_verified === "true"
+      },
+      body,
+      request,
+      reply
+    );
   });
 
   app.get("/auth/me", { preHandler: [app.authenticate] }, async (request) => {

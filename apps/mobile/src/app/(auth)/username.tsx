@@ -5,7 +5,7 @@ import { BigInput } from '@/components/big-input';
 import { FieldMessage } from '@/components/field-message';
 import { PrimaryButton } from '@/components/primary-button';
 import { StepScreen } from '@/components/step-screen';
-import { USERNAME_PATTERN, checkUsernameAvailable, normalizeUsername } from '@/mock/api';
+import { USERNAME_PATTERN, checkUsernameAvailable, normalizeUsername } from '@/lib/auth';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
 import { Text } from '@/components/text';
@@ -26,8 +26,9 @@ export default function UsernameStep() {
     setStatus('checking');
     const id = ++requestId.current;
     const timer = setTimeout(async () => {
-      const available = await checkUsernameAvailable(username);
-      if (id === requestId.current) setStatus(available ? 'available' : 'taken');
+      const available = await checkUsernameAvailable(username).catch(() => null);
+      if (id !== requestId.current) return;
+      setStatus(available === null ? 'idle' : available ? 'available' : 'taken');
     }, 300);
     return () => clearTimeout(timer);
   }, [username]);

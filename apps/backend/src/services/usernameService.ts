@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 
-const usernamePattern = /^[a-z0-9_]+$/;
+// Letters, digits, _ and . ; a dot cannot start or end the name or repeat (like Instagram).
+const usernamePattern = /^(?!\.)(?!.*\.\.)[a-z0-9_.]+(?<!\.)$/;
 const reservedUsernames = new Set([
   "admin",
   "administrator",
@@ -39,7 +40,7 @@ export function validateUsername(username: string): UsernameAvailabilityReason |
 }
 
 function suggestionCandidates(username: string) {
-  const normalized = normalizeUsername(username).replace(/[^a-z0-9_]/g, "").slice(0, 24) || "reader";
+  const normalized = normalizeUsername(username).replace(/[^a-z0-9_.]/g, "").replace(/\.{2,}/g, ".").replace(/^\.+|\.+$/g, "").slice(0, 24) || "reader";
   const year = new Date().getUTCFullYear();
   return [
     `${normalized}_reads`,

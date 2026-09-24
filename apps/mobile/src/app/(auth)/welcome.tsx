@@ -1,11 +1,12 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
-import { socialSignIn } from '@/mock/api';
+import { socialSignIn } from '@/lib/auth';
 import { useSession } from '@/state/session';
 import { colors, fonts } from '@/theme';
 import { AnimatedText, Text } from '@/components/text';
@@ -15,16 +16,23 @@ type Provider = 'google' | 'apple';
 
 export default function Welcome() {
   const insets = useSafeAreaInsets();
-  const { resetDraft } = useSession();
+  const { resetDraft, signIn } = useSession();
   const [pending, setPending] = useState<Provider | null>(null);
 
   const onSocial = async (provider: Provider) => {
     if (pending) return;
     setPending(provider);
     try {
-      await socialSignIn(provider);
-      resetDraft({ provider });
-      push('/name');
+      const result = await socialSignIn(provider);
+      if (result.kind === 'signedIn') {
+        signIn(result.user);
+        router.replace('/(tabs)');
+      } else if (result.kind === 'signup') {
+        resetDraft({ provider, identityToken: result.identityToken });
+        push('/name');
+      }
+    } catch (e) {
+      Alert.alert('Could not sign in', e instanceof Error ? e.message : 'Try again later.');
     } finally {
       setPending(null);
     }
