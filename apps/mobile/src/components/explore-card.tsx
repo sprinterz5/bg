@@ -25,19 +25,22 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
         <View style={styles.titleChip}>
           {/* Figma: background blur 3 under the 80% white fill. iOS only — on Android every card in a scrolling
               list would need its own blur target, the white fill alone reads the same at this strength. */}
-          {Platform.OS === 'ios' ? <BlurView intensity={9} tint="light" style={StyleSheet.absoluteFill} /> : null}
-          <View style={[StyleSheet.absoluteFill, styles.titleFill]} />
-          <Text style={styles.titleText} numberOfLines={2}>
+          {/* The rounded clip is on this background layer only, so the title's descenders are never cut. */}
+          <View style={styles.titleBg}>
+            {Platform.OS === 'ios' ? <BlurView intensity={9} tint="light" style={StyleSheet.absoluteFill} /> : null}
+            <View style={[StyleSheet.absoluteFill, styles.titleFill]} />
+          </View>
+          <Text style={[styles.titleText, styles.unclip]} numberOfLines={2}>
             {post.title}
           </Text>
         </View>
       </View>
       <View style={styles.captionBlock}>
-        <Text style={styles.caption} numberOfLines={2}>
+        <Text style={[styles.caption, styles.unclip]} numberOfLines={2}>
           <Text style={styles.lead}>{post.lead}</Text>
           {post.rest}
         </Text>
-        <Text style={styles.time}>{post.reads ? `${post.reads} reads · ${post.timeAgo}` : post.timeAgo}</Text>
+        <Text style={[styles.time, styles.unclip]}>{post.reads ? `${post.reads} reads · ${post.timeAgo}` : post.timeAgo}</Text>
       </View>
     </PressableScale>
   );
@@ -60,11 +63,13 @@ const styles = StyleSheet.create({
     paddingTop: 8.25, // 2px lower than the frame, by eye on the phone
     paddingHorizontal: 6,
     borderRadius: 13.5,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#FFFFFF',
   },
+  titleBg: { ...StyleSheet.absoluteFillObject, borderRadius: 12.5, overflow: 'hidden' },
   titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
+  // Line heights are tighter than the fonts (Android clips text to its box): pad the box, pull the layout back.
+  unclip: { paddingVertical: 3, marginVertical: -3 },
   titleText: { width: 285.2, fontFamily: fonts.display, fontSize: 20.05, lineHeight: 20.67, letterSpacing: 20.05 * 0.01, color: colors.text },
   captionBlock: { paddingLeft: 13, paddingRight: 19, marginTop: 14, gap: 9 }, // text box 358 wide (x 11.5..369.5)
   caption: { fontSize: 14.25, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
