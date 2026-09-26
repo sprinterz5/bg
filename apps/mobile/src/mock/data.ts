@@ -316,7 +316,7 @@ export const SEARCH_PROFILES: Author[] = [
 /** Figma 3167:1542 — someone else's profile. */
 export type ProfilePost = {
   id: string;
-  image: ImageSourcePropType;
+  image: ImageSourcePropType | null;
   title: string;
   likes: string;
   timeAgo: string;
@@ -374,7 +374,7 @@ export function getProfile(username: string): Profile {
 }
 
 /** Figma 3184:1274 / 3185:1524 — Followers / Following rows (subtitle "robertus" as in the design). */
-export type Connection = { username: string; subtitle: string; avatar: ImageSourcePropType; following: boolean };
+export type Connection = { username: string; subtitle: string; avatar: ImageSourcePropType | null; following: boolean; /** Backend user id (real lists); mock rows have none. */ id?: string; isMe?: boolean };
 
 export const CONNECTIONS: Connection[] = [
   { username: 'jobsie_popsi', subtitle: 'robertus', avatar: require('@/assets/mock/f-jobsie-popsi.png'), following: false },

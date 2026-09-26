@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,7 +8,8 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { Text } from '@/components/text';
-import { getProfile } from '@/mock/data';
+import { getProfile, type Profile } from '@/mock/data';
+import { loadProfile, setFollow } from '@/lib/users';
 import { colors } from '@/theme';
 import { back } from '@/lib/nav';
 
@@ -16,16 +17,47 @@ import { back } from '@/lib/nav';
 export default function UserProfile() {
   const insets = useSafeAreaInsets();
   const { username } = useLocalSearchParams<{ username: string }>();
-  const profile = useMemo(() => getProfile(username ?? ''), [username]);
+  const [profile, setProfile] = useState<Profile>(() => ({ ...getProfile(username ?? ''), posts: [] }));
+  // Backend user id; null for mock-only authors (feed is still mock), whose Follow stays local.
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isMe, setIsMe] = useState(false);
   const [following, setFollowing] = useState(false);
   const [tab, setTab] = useState<'posts' | 'liked'>('posts');
+
+  useEffect(() => {
+    let alive = true;
+    loadProfile(username ?? '')
+      .then((r) => {
+        if (!alive) return;
+        if (!r) return setProfile(getProfile(username ?? ''));
+        setProfile(r.profile);
+        setUserId(r.api.id);
+        setIsMe(r.api.isMe);
+        setFollowing(r.api.isFollowing);
+      })
+      .catch(() => alive && setProfile(getProfile(username ?? '')));
+    return () => {
+      alive = false;
+    };
+  }, [username]);
+
+  const toggleFollow = () => {
+    const next = !following;
+    setFollowing(next);
+    if (!userId) return;
+    setFollow(userId, next).catch(() => setFollowing(!next));
+  };
 
   const header = (
     <View>
       <ProfileSummary {...profile} />
       <ProfileButtons marginTop={profile.bio.length > 0 ? 17 : 28}>
-        <ProfileButton label={following ? 'Following' : 'Follow'} primary={!following} onPress={() => setFollowing((v) => !v)} />
-        <ProfileButton label="Message" />
+        {isMe ? null : (
+          <>
+            <ProfileButton label={following ? 'Following' : 'Follow'} primary={!following} onPress={toggleFollow} />
+            <ProfileButton label="Message" />
+          </>
+        )}
       </ProfileButtons>
       <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
     </View>

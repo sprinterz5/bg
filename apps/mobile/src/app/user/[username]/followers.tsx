@@ -1,5 +1,8 @@
+import { useLocalSearchParams } from 'expo-router';
+
 import { ConnectionsScreen } from '@/components/connections-screen';
 
 export default function Followers() {
-  return <ConnectionsScreen title="Followers" withButtons />;
+  const { username } = useLocalSearchParams<{ username: string }>();
+  return <ConnectionsScreen title="Followers" withButtons source={{ username: username ?? '', kind: 'followers' }} />;
 }

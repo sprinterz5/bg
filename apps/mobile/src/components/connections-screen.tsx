@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { type Href } from 'expo-router';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,6 +11,7 @@ import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { ProfileButton } from './profile';
 import { back, push } from '@/lib/nav';
+import { fetchConnections, setFollow } from '@/lib/users';
 
 // Figma 3184:982 (Followers, with Follow/Following buttons) and 3184:1274 (Following, no buttons).
 const HEADER_H = 67; // back + title centred on design y 80.5, search field starts at y 114
@@ -24,17 +25,55 @@ type Props = {
   header?: ReactNode;
   /** Initial follow state per row; defaults to the mock data. */
   initialFollowing?: (c: Connection) => boolean;
+  /** Load this user's real followers / following instead of the mock list. */
+  source?: { username: string; kind: 'followers' | 'following' };
 };
 
-export function ConnectionsScreen({ title, withButtons, header, initialFollowing }: Props) {
+export function ConnectionsScreen({ title, withButtons, header, initialFollowing, source }: Props) {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
+  const [list, setList] = useState<Connection[]>(source ? [] : CONNECTIONS);
   const [following, setFollowing] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(CONNECTIONS.map((c) => [c.username, initialFollowing ? initialFollowing(c) : c.following])),
   );
 
+  const sourceUser = source?.username;
+  const sourceKind = source?.kind;
+  useEffect(() => {
+    if (!sourceUser || !sourceKind) return;
+    let alive = true;
+    fetchConnections(sourceUser, sourceKind)
+      .then((rows) => {
+        if (!alive) return;
+        const items = rows.map((u) => ({
+          id: u.id,
+          isMe: u.isMe,
+          username: u.username,
+          subtitle: u.displayName ?? '',
+          avatar: u.avatarUrl ? { uri: u.avatarUrl } : null,
+          following: u.isFollowing,
+        }));
+        setList(items);
+        setFollowing(Object.fromEntries(items.map((c) => [c.username, c.following])));
+      })
+      // Mock-only author (feed is still mock) → keep the mock list.
+      .catch(() => alive && setList(CONNECTIONS));
+    return () => {
+      alive = false;
+    };
+  }, [sourceUser, sourceKind]);
+
+  const toggle = (c: Connection) => {
+    const next = !following[c.username];
+    setFollowing((f) => ({ ...f, [c.username]: next }));
+    if (c.id) setFollow(c.id, next).catch(() => setFollowing((f) => ({ ...f, [c.username]: !next })));
+  };
+
   const q = query.trim().toLowerCase();
-  const data = useMemo(() => (q ? CONNECTIONS.filter((c) => c.username.includes(q) || c.subtitle.includes(q)) : CONNECTIONS), [q]);
+  const data = useMemo(
+    () => (q ? list.filter((c) => c.username.includes(q) || c.subtitle.toLowerCase().includes(q)) : list),
+    [q, list],
+  );
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -70,9 +109,9 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
         renderItem={({ item }) => (
           <Row
             item={item}
-            button={typeof withButtons === 'function' ? withButtons(item) : withButtons}
+            button={!item.isMe && (typeof withButtons === 'function' ? withButtons(item) : withButtons)}
             following={following[item.username]}
-            onToggle={() => setFollowing((f) => ({ ...f, [item.username]: !f[item.username] }))}
+            onToggle={() => toggle(item)}
           />
         )}
         keyboardDismissMode="on-drag"
@@ -93,7 +132,11 @@ function Row({ item, button, following, onToggle }: { item: Connection; button: 
         style={styles.person}
         accessibilityRole="button"
         accessibilityLabel={item.username}>
-        <Image source={item.avatar} style={styles.avatar} transition={150} />
+        {item.avatar ? (
+          <Image source={item.avatar} style={styles.avatar} transition={150} />
+        ) : (
+          <Icon name="avatarPlaceholder" width={53} style={styles.avatar} />
+        )}
         <View style={styles.names}>
           <Text style={styles.name} numberOfLines={1}>
             {item.username}
