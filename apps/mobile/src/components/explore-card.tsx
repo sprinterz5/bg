@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFFFFF',
   },
-  titleBg: { ...StyleSheet.absoluteFillObject, borderRadius: 12.5, overflow: 'hidden' },
+  titleBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 12.5, overflow: 'hidden' },
   titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
   // Line heights are tighter than the fonts (Android clips text to its box): pad the box, pull the layout back.
   unclip: { paddingVertical: 3, marginVertical: -3 },
