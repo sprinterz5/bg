@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, lineHeight: 16, letterSpacing: -0.13, fontWeight: '600', color: colors.text },
   chipTextActive: { fontWeight: '700' },
 
-  segmented: { height: 28, marginTop: 17 - HEADER_BOTTOM, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },
+  segmented: { height: 28, marginTop: 15 - HEADER_BOTTOM, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },
   segment: { height: 28, borderRadius: 6, backgroundColor: FIELD_BG },
   segIndicator: { position: 'absolute', left: 0, top: 0, backgroundColor: colors.primary },
   segHit: { position: 'absolute', top: 0, left: 0, height: 28, alignItems: 'center', justifyContent: 'center' },
@@ -459,5 +459,5 @@ const styles = StyleSheet.create({
   profileName: { fontSize: 13, lineHeight: 16, fontWeight: '700', color: colors.text },
   profileSub: { fontSize: 12, lineHeight: 15, color: MUTED },
 
-  resultsList: { paddingTop: 17 - HEADER_BOTTOM },
+  resultsList: { paddingTop: 15 - HEADER_BOTTOM },
 });
