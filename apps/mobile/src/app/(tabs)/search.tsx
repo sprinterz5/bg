@@ -75,12 +75,11 @@ export default function Search() {
     m.value = withTiming(MODE_VALUE[mode], EASE);
   }, [mode, m]);
 
-  // Field: x 11.5..326.5 (explore, THIS.svg) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
+  // Field: x 11.5..367.5 (explore, 356 wide, no saved/liked button) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
   const fieldStyle = useAnimatedStyle(() => ({
     marginLeft: interpolate(m.value, [0, 1, 2], [11.5, 15, 44]),
-    marginRight: interpolate(m.value, [0, 1, 2], [63.5, 65, 65]),
+    marginRight: interpolate(m.value, [0, 1, 2], [22.5, 65, 65]),
   }));
-  const filterStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [1, 0], Extrapolation.CLAMP) }));
   // Explore (Instagram-style): search + topics leave with the posts when scrolling up; scrolling back down
   // brings only the search field back (topics return at the top). Neither moves on pull-to-refresh.
   const hidden = useSharedValue(0); // search field offset, 0..HEADER_H
@@ -226,12 +225,6 @@ export default function Search() {
               </PressableScale>
             </Animated.View>
           ) : null}
-        </Animated.View>
-
-        <Animated.View collapsable={false} style={[styles.filter, filterStyle]} pointerEvents={mode === 'explore' ? 'auto' : 'none'}>
-          <PressableScale hitSlop={10} scaleTo={0.88} accessibilityLabel="Filters">
-            <Icon name="searchFilter" width={26} height={24} />
-          </PressableScale>
         </Animated.View>
 
         <Animated.View collapsable={false} style={[styles.exit, exitStyle]} pointerEvents={mode === 'explore' ? 'none' : 'auto'}>
@@ -421,7 +414,6 @@ const styles = StyleSheet.create({
   fieldIcon: { marginRight: 14.5 }, // placeholder at x 51.6
   input: { flex: 1, fontSize: 15.25, color: colors.text, padding: 0, height: FIELD_H },
   clear: { marginLeft: 8 },
-  filter: { position: 'absolute', right: 20.5, top: 15 },
   exit: { position: 'absolute', right: 24, top: FIELD_TOP + 9 },
   exitText: { fontSize: 16, lineHeight: 20, color: colors.text },
   body: { flex: 1 },
