@@ -213,11 +213,13 @@ export default function Search() {
       <View style={styles.body}>
         {mode === 'explore' ? (
           <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
+            {/* Topics stay pinned under the search field; only the posts scroll. */}
+            <Topics selected={topic} onSelect={setTopic} />
             <FlatList
               data={EXPLORE_FEED}
               keyExtractor={(p) => p.id}
               renderItem={({ item }) => <ExploreCard post={item} />}
-              ListHeaderComponent={<Topics selected={topic} onSelect={setTopic} />}
+              style={styles.feed}
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
             />
@@ -373,6 +375,7 @@ const styles = StyleSheet.create({
   exit: { position: 'absolute', right: 24, top: FIELD_TOP + 9 },
   exitText: { fontSize: 16, lineHeight: 20, color: colors.text },
   body: { flex: 1 },
+  feed: { flex: 1 },
 
   // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
   topicsScroll: { marginTop: 15 - HEADER_BOTTOM, marginBottom: 15, flexGrow: 0 },
