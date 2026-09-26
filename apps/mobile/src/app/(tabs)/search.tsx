@@ -198,7 +198,7 @@ export default function Search() {
         </Animated.View>
 
         <Animated.View collapsable={false} style={[styles.field, fieldStyle]}>
-          <Icon name="searchFieldThin" width={19.5} style={styles.fieldIcon} />
+          <Icon name="searchFieldThin" width={16.6} style={styles.fieldIcon} />
           <TextInput
             ref={inputRef}
             value={query}
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10.6,
     paddingRight: 8,
   },
-  fieldIcon: { marginRight: 10, transform: [{ translateY: 0.5 }] }, // icon 30% over the frame; placeholder stays at x 51.6
+  fieldIcon: { marginRight: 12.9, transform: [{ translateY: 0.5 }] }, // icon 16.6 (1.1x the frame); placeholder stays at x 51.6
   input: { flex: 1, fontSize: 16, color: colors.text, padding: 0, height: FIELD_H, transform: [{ translateY: 1 }] },
   clear: { marginLeft: 8 },
   exit: { position: 'absolute', right: 24, top: FIELD_TOP + 11 },
