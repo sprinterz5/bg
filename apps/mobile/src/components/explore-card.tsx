@@ -1,6 +1,7 @@
+import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/text';
 import type { ExplorePost } from '@/mock/data';
@@ -18,6 +19,10 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
       <View style={styles.media}>
         <Image source={post.image} style={styles.image} contentFit="cover" transition={200} />
         <View style={styles.titleChip}>
+          {/* Figma: background blur 4 under the 80% white fill. iOS only — on Android every card in a scrolling
+              list would need its own blur target, the white fill alone reads the same at this strength. */}
+          {Platform.OS === 'ios' ? <BlurView intensity={12} tint="light" style={StyleSheet.absoluteFill} /> : null}
+          <View style={[StyleSheet.absoluteFill, styles.titleFill]} />
           <Text style={styles.titleText} numberOfLines={2}>
             {post.title}
           </Text>
@@ -50,10 +55,11 @@ const styles = StyleSheet.create({
     paddingTop: 8.75, // 2px lower than the frame, by eye on the phone
     paddingHorizontal: 6,
     borderRadius: 13.5,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#FFFFFF',
   },
+  titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
   titleText: { width: 276, fontFamily: fonts.display, fontSize: 19.4, lineHeight: 20, letterSpacing: 18.4 * 0.01, color: colors.text },
   captionBlock: { paddingLeft: 11.5, paddingRight: 20.5, marginTop: 12, gap: 5 }, // text box 358 wide (x 11.5..369.5)
   caption: { fontSize: 14.075, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
