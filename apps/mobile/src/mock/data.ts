@@ -243,6 +243,27 @@ export type ExplorePost = {
 };
 
 export const EXPLORE_FEED: ExplorePost[] = [
+  // The two posts from the Explore frame (THIS.svg); they open existing mock articles.
+  {
+    id: 'e-kindergarten',
+    image: require('@/assets/mock/explore-kindergarten.jpg'),
+    title: 'Wiggling is Welcome in This Kindergarten Classroom',
+    lead: 'Kim',
+    rest: ' Broomer`s classroom is one of the most unique and supportive learning environments I`ve ever seen in life',
+    timeAgo: '1 day ago',
+    reads: '100K',
+    articleId: 'tinkov',
+  },
+  {
+    id: 'e-nurse',
+    image: require('@/assets/mock/explore-nurse.jpg'),
+    title: 'This Heroic Nurse Climbs 1000-foot ladder to save lives',
+    lead: 'Agnes',
+    rest: ' Nambozo goes to extraordinary lengths to vaccinate children in Uganda',
+    timeAgo: '2 weeks ago',
+    reads: '1M',
+    articleId: 'iphoneDuo',
+  },
   {
     id: 'e1',
     image: require('@/assets/mock/explore-tinkov.png'),
@@ -277,7 +298,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
 
 /** Figma 3170:2017 — article results for "Steve Jobs". */
 export const SEARCH_ARTICLES: ExplorePost[] = [
-  EXPLORE_FEED[2],
+  EXPLORE_FEED[4],
   {
     id: 'r2',
     image: require('@/assets/mock/explore-habits.png'),
@@ -288,7 +309,7 @@ export const SEARCH_ARTICLES: ExplorePost[] = [
     reads: '310K',
     articleId: 'steveIve',
   },
-  ...EXPLORE_FEED.slice(0, 2),
+  ...EXPLORE_FEED.slice(2, 4),
 ];
 
 /** Figma 3158:793 — query completions. */
