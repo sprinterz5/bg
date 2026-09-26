@@ -96,6 +96,9 @@ export default function Search() {
   const headerShift = useAnimatedStyle(() => ({
     transform: [{ translateY: -hidden.value * (1 - Math.min(Math.max(m.value, 0), 1)) }],
   }));
+  // Once the topics have scrolled away the returning field gets an 18px white strip under it (8 at the top,
+  // where the topics sit 15 below the field).
+  const stripStyle = useAnimatedStyle(() => ({ opacity: interpolate(lastY.value, [35, 45], [0, 1], Extrapolation.CLAMP) }));
   const topicsShift = useAnimatedStyle(() => ({
     transform: [{ translateY: -Math.min(Math.max(lastY.value, 0), FEED_TOP) }],
   }));
@@ -187,6 +190,7 @@ export default function Search() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.clip}>
       <Animated.View collapsable={false} style={[styles.header, headerShift]}>
+        <Animated.View collapsable={false} pointerEvents="none" style={[styles.headerStrip, stripStyle]} />
         <Animated.View collapsable={false} style={[styles.back, backStyle]} pointerEvents={mode === 'results' ? 'auto' : 'none'}>
           <PressableScale onPress={backToTyping} hitSlop={14} scaleTo={0.85} accessibilityLabel="Back">
             <Icon name="searchBack" width={10} height={20} />
@@ -194,7 +198,7 @@ export default function Search() {
         </Animated.View>
 
         <Animated.View collapsable={false} style={[styles.field, fieldStyle]}>
-          <Icon name="searchField" width={19.5} style={styles.fieldIcon} />
+          <Icon name="searchFieldThin" width={19.5} style={styles.fieldIcon} />
           <TextInput
             ref={inputRef}
             value={query}
@@ -400,6 +404,7 @@ function ProfileRow({ profile }: { profile: Author }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
+  headerStrip: { position: 'absolute', left: 0, right: 0, top: HEADER_H, height: 18 - HEADER_BOTTOM, backgroundColor: colors.bg },
   header: { height: FIELD_TOP + FIELD_H + HEADER_BOTTOM, paddingTop: FIELD_TOP, zIndex: 1, backgroundColor: colors.bg },
   back: { position: 'absolute', left: 15, top: FIELD_TOP + 11 },
   field: {

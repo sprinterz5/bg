@@ -7,6 +7,8 @@ const icons = {
   profileEmptyBio: require('@/assets/icons/profile-empty-bio.svg'),
   profileEmptyWrite: require('@/assets/icons/profile-empty-write.svg'),
   searchField: require('@/assets/icons/search-field.svg'),
+  // Same glyph, stroke 0.77 so it renders 1px at the Explore size (19.5).
+  searchFieldThin: require('@/assets/icons/search-field-thin.svg'),
   searchFilter: require('@/assets/icons/search-filter.svg'),
   searchClear: require('@/assets/icons/search-clear.svg'),
   searchBack: require('@/assets/icons/search-back.svg'),
