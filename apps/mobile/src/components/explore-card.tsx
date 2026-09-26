@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     left: 5.25,
     bottom: 5.5,
     // Frame 292x52 at a 19.4 title, scaled with the title (19.85 / 19.4).
-    width: 298.8,
+    width: 296.8,
     height: 53.2,
     paddingTop: 8.75, // 2px lower than the frame, by eye on the phone
     paddingHorizontal: 6,
