@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
 // THIS.svg Explore (text styles from the export): 227 media, chip 292x52 (white 1px stroke included)
 // at 4 / 5.5 from the bottom, Sen 800 18.4/20 +0.1% with baselines at chip top +23.7 / +43.7;
 // caption SF 14.075/16 +0.25% (lead 590) at x 11.5, 12 under the media; meta 12.15 at x 12.5, 5 below; next card 23 below.
-  card: { paddingBottom: 34  }, // Figma gap between posts 16 (was 14 in THIS.svg → 23 here)
+  card: { paddingBottom: 36  }, // Figma gap between posts 16 (was 14 in THIS.svg → 23 here)
   media: { height: 227, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   titleChip: {
