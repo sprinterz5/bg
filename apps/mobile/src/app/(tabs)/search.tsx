@@ -79,10 +79,10 @@ export default function Search() {
     m.value = withTiming(MODE_VALUE[mode], EASE);
   }, [mode, m]);
 
-  // Field: x 9.5..377.5 (explore, 368 wide, no saved/liked button) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
+  // Field: x 10..378 (explore, 368 wide, no saved/liked button) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
   const fieldStyle = useAnimatedStyle(() => ({
-    marginLeft: interpolate(m.value, [0, 1, 2], [9.5, 15, 44]),
-    marginRight: interpolate(m.value, [0, 1, 2], [12.5, 65, 65]),
+    marginLeft: interpolate(m.value, [0, 1, 2], [10, 15, 44]),
+    marginRight: interpolate(m.value, [0, 1, 2], [12, 65, 65]),
   }));
   // Explore (Instagram-style): search + topics leave with the posts when scrolling up; scrolling back down
   // brings only the search field back (topics return at the top). Neither moves on pull-to-refresh.
