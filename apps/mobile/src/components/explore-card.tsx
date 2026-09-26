@@ -19,9 +19,9 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
       <View style={styles.media}>
         <Image source={post.image} style={styles.image} contentFit="cover" transition={200} />
         <View style={styles.titleChip}>
-          {/* Figma: background blur 4 under the 80% white fill. iOS only — on Android every card in a scrolling
+          {/* Figma: background blur 3 under the 80% white fill. iOS only — on Android every card in a scrolling
               list would need its own blur target, the white fill alone reads the same at this strength. */}
-          {Platform.OS === 'ios' ? <BlurView intensity={12} tint="light" style={StyleSheet.absoluteFill} /> : null}
+          {Platform.OS === 'ios' ? <BlurView intensity={9} tint="light" style={StyleSheet.absoluteFill} /> : null}
           <View style={[StyleSheet.absoluteFill, styles.titleFill]} />
           <Text style={styles.titleText} numberOfLines={2}>
             {post.title}
