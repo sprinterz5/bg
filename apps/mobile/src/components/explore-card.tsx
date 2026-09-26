@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
   titleText: { width: 282.4, fontFamily: fonts.display, fontSize: 19.85, lineHeight: 20.46, letterSpacing: 19.85 * 0.01, color: colors.text },
   captionBlock: { paddingLeft: 13, paddingRight: 19, marginTop: 13, gap: 5 }, // text box 358 wide (x 11.5..369.5)
-  caption: { fontSize: 14.075, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
+  caption: { fontSize: 14.20, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
   lead: { fontWeight: '600' },
   time: { fontSize: 12.15, lineHeight: 16, marginLeft: 1, color: colors.textSubtle },
 });
