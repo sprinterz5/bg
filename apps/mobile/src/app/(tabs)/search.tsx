@@ -30,7 +30,7 @@ type Mode = 'explore' | 'typing' | 'results';
 type Tab = 'articles' | 'profiles';
 
 const FIELD_TOP = 8; // y 55
-const FIELD_H = 38;
+const FIELD_H = 37;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
 const HEADER_BOTTOM = 8;
 const FIELD_BG = '#EFF3F4';
@@ -64,10 +64,10 @@ export default function Search() {
     m.value = withTiming(MODE_VALUE[mode], EASE);
   }, [mode, m]);
 
-  // Field: x 15..330 (explore) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
+  // Field: x 11.5..326.5 (explore, THIS.svg) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
   const fieldStyle = useAnimatedStyle(() => ({
-    marginLeft: interpolate(m.value, [0, 1, 2], [15, 15, 44]),
-    marginRight: interpolate(m.value, [0, 1, 2], [60, 65, 65]),
+    marginLeft: interpolate(m.value, [0, 1, 2], [11.5, 15, 44]),
+    marginRight: interpolate(m.value, [0, 1, 2], [63.5, 65, 65]),
   }));
   const filterStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [1, 0], Extrapolation.CLAMP) }));
   const exitStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [0, 1], Extrapolation.CLAMP) }));
@@ -199,7 +199,7 @@ export default function Search() {
 
         <Animated.View style={[styles.filter, filterStyle]} pointerEvents={mode === 'explore' ? 'auto' : 'none'}>
           <PressableScale hitSlop={10} scaleTo={0.88} accessibilityLabel="Filters">
-            <Icon name="searchFilter" width={26} height={25} />
+            <Icon name="searchFilter" width={26} height={24} />
           </PressableScale>
         </Animated.View>
 
@@ -363,23 +363,24 @@ const styles = StyleSheet.create({
     backgroundColor: FIELD_BG,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 9,
+    paddingLeft: 10.6,
     paddingRight: 8,
   },
   fieldIcon: { marginRight: 15 },
-  input: { flex: 1, fontSize: 16, color: colors.text, padding: 0, height: FIELD_H },
+  input: { flex: 1, fontSize: 15, color: colors.text, padding: 0, height: FIELD_H },
   clear: { marginLeft: 8 },
-  filter: { position: 'absolute', right: 19, top: 15 },
+  filter: { position: 'absolute', right: 20.5, top: 15 },
   exit: { position: 'absolute', right: 24, top: FIELD_TOP + 9 },
   exitText: { fontSize: 16, lineHeight: 20, color: colors.text },
   body: { flex: 1 },
 
-  topicsScroll: { marginTop: 11 - HEADER_BOTTOM, marginBottom: 11, flexGrow: 0 },
-  topics: { paddingHorizontal: 15, gap: 10 },
+  // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
+  topicsScroll: { marginTop: 15 - HEADER_BOTTOM, marginBottom: 15, flexGrow: 0 },
+  topics: { paddingHorizontal: 11, gap: 9 },
   chip: {
-    height: 30,
+    height: 28,
     paddingHorizontal: 15,
-    borderRadius: 15,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#EEF0F2',
     alignItems: 'center',
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: FIELD_BG, borderColor: FIELD_BG },
   plusChip: { width: 42, paddingHorizontal: 0 },
-  chipText: { fontSize: 13, lineHeight: 16, fontWeight: '600', color: colors.text },
+  chipText: { fontSize: 12.5, lineHeight: 16, fontWeight: '600', color: colors.text },
   chipTextActive: { fontWeight: '700' },
 
   segmented: { height: 28, marginTop: 17 - HEADER_BOTTOM, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },

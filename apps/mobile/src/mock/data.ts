@@ -237,6 +237,8 @@ export type ExplorePost = {
   lead: string;
   rest: string;
   timeAgo: string;
+  /** "100K" → "100K reads · 1 day ago" under the caption. */
+  reads?: string;
   articleId: string;
 };
 
@@ -248,6 +250,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
     lead: 'How Tinkov',
     rest: ' managed to recreate his Tinkov Bank model in Mexico so successfully under a new name “Plata”',
     timeAgo: '1 week ago',
+    reads: '100K',
     articleId: 'tinkov',
   },
   {
@@ -257,6 +260,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
     lead: 'Why iPhone',
     rest: ' Duo is the best foldable of the whole market and why it will be a tremendous success in terms of sales',
     timeAgo: '2 days ago',
+    reads: '1M',
     articleId: 'iphoneDuo',
   },
   {
@@ -266,6 +270,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
     lead: 'How Steve',
     rest: ' does such great presentations. Explaining through the analysis of his products release performances',
     timeAgo: '1 week ago',
+    reads: '24K',
     articleId: 'stevePresentations',
   },
 ];
@@ -280,6 +285,7 @@ export const SEARCH_ARTICLES: ExplorePost[] = [
     lead: 'All the',
     rest: ' 7 extraordinary habits Steve practiced as a teenager and in his 20s. And how this is connected with the products we use today',
     timeAgo: '2 days ago',
+    reads: '310K',
     articleId: 'steveIve',
   },
   ...EXPLORE_FEED.slice(0, 2),

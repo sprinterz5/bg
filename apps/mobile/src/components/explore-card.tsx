@@ -28,32 +28,33 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
           <Text style={styles.lead}>{post.lead}</Text>
           {post.rest}
         </Text>
-        <Text style={styles.time}>{post.timeAgo}</Text>
+        <Text style={styles.time}>{post.reads ? `${post.reads} reads · ${post.timeAgo}` : post.timeAgo}</Text>
       </View>
     </PressableScale>
   );
 });
 
 const styles = StyleSheet.create({
-// Section 7 Explore (x 2650): 227 media, chip 263x47 at 8.5 / 7.5 from the bottom, caption 7.5 under the media.
-  card: { paddingBottom: 24.2 },
+// THIS.svg Explore: 227 media, chip 292x52 (white 1px stroke included) at 4 / 5.5 from the bottom,
+// Sen 18.4/21 title; caption 13/16 at x 11.5, 11.8 under the media; meta 5 below; next card 23.3 below.
+  card: { paddingBottom: 23.3 },
   media: { height: 227, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   titleChip: {
     position: 'absolute',
-    left: 8.5,
-    bottom: 7.5,
-    width: 263,
-    height: 47,
+    left: 4,
+    bottom: 5.5,
+    width: 292,
+    height: 52,
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     borderRadius: 13.5,
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderWidth: 1,
     borderColor: '#FFFFFF',
   },
-  titleText: { fontFamily: fonts.display, fontSize: 17, lineHeight: 19, color: colors.text },
-  captionBlock: { paddingHorizontal: 15, marginTop: 7.6, gap: 3.75 },
+  titleText: { fontFamily: fonts.display, fontSize: 18.4, lineHeight: 21, color: colors.text },
+  captionBlock: { paddingHorizontal: 11.5, marginTop: 11.8, gap: 5 },
   caption: { fontSize: 13, lineHeight: 16, color: colors.text },
   lead: { fontWeight: '600' },
   time: { fontSize: 12, lineHeight: 16, color: colors.textSubtle },
