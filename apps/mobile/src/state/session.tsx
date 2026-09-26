@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { logout, restoreSession } from '@/lib/auth';
+import { closeChatSocket } from '@/lib/chat';
 
 export type SessionUser = {
   id: string;
@@ -61,6 +62,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback((u: SessionUser) => setUser(u), []);
   const signOut = useCallback(() => {
     setUser(null);
+    closeChatSocket();
     logout();
   }, []);
 

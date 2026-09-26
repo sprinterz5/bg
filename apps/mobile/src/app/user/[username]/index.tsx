@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -11,7 +11,8 @@ import { Text } from '@/components/text';
 import { getProfile, type Profile } from '@/mock/data';
 import { loadProfile, setFollow } from '@/lib/users';
 import { colors } from '@/theme';
-import { back } from '@/lib/nav';
+import { back, push } from '@/lib/nav';
+import { openDirect } from '@/lib/chat';
 
 // Figma 3167:1542 — someone else's profile: back + username, summary, Follow / Message, article list.
 export default function UserProfile() {
@@ -41,6 +42,13 @@ export default function UserProfile() {
     };
   }, [username]);
 
+  const message = () => {
+    if (!userId) return;
+    openDirect(userId)
+      .then((c) => push(`/conversation/${c.id}?username=${encodeURIComponent(profile.username)}` as Href))
+      .catch(() => {});
+  };
+
   const toggleFollow = () => {
     const next = !following;
     setFollowing(next);
@@ -55,7 +63,7 @@ export default function UserProfile() {
         {isMe ? null : (
           <>
             <ProfileButton label={following ? 'Following' : 'Follow'} primary={!following} onPress={toggleFollow} />
-            <ProfileButton label="Message" />
+            <ProfileButton label="Message" onPress={message} />
           </>
         )}
       </ProfileButtons>

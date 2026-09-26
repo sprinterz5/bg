@@ -95,3 +95,15 @@ export async function loadProfile(username: string) {
     throw e;
   }
 }
+
+type SearchUser = { id: string; username: string; displayName: string | null; avatarUrl: string | null };
+
+/** Accounts matching the query, shaped like the search screen's profile rows. */
+export const searchUsers = (q: string) =>
+  api<{ data: { users: SearchUser[] } }>(`/search?type=users&limit=20&q=${enc(q)}`, { auth: true }).then((r) =>
+    r.data.users.map((u) => ({
+      username: u.username,
+      subtitle: u.displayName ?? '',
+      avatar: u.avatarUrl ? { uri: u.avatarUrl } : null,
+    })),
+  );

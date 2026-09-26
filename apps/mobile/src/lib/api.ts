@@ -77,3 +77,5 @@ export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
     return send<T>(path, init);
   }
 }
+
+export const getAccessToken = () => accessToken;

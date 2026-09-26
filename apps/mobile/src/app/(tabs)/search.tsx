@@ -19,6 +19,7 @@ import { ExploreCard } from '@/components/explore-card';
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { AnimatedText, Text, TextInput } from '@/components/text';
+import { searchUsers } from '@/lib/users';
 import { EXPLORE_FEED, EXPLORE_TOPICS, SEARCH_ARTICLES, SEARCH_PROFILES, SEARCH_SUGGESTIONS, type Author } from '@/mock/data';
 import { colors, motion } from '@/theme';
 import { push } from '@/lib/nav';
@@ -123,11 +124,30 @@ export default function Search() {
     const found = SEARCH_SUGGESTIONS.filter((s) => s.toLowerCase().startsWith(ql));
     return found.length ? found : [q];
   }, [q]);
-  const profiles = useMemo(() => {
+  const mockProfiles = useMemo(() => {
     const ts = tokens(q);
     if (!ts.length) return [];
     return SEARCH_PROFILES.filter((p) => ts.some((t) => p.username.includes(t.slice(0, 4)) || p.subtitle.toLowerCase().includes(t)));
   }, [q]);
+  // Real accounts from the backend first; mock authors (the feed is still mock) after them.
+  const [apiProfiles, setApiProfiles] = useState<Author[]>([]);
+  useEffect(() => {
+    if (!q) return setApiProfiles([]);
+    let alive = true;
+    const t = setTimeout(() => {
+      searchUsers(q)
+        .then((users) => alive && setApiProfiles(users))
+        .catch(() => {});
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [q]);
+  const profiles = useMemo(() => {
+    const seen = new Set(apiProfiles.map((p) => p.username));
+    return [...apiProfiles, ...mockProfiles.filter((p) => !seen.has(p.username))];
+  }, [apiProfiles, mockProfiles]);
   const results = useMemo(() => {
     const ts = tokens(q);
     const found = SEARCH_ARTICLES.filter((a) => ts.some((t) => `${a.title} ${a.lead}${a.rest}`.toLowerCase().includes(t.slice(0, 4))));

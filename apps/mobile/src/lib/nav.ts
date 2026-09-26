@@ -29,3 +29,8 @@ export function back() {
   if (locked()) return;
   router.back();
 }
+
+export function replace(href: Href) {
+  if (locked()) return;
+  router.replace(href);
+}

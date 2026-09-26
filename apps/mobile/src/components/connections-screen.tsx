@@ -27,9 +27,15 @@ type Props = {
   initialFollowing?: (c: Connection) => boolean;
   /** Load this user's real followers / following instead of the mock list. */
   source?: { username: string; kind: 'followers' | 'following' };
+  /** Rows supplied by the caller (e.g. conversations); overrides mock / source. */
+  items?: Connection[];
+  /** Row tap; defaults to opening the profile. */
+  onOpen?: (c: Connection) => void;
+  /** Shown instead of the list while it is empty. */
+  empty?: ReactNode;
 };
 
-export function ConnectionsScreen({ title, withButtons, header, initialFollowing, source }: Props) {
+export function ConnectionsScreen({ title, withButtons, header, initialFollowing, source, items, onOpen, empty }: Props) {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [list, setList] = useState<Connection[]>(source ? [] : CONNECTIONS);
@@ -71,8 +77,11 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
 
   const q = query.trim().toLowerCase();
   const data = useMemo(
-    () => (q ? list.filter((c) => c.username.includes(q) || c.subtitle.toLowerCase().includes(q)) : list),
-    [q, list],
+    () => {
+      const all = items ?? list;
+      return q ? all.filter((c) => c.username.includes(q) || c.subtitle.toLowerCase().includes(q)) : all;
+    },
+    [q, list, items],
   );
 
   return (
@@ -105,13 +114,15 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
 
       <FlatList
         data={data}
-        keyExtractor={(c) => c.username}
+        keyExtractor={(c) => c.id ?? c.username}
+        ListEmptyComponent={empty ? <>{empty}</> : null}
         renderItem={({ item }) => (
           <Row
             item={item}
             button={!item.isMe && (typeof withButtons === 'function' ? withButtons(item) : withButtons)}
             following={following[item.username]}
             onToggle={() => toggle(item)}
+            onOpen={onOpen}
           />
         )}
         keyboardDismissMode="on-drag"
@@ -123,12 +134,24 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
   );
 }
 
-function Row({ item, button, following, onToggle }: { item: Connection; button: boolean; following: boolean; onToggle: () => void }) {
+function Row({
+  item,
+  button,
+  following,
+  onToggle,
+  onOpen,
+}: {
+  item: Connection;
+  button: boolean;
+  following: boolean;
+  onToggle: () => void;
+  onOpen?: (c: Connection) => void;
+}) {
   return (
     <View style={styles.row}>
       <PressableScale
         scaleTo={0.98}
-        onPress={() => push(`/user/${encodeURIComponent(item.username)}` as Href)}
+        onPress={() => (onOpen ? onOpen(item) : push(`/user/${encodeURIComponent(item.username)}` as Href))}
         style={styles.person}
         accessibilityRole="button"
         accessibilityLabel={item.username}>
