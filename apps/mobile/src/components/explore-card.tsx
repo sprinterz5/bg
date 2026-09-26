@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%' },
   titleChip: {
     position: 'absolute',
-    left: 4.25,
+    left: 4.75,
     bottom: 5.5,
     // Frame 292x52 at a 19.4 title, scaled with the title (19.65 / 19.4).
     width: 295.6,
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   },
   titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
   titleText: { width: 279.6, fontFamily: fonts.display, fontSize: 19.65, lineHeight: 20.26, letterSpacing: 19.65 * 0.01, color: colors.text },
-  captionBlock: { paddingLeft: 12, paddingRight: 20, marginTop: 13, gap: 5 }, // text box 358 wide (x 11.5..369.5)
+  captionBlock: { paddingLeft: 12.5, paddingRight: 19.5, marginTop: 13, gap: 5 }, // text box 358 wide (x 11.5..369.5)
   caption: { fontSize: 14.075, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
   lead: { fontWeight: '600' },
   time: { fontSize: 12.15, lineHeight: 16, marginLeft: 1, color: colors.textSubtle },
