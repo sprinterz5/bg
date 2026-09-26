@@ -15,7 +15,7 @@ type Glyph = { icon: IconName; w: number; h: number; cx: number; cy: number };
 const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
   index: {
     label: 'Home',
-    off: { icon: 'tabHomeInactive', w: 22.99, h: 22, cx: 38.25, cy: 24.5 },
+    off: { icon: 'tabHomeInactive', w: 23, h: 22, cx: 38.25, cy: 24.5 },
     on: { icon: 'tabHome', w: 23, h: 22, cx: 39.25, cy: 24.5 },
   },
   // The messages icon has a single variant in the design.
