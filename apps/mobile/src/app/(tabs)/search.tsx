@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   fieldIcon: { marginRight: 14.5 }, // placeholder at x 51.6
-  input: { flex: 1, fontSize: 14.5, color: colors.text, padding: 0, height: FIELD_H },
+  input: { flex: 1, fontSize: 15.25, color: colors.text, padding: 0, height: FIELD_H },
   clear: { marginLeft: 8 },
   filter: { position: 'absolute', right: 20.5, top: 15 },
   exit: { position: 'absolute', right: 24, top: FIELD_TOP + 9 },
