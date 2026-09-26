@@ -226,6 +226,7 @@ export default function Search() {
               keyExtractor={(p) => p.id}
               renderItem={({ item }) => <ExploreCard post={item} />}
               style={styles.feed}
+              contentContainerStyle={styles.feedContent}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} colors={[colors.textMuted]} />
               }
@@ -385,9 +386,11 @@ const styles = StyleSheet.create({
   exitText: { fontSize: 16, lineHeight: 20, color: colors.text },
   body: { flex: 1 },
   feed: { flex: 1 },
+  feedContent: { paddingTop: 12 },
 
   // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
-  topicsScroll: { marginTop: 15 - HEADER_BOTTOM, marginBottom: 15, flexGrow: 0 },
+  // Feed clips 3px under the chips; the other 12 of the 15 gap is the list's top padding, so posts scroll up close to the chips.
+  topicsScroll: { marginTop: 15 - HEADER_BOTTOM, marginBottom: 3, flexGrow: 0 },
   topics: { paddingHorizontal: 11, gap: 9 },
   chip: {
     height: 28,
