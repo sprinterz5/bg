@@ -35,6 +35,9 @@ const FIELD_H = 37;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
 const HEADER_BOTTOM = 8;
 const HEADER_H = FIELD_TOP + FIELD_H + HEADER_BOTTOM;
+// Topics block under the header: chips 28 tall, 5 under the field, first post 15 below them.
+const TOPICS_H = 5 - HEADER_BOTTOM + 28 + 15;
+const FEED_TOP = HEADER_H + TOPICS_H;
 const FIELD_BG = '#EFF3F4';
 const PLACEHOLDER = '#536471';
 const MUTED = '#737A84';
@@ -78,12 +81,12 @@ export default function Search() {
     marginRight: interpolate(m.value, [0, 1, 2], [63.5, 65, 65]),
   }));
   const filterStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [1, 0], Extrapolation.CLAMP) }));
-  // Explore (Instagram-style): the search header leaves with the posts when scrolling up and comes back as soon
-  // as you scroll down again (the topics stay in the list). It never follows a pull-to-refresh.
-  const hidden = useSharedValue(0); // 0..HEADER_H
+  // Explore (Instagram-style): search + topics leave with the posts when scrolling up; scrolling back down
+  // brings only the search field back (topics return at the top). Neither moves on pull-to-refresh.
+  const hidden = useSharedValue(0); // search field offset, 0..HEADER_H
   const lastY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
-    const y = e.contentOffset.y + (Platform.OS === 'ios' ? HEADER_H : 0);
+    const y = e.contentOffset.y + (Platform.OS === 'ios' ? FEED_TOP : 0);
     const next = Math.min(Math.max(hidden.value + y - lastY.value, 0), HEADER_H);
     hidden.value = Math.min(next, Math.max(y, 0)); // near the top it stays glued to the content
     lastY.value = y;
@@ -93,6 +96,9 @@ export default function Search() {
   }, [mode, hidden, lastY]);
   const headerShift = useAnimatedStyle(() => ({
     transform: [{ translateY: -hidden.value * (1 - Math.min(Math.max(m.value, 0), 1)) }],
+  }));
+  const topicsShift = useAnimatedStyle(() => ({
+    transform: [{ translateY: -Math.min(Math.max(lastY.value, 0), FEED_TOP) }],
   }));
   const exitStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [0, 1], Extrapolation.CLAMP) }));
   const backStyle = useAnimatedStyle(() => ({
@@ -238,18 +244,17 @@ export default function Search() {
       <View style={styles.body}>
         {mode === 'explore' ? (
           <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={styles.exploreLayer}>
-            {/* The list runs behind the header (it moves with the scroll), topics scroll with the posts. */}
+            {/* The list runs behind the header and the topics; both are overlays moved by the scroll. */}
             <Animated.FlatList
               data={EXPLORE_FEED}
               keyExtractor={(p) => p.id}
               renderItem={({ item }) => <ExploreCard post={item} />}
-              ListHeaderComponent={<Topics selected={topic} onSelect={setTopic} />}
               onScroll={onScroll}
               scrollEventThrottle={16}
               // The header covers the list's top: on iOS an inset keeps the refresh spinner under it, Android uses padding + progressViewOffset.
-              contentInset={Platform.OS === 'ios' ? { top: HEADER_H } : undefined}
-              contentOffset={Platform.OS === 'ios' ? { x: 0, y: -HEADER_H } : undefined}
-              scrollIndicatorInsets={Platform.OS === 'ios' ? { top: HEADER_H } : undefined}
+              contentInset={Platform.OS === 'ios' ? { top: FEED_TOP } : undefined}
+              contentOffset={Platform.OS === 'ios' ? { x: 0, y: -FEED_TOP } : undefined}
+              scrollIndicatorInsets={Platform.OS === 'ios' ? { top: FEED_TOP } : undefined}
               automaticallyAdjustContentInsets={false}
               contentContainerStyle={Platform.OS === 'android' ? styles.feedContent : undefined}
               refreshControl={
@@ -258,12 +263,15 @@ export default function Search() {
                   onRefresh={onRefresh}
                   tintColor={colors.textMuted}
                   colors={[colors.textMuted]}
-                  progressViewOffset={HEADER_H}
+                  progressViewOffset={FEED_TOP}
                 />
               }
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
             />
+            <Animated.View style={[styles.topicsOverlay, topicsShift]}>
+              <Topics selected={topic} onSelect={setTopic} />
+            </Animated.View>
           </Animated.View>
         ) : null}
 
@@ -419,7 +427,8 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   clip: { flex: 1, overflow: 'hidden' },
   exploreLayer: { position: 'absolute', top: -HEADER_H, left: 0, right: 0, bottom: 0 },
-  feedContent: { paddingTop: HEADER_H },
+  feedContent: { paddingTop: FEED_TOP },
+  topicsOverlay: { position: 'absolute', top: HEADER_H, left: 0, right: 0, height: TOPICS_H, backgroundColor: colors.bg },
 
   // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
   // Chips 5 under the search field, first post 15 below them.
