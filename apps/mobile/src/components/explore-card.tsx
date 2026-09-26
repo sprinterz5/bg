@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   titleChip: {
     position: 'absolute',
     left: 5.25,
-    bottom: 4.5,
+    bottom: 5,
     // Frame 292x52 at a 19.4 title, scaled with the title (20.05 / 19.4), then −2 wide and −1 tall by eye.
     width: 299.8,
     height: 52.7,
