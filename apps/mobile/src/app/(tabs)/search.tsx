@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: FIELD_BG, borderColor: FIELD_BG },
   plusChip: { width: 42, paddingHorizontal: 0 },
-  chipText: { fontSize: 12.25, lineHeight: 16, letterSpacing: -0.1225, fontWeight: '600', color: colors.text },
+  chipText: { fontSize: 13, lineHeight: 16, letterSpacing: -0.13, fontWeight: '600', color: colors.text },
   chipTextActive: { fontWeight: '700' },
 
   segmented: { height: 28, marginTop: 17 - HEADER_BOTTOM, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },
