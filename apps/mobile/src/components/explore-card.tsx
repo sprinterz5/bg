@@ -35,9 +35,10 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
 });
 
 const styles = StyleSheet.create({
-// THIS.svg Explore: 227 media, chip 292x52 (white 1px stroke included) at 4 / 5.5 from the bottom,
-// Sen 18.4/21 title; caption 13.15/16 (+0.25%) at x 11.5, 11.8 under the media; meta 5 below; next card 23.3 below.
-  card: { paddingBottom: 23.3 },
+// THIS.svg Explore (text styles from the export): 227 media, chip 292x52 (white 1px stroke included)
+// at 4 / 5.5 from the bottom, Sen 800 18.4/20 +0.1% with baselines at chip top +23.7 / +43.7;
+// caption SF 13.15/16 +0.25% (lead 590) at x 11.5, 12 under the media; meta 11.5 at x 12.5, 5 below; next card 23 below.
+  card: { paddingBottom: 23 },
   media: { height: 227, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   titleChip: {
@@ -46,16 +47,16 @@ const styles = StyleSheet.create({
     bottom: 5.5,
     width: 292,
     height: 52,
-    justifyContent: 'center',
+    paddingTop: 6.5, // Sen baseline = (20 − 1.203·18.4)/2 + 0.9395·18.4 = 16.2 into the line
     paddingHorizontal: 6,
     borderRadius: 13.5,
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderWidth: 1,
     borderColor: '#FFFFFF',
   },
-  titleText: { fontFamily: fonts.display, fontSize: 18.4, lineHeight: 21, color: colors.text },
-  captionBlock: { paddingHorizontal: 11.5, marginTop: 11.8, gap: 5 },
+  titleText: { fontFamily: fonts.display, fontSize: 18.4, lineHeight: 20, letterSpacing: 18.4 * 0.001, color: colors.text },
+  captionBlock: { paddingHorizontal: 11.5, marginTop: 12, gap: 5 },
   caption: { fontSize: 13.15, lineHeight: 16, letterSpacing: 13.15 * 0.0025, color: colors.text },
   lead: { fontWeight: '600' },
-  time: { fontSize: 12, lineHeight: 16, color: colors.textSubtle },
+  time: { fontSize: 11.5, lineHeight: 16, marginLeft: 1, color: colors.textSubtle },
 });

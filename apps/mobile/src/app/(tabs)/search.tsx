@@ -366,8 +366,8 @@ const styles = StyleSheet.create({
     paddingLeft: 10.6,
     paddingRight: 8,
   },
-  fieldIcon: { marginRight: 15 },
-  input: { flex: 1, fontSize: 15, color: colors.text, padding: 0, height: FIELD_H },
+  fieldIcon: { marginRight: 14.5 }, // placeholder at x 51.6
+  input: { flex: 1, fontSize: 14.5, color: colors.text, padding: 0, height: FIELD_H },
   clear: { marginLeft: 8 },
   filter: { position: 'absolute', right: 20.5, top: 15 },
   exit: { position: 'absolute', right: 24, top: FIELD_TOP + 9 },
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   topics: { paddingHorizontal: 11, gap: 9 },
   chip: {
     height: 28,
-    paddingHorizontal: 15,
+    paddingHorizontal: 14.5, // text 15.5 from the outer edge
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#EEF0F2',
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: FIELD_BG, borderColor: FIELD_BG },
   plusChip: { width: 42, paddingHorizontal: 0 },
-  chipText: { fontSize: 12.5, lineHeight: 16, fontWeight: '600', color: colors.text },
+  chipText: { fontSize: 12.25, lineHeight: 16, letterSpacing: -0.1225, fontWeight: '600', color: colors.text },
   chipTextActive: { fontWeight: '700' },
 
   segmented: { height: 28, marginTop: 17 - HEADER_BOTTOM, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },
