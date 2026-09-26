@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View, type NativeSyntheticEvent, type TextLayoutEventData } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +11,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { useFeed } from '@/state/feed';
 import { useSession } from '@/state/session';
 import { colors, motion } from '@/theme';
-import { ARTICLE_TITLE_MAX } from '@/components/explore-card';
+import { ARTICLE_TITLE_MAX, exploreTitleStyle } from '@/components/explore-card';
 import { AnimatedText, Text, TextInput } from '@/components/text';
 import { back } from '@/lib/nav';
 
@@ -19,6 +19,7 @@ import { back } from '@/lib/nav';
 const HEADER_H = 58; // hairline at y 105
 const BUTTON_BOTTOM_LIFT = 7; // Post bottom at y 803 on an 844 frame with a 34px home indicator
 const KEYBOARD_GAP = 10;
+const TITLE_W = (exploreTitleStyle as { width: number }).width;
 
 export default function NewArticle() {
   const insets = useSafeAreaInsets();
@@ -49,6 +50,23 @@ export default function NewArticle() {
 
   const bottomPad = Math.max(insets.bottom, 12) + BUTTON_BOTTOM_LIFT;
 
+  // The label is laid out off-screen exactly like the Explore card title. A third line is refused (the last
+  // text that fit comes back); on the second line we show how many characters still fit.
+  const lastFit = useRef(draft.label);
+  const [left, setLeft] = useState<number | null>(null);
+  const onMeasure = (e: NativeSyntheticEvent<TextLayoutEventData>) => {
+    const lines = e.nativeEvent.lines;
+    if (lines.length > 2) {
+      updateDraft({ label: lastFit.current });
+      return;
+    }
+    lastFit.current = draft.label;
+    if (lines.length < 2 || !draft.label) return setLeft(null);
+    const used = lines[0].width + lines[1].width;
+    const perChar = used / Math.max(draft.label.length, 1);
+    setLeft(Math.max(0, Math.floor((TITLE_W - lines[1].width) / perChar)));
+  };
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -76,6 +94,12 @@ export default function NewArticle() {
           style={styles.label}
           accessibilityLabel="Article label"
         />
+        {left !== null ? <Text style={styles.left}>{left} left</Text> : null}
+        <View pointerEvents="none" style={styles.measure} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <Text style={exploreTitleStyle} onTextLayout={onMeasure}>
+            {draft.label || ' '}
+          </Text>
+        </View>
       </View>
 
       <KeyboardStickyView offset={{ closed: 0, opened: bottomPad - KEYBOARD_GAP }}>
@@ -92,6 +116,9 @@ export default function NewArticle() {
 }
 
 const styles = StyleSheet.create({
+  measure: { position: 'absolute', left: 0, top: 0, opacity: 0 },
+  // Not in the design: a small counter once the title reaches the card's second line.
+  left: { alignSelf: 'flex-end', marginTop: 4, marginRight: 16, fontSize: 12, lineHeight: 16, color: colors.textMuted },
   root: { flex: 1, backgroundColor: colors.bg },
   header: {
     height: HEADER_H,
