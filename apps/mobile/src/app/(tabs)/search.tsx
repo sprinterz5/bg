@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   fieldIcon: { marginRight: 14.5 }, // placeholder at x 51.6
-  input: { flex: 1, fontSize: 15.25, color: colors.text, padding: 0, height: FIELD_H },
+  input: { flex: 1, fontSize: 15.25, color: colors.text, padding: 0, height: FIELD_H, transform: [{ translateY: -1 }] },
   clear: { marginLeft: 8 },
   exit: { position: 'absolute', right: 24, top: FIELD_TOP + 9 },
   exitText: { fontSize: 16, lineHeight: 20, color: colors.text },
