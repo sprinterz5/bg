@@ -54,9 +54,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 5.25,
     bottom: 5.5,
-    // Frame 292x52 at a 19.4 title, scaled with the title (20 / 19.4).
-    width: 301,
-    height: 53.6,
+    // Frame 292x52 at a 19.4 title, scaled with the title (19.85 / 19.4).
+    width: 298.8,
+    height: 53.2,
     paddingTop: 8.75, // 2px lower than the frame, by eye on the phone
     paddingHorizontal: 6,
     borderRadius: 13.5,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
-  titleText: { width: 284.5, fontFamily: fonts.display, fontSize: 20, lineHeight: 20.6, letterSpacing: 20 * 0.01, color: colors.text },
+  titleText: { width: 282.4, fontFamily: fonts.display, fontSize: 19.85, lineHeight: 20.46, letterSpacing: 19.85 * 0.01, color: colors.text },
   captionBlock: { paddingLeft: 13, paddingRight: 19, marginTop: 13, gap: 5 }, // text box 358 wide (x 11.5..369.5)
   caption: { fontSize: 14.075, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
   lead: { fontWeight: '600' },
