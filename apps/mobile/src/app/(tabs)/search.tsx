@@ -79,10 +79,10 @@ export default function Search() {
     m.value = withTiming(MODE_VALUE[mode], EASE);
   }, [mode, m]);
 
-  // Field: x 10..378 (explore, 368 wide, no saved/liked button) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
+  // Field: x 8..376 (explore, 368 wide, no saved/liked button) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
   const fieldStyle = useAnimatedStyle(() => ({
-    marginLeft: interpolate(m.value, [0, 1, 2], [10, 15, 44]),
-    marginRight: interpolate(m.value, [0, 1, 2], [12, 65, 65]),
+    marginLeft: interpolate(m.value, [0, 1, 2], [8, 15, 44]),
+    marginRight: interpolate(m.value, [0, 1, 2], [14, 65, 65]),
   }));
   // Explore (Instagram-style): search + topics leave with the posts when scrolling up; scrolling back down
   // brings only the search field back (topics return at the top). Neither moves on pull-to-refresh.
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
   // Chips 15 under the search field, first post 15 below them.
   topicsScroll: { marginTop: TOPICS_GAP - HEADER_BOTTOM, marginBottom: TOPICS_GAP, flexGrow: 0 },
-  topics: { paddingHorizontal: 10, gap: 9 },
+  topics: { paddingHorizontal: 8, gap: 9 },
   chip: {
     height: 28,
     paddingHorizontal: 14.5, // text 15.5 from the outer edge
