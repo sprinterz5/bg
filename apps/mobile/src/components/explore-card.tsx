@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     // Frame 292x52 at a 19.4 title, scaled with the title (20.05 / 19.4), then −2 wide and −1 tall by eye.
     width: 299.8,
     height: 52.7,
-    paddingTop: 7.75, // 2px lower than the frame, by eye on the phone
+    paddingTop: 8.25, // 2px lower than the frame, by eye on the phone
     paddingHorizontal: 6,
     borderRadius: 13.5,
     overflow: 'hidden',
