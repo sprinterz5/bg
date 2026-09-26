@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   titleText: { fontFamily: fonts.display, fontSize: 18.4, lineHeight: 20, letterSpacing: 18.4 * 0.001, color: colors.text },
-  captionBlock: { paddingHorizontal: 11.5, marginTop: 12, gap: 5 },
+  captionBlock: { paddingLeft: 11.5, paddingRight: 20.5, marginTop: 12, gap: 5 }, // text box 358 wide (x 11.5..369.5)
   caption: { fontSize: 14.075, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
   lead: { fontWeight: '600' },
   time: { fontSize: 11.5, lineHeight: 16, marginLeft: 1, color: colors.textSubtle },
