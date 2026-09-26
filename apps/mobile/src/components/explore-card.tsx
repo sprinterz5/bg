@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     bottom: 5.5,
     width: 292,
     height: 52,
-    paddingTop: 6.5, // Sen baseline = (20 − 1.203·18.4)/2 + 0.9395·18.4 = 16.2 into the line
+    paddingTop: 7.5, // 1px lower than the frame, by eye on the phone
     paddingHorizontal: 6,
     borderRadius: 13.5,
     backgroundColor: 'rgba(255,255,255,0.8)',
