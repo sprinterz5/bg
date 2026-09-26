@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   titleText: { width: 285.2, fontFamily: fonts.display, fontSize: 20.05, lineHeight: 20.67, letterSpacing: 20.05 * 0.01, paddingBottom: 3, marginBottom: -3, color: colors.text },
   captionBlock: { paddingLeft: 13, paddingRight: 19, marginTop: 14, gap: 9 }, // text box 358 wide (x 11.5..369.5)
   // The line height is tighter than the font: room below so the second line's descenders (g, y, p) aren't cut.
-  caption: { fontSize: 14.25, lineHeight: 17, letterSpacing: 14.075 * 0.0025, paddingBottom: 3, marginBottom: -3, color: colors.text },
+  caption: { fontSize: 14.25, lineHeight: 17.5, letterSpacing: 14.075 * 0.0025, paddingBottom: 3, marginBottom: -3, color: colors.text },
   lead: { fontWeight: '600' },
   time: { fontSize: 12.25, lineHeight: 16, marginLeft: 1, color: colors.textSubtle },
 });
