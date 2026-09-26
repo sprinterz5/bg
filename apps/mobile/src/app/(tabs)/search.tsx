@@ -38,8 +38,9 @@ const FIELD_H = 41;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
 const HEADER_BOTTOM = 8;
 const HEADER_H = FIELD_TOP + FIELD_H + HEADER_BOTTOM;
-// Topics block under the header: chips 28 tall, 15 under the field (frame y 107), first post 15 below them.
-const TOPICS_H = 15 - HEADER_BOTTOM + 28 + 15;
+// Topics block under the header: chips 28 tall, TOPICS_GAP under the field (15 in the frame), first post 15 below them.
+const TOPICS_GAP = 11;
+const TOPICS_H = TOPICS_GAP - HEADER_BOTTOM + 28 + 15;
 const FEED_TOP = HEADER_H + TOPICS_H;
 const FIELD_BG = '#EFF3F4';
 const PLACEHOLDER = '#536471';
@@ -101,7 +102,7 @@ export default function Search() {
   }));
   // Once the topics have scrolled away the returning field gets an 18px white strip under it (8 at the top,
   // where the topics sit 15 below the field).
-  const stripStyle = useAnimatedStyle(() => ({ opacity: interpolate(lastY.value, [35, 45], [0, 1], Extrapolation.CLAMP) }));
+  const stripStyle = useAnimatedStyle(() => ({ opacity: interpolate(lastY.value, [TOPICS_GAP + 20, TOPICS_GAP + 30], [0, 1], Extrapolation.CLAMP) }));
   const topicsShift = useAnimatedStyle(() => ({
     transform: [{ translateY: -Math.min(Math.max(lastY.value, 0), FEED_TOP) }],
   }));
@@ -432,7 +433,7 @@ const styles = StyleSheet.create({
 
   // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
   // Chips 15 under the search field, first post 15 below them.
-  topicsScroll: { marginTop: 15 - HEADER_BOTTOM, marginBottom: 15, flexGrow: 0 },
+  topicsScroll: { marginTop: TOPICS_GAP - HEADER_BOTTOM, marginBottom: 15, flexGrow: 0 },
   topics: { paddingHorizontal: 10, gap: 9 },
   chip: {
     height: 28,
