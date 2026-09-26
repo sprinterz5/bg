@@ -31,7 +31,7 @@ type Mode = 'explore' | 'typing' | 'results';
 type Tab = 'articles' | 'profiles';
 
 const FIELD_TOP = 6; // y 55 in the frame, 2px higher by eye
-const FIELD_H = 37;
+const FIELD_H = 41;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
 const HEADER_BOTTOM = 8;
 const HEADER_H = FIELD_TOP + FIELD_H + HEADER_BOTTOM;
@@ -401,7 +401,7 @@ function ProfileRow({ profile }: { profile: Author }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   header: { height: FIELD_TOP + FIELD_H + HEADER_BOTTOM, paddingTop: FIELD_TOP, zIndex: 1, backgroundColor: colors.bg },
-  back: { position: 'absolute', left: 15, top: FIELD_TOP + 9 },
+  back: { position: 'absolute', left: 15, top: FIELD_TOP + 11 },
   field: {
     height: FIELD_H,
     borderRadius: 10,
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   fieldIcon: { marginRight: 14.5 }, // placeholder at x 51.6
   input: { flex: 1, fontSize: 15.25, color: colors.text, padding: 0, height: FIELD_H, transform: [{ translateY: -0.5 }] },
   clear: { marginLeft: 8 },
-  exit: { position: 'absolute', right: 24, top: FIELD_TOP + 9 },
+  exit: { position: 'absolute', right: 24, top: FIELD_TOP + 11 },
   exitText: { fontSize: 16, lineHeight: 20, color: colors.text },
   body: { flex: 1 },
   clip: { flex: 1, overflow: 'hidden' },

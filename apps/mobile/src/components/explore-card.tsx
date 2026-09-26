@@ -11,6 +11,10 @@ import { push } from '@/lib/nav';
 
 // Figma 3163:1520 / 3170:2017: image 220 tall, title chip 8px from its bottom-left,
 // caption 13/16 at x 15 with bold lead words, time 12/16 #788690, 24px to the next card.
+/** Longest title / caption that still fits the card's 2 lines at the current sizes (backend enforces the same). */
+export const ARTICLE_TITLE_MAX = 45;
+export const ARTICLE_EXCERPT_MAX = 90;
+
 export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePost }) {
   const open = () => push({ pathname: '/article/[id]', params: { id: post.articleId } });
 

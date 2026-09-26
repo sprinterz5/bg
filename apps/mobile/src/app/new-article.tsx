@@ -11,6 +11,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { useFeed } from '@/state/feed';
 import { useSession } from '@/state/session';
 import { colors, motion } from '@/theme';
+import { ARTICLE_TITLE_MAX } from '@/components/explore-card';
 import { AnimatedText, Text, TextInput } from '@/components/text';
 import { back } from '@/lib/nav';
 
@@ -70,7 +71,7 @@ export default function NewArticle() {
           placeholder="Label your article..."
           placeholderTextColor="#737373"
           multiline
-          maxLength={180}
+          maxLength={ARTICLE_TITLE_MAX}
           selectionColor={colors.primary}
           style={styles.label}
           accessibilityLabel="Article label"

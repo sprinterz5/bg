@@ -6,9 +6,10 @@ import { makeSlug } from "../utils/slug.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
 
 const articleCreateSchema = z.object({
-  title: z.string().min(1).max(180),
+  // Explore cards show the title and excerpt in 2 lines each without truncation.
+  title: z.string().min(1).max(45),
   subtitle: z.string().max(240).optional(),
-  excerpt: z.string().max(600).optional(),
+  excerpt: z.string().max(90).optional(),
   body: z.string().min(1),
   coverImageUrl: z.string().url().optional(),
   tags: z.array(z.string().min(1).max(40)).max(20).default([])
