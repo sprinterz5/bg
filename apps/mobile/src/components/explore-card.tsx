@@ -12,7 +12,7 @@ import { push } from '@/lib/nav';
 // Figma 3163:1520 / 3170:2017: image 220 tall, title chip 8px from its bottom-left,
 // caption 13/16 at x 15 with bold lead words, time 12/16 #788690, 24px to the next card.
 /** Longest title / caption that still fits the card's 2 lines at the current sizes (backend enforces the same). */
-export const ARTICLE_TITLE_MAX = 45;
+export const ARTICLE_TITLE_MAX = 55;
 export const ARTICLE_EXCERPT_MAX = 90;
 
 export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePost }) {
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 4,
     bottom: 5.5,
-    width: 292,
+    width: 314, // 292 in the frame, widened so 55-char titles fit 2 lines
     height: 52,
     paddingTop: 8.75, // 2px lower than the frame, by eye on the phone
     paddingHorizontal: 6,
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
-  titleText: { width: 276, fontFamily: fonts.display, fontSize: 19.4, lineHeight: 20, letterSpacing: 18.4 * 0.01, color: colors.text },
+  titleText: { width: 300, fontFamily: fonts.display, fontSize: 19.4, lineHeight: 20, letterSpacing: 18.4 * 0.01, color: colors.text },
   captionBlock: { paddingLeft: 11.5, paddingRight: 20.5, marginTop: 13, gap: 5 }, // text box 358 wide (x 11.5..369.5)
   caption: { fontSize: 14.075, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
   lead: { fontWeight: '600' },

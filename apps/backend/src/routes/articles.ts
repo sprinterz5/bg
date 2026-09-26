@@ -7,7 +7,7 @@ import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
 
 const articleCreateSchema = z.object({
   // Explore cards show the title and excerpt in 2 lines each without truncation.
-  title: z.string().min(1).max(45),
+  title: z.string().min(1).max(55),
   subtitle: z.string().max(240).optional(),
   excerpt: z.string().max(90).optional(),
   body: z.string().min(1),

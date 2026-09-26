@@ -170,7 +170,7 @@ ARTICLES.tinkov = {
   id: 'tinkov',
   author: mx,
   cover: require('@/assets/mock/explore-tinkov.png'),
-  title: 'How Tinkov Rebuilt His Bank in Mexico',
+  title: 'How Tinkov Recreated his Tinkov Bank in Mexico',
   likes: 1312,
   comments: 204,
   shares: 96,
@@ -185,7 +185,7 @@ ARTICLES.iphoneDuo = {
   id: 'iphoneDuo',
   author: gadgets,
   cover: require('@/assets/mock/explore-iphone.png'),
-  title: 'Why iPhone Duo Is the Best Foldable',
+  title: 'Why iPhone Duo is The Best Foldable of the whole market',
   likes: 987,
   comments: 311,
   shares: 58,
@@ -247,7 +247,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
   {
     id: 'e-kindergarten',
     image: require('@/assets/mock/explore-kindergarten.jpg'),
-    title: 'Wiggling Is Welcome in This Classroom',
+    title: 'Wiggling is Welcome in This Kindergarten Classroom',
     lead: 'Kim',
     rest: ' Broomer`s classroom is one of the most supportive places to learn I`ve ever seen',
     timeAgo: '1 day ago',
@@ -257,7 +257,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
   {
     id: 'e-nurse',
     image: require('@/assets/mock/explore-nurse.jpg'),
-    title: 'The Nurse Who Climbs a Ladder to Save Lives',
+    title: 'This Heroic Nurse Climbs 1000-foot ladder to save lives',
     lead: 'Agnes',
     rest: ' Nambozo goes to extraordinary lengths to vaccinate children in Uganda',
     timeAgo: '2 weeks ago',
@@ -267,7 +267,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
   {
     id: 'e1',
     image: require('@/assets/mock/explore-tinkov.png'),
-    title: 'How Tinkov Rebuilt His Bank in Mexico',
+    title: 'How Tinkov Recreated his Tinkov Bank in Mexico',
     lead: 'How Tinkov',
     rest: ' recreated his bank model in Mexico under a new name, “Plata”',
     timeAgo: '1 week ago',
@@ -277,7 +277,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
   {
     id: 'e2',
     image: require('@/assets/mock/explore-iphone.png'),
-    title: 'Why iPhone Duo Is the Best Foldable',
+    title: 'Why iPhone Duo is The Best Foldable of the whole market',
     lead: 'Why iPhone',
     rest: ' Duo is the best foldable on the market, and why it will sell so well',
     timeAgo: '2 days ago',
@@ -297,7 +297,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
   {
     id: 'e-habits',
     image: require('@/assets/mock/explore-habits.png'),
-    title: 'Tiny Habits That Quietly Change Your Year',
+    title: 'The Tiny Habits That Quietly Change Your Whole Year',
     lead: 'Small',
     rest: ' routines compound faster than big resolutions — here is how to start one this week',
     timeAgo: '3 hours ago',
@@ -307,7 +307,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
   {
     id: 'e-spiderman',
     image: require('@/assets/mock/post-spiderman.jpg'),
-    title: 'Why the New Spider-Man Broke Every Record',
+    title: 'Why the New Spider-Man Film Broke Every Record',
     lead: 'Spider-Man',
     rest: ' returns with the biggest opening weekend in years, and critics love it',
     timeAgo: '5 hours ago',
