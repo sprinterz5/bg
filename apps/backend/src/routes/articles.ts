@@ -9,7 +9,7 @@ const articleCreateSchema = z.object({
   // The app measures titles against the Explore card (2 lines); this is only a hard cap.
   title: z.string().min(1).max(80),
   subtitle: z.string().max(240).optional(),
-  excerpt: z.string().max(90).optional(),
+  excerpt: z.string().max(600).optional(),
   body: z.string().min(1),
   coverImageUrl: z.string().url().optional(),
   tags: z.array(z.string().min(1).max(40)).max(20).default([])

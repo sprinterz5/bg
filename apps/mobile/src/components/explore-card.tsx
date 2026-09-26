@@ -14,7 +14,6 @@ import { push } from '@/lib/nav';
 /** Hard caps (backend enforces the same). Whether a title fits the card's 2 lines is measured while typing:
  * see `exploreTitleStyle` and the new-article screen. */
 export const ARTICLE_TITLE_MAX = 80;
-export const ARTICLE_EXCERPT_MAX = 90;
 
 export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePost }) {
   const open = () => push({ pathname: '/article/[id]', params: { id: post.articleId } });
