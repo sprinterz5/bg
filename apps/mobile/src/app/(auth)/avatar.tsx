@@ -48,7 +48,7 @@ export default function AvatarStep() {
       title="Set a profile picture"
       subtitle="If you don`t want to share your face, upload images of your interests and topics that match your character"
       footer={
-        <Animated.View layout={LinearTransition.duration(260)} style={styles.buttons}>
+        <Animated.View collapsable={false} layout={LinearTransition.duration(260)} style={styles.buttons}>
           {uri ? (
             <Animated.View collapsable={false} entering={FadeInDown.duration(260)}>
               <PrimaryButton title="Change a photo" variant="outline" onPress={pick} />

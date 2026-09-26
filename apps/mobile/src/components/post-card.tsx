@@ -65,7 +65,7 @@ export const PostCard = memo(function PostCard({ post }: { post: Post }) {
           <Action icon="postShare" w={16.5} h={15.5} count={post.shares} onPress={() => {}} label="Share" />
         </View>
         <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
-          <Animated.View style={saveStyle}>
+          <Animated.View collapsable={false} style={saveStyle}>
             <Icon name="postBookmark" width={17.75} height={19.75} tintColor={saved ? colors.primary : undefined} />
           </Animated.View>
         </PressableScale>
@@ -97,7 +97,7 @@ function Action({ icon, w, h, count, onPress, label, tint, pop }: ActionProps) {
   const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop ? pop.value : 1 }] }));
   return (
     <PressableScale onPress={onPress} hitSlop={8} accessibilityLabel={label} style={styles.action}>
-      <Animated.View style={popStyle}>
+      <Animated.View collapsable={false} style={popStyle}>
         <Icon name={icon} width={w} height={h} tintColor={tint} />
       </Animated.View>
       <Text style={styles.count}>{formatCount(count)}</Text>

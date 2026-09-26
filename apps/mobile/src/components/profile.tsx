@@ -106,7 +106,7 @@ export function ProfileButton({
 
   return (
     <PressableScale onPress={onPress} scaleTo={0.97} haptic style={fill ? styles.buttonWrap : undefined} accessibilityRole="button" accessibilityLabel={label}>
-      <Animated.View style={[styles.button, { height }, bg]}>
+      <Animated.View collapsable={false} style={[styles.button, { height }, bg]}>
         <AnimatedText style={[styles.buttonText, fg]}>{label}</AnimatedText>
       </Animated.View>
     </PressableScale>
@@ -145,7 +145,7 @@ export function ProfileTabs({
       <PressableScale onPress={() => onChange('liked')} scaleTo={0.9} style={[styles.tab, { left: LIST_X + TABS_STEP - TAB_W / 2 }]} accessibilityRole="tab" accessibilityState={{ selected: tab === 'liked' }} accessibilityLabel="Liked">
         <Icon name="profileTabLiked" width={20.75} height={17.75} tintColor={tab === 'liked' ? colors.text : colors.textSubtle} />
       </PressableScale>
-      <Animated.View style={[styles.underline, underline]} />
+      <Animated.View collapsable={false} style={[styles.underline, underline]} />
     </View>
   );
 }

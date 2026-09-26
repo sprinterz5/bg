@@ -96,10 +96,10 @@ function TabGlyph({ meta, focused, k }: { meta: (typeof TABS)[string]; focused: 
 
   return (
     <>
-      <Animated.View style={[styles.layer, place(meta.off), offStyle]}>
+      <Animated.View collapsable={false} style={[styles.layer, place(meta.off), offStyle]}>
         <Icon name={meta.off.icon} width={meta.off.w} height={meta.off.h} />
       </Animated.View>
-      <Animated.View style={[styles.layer, place(meta.on), onStyle]}>
+      <Animated.View collapsable={false} style={[styles.layer, place(meta.on), onStyle]}>
         <Icon name={meta.on.icon} width={meta.on.w} height={meta.on.h} />
       </Animated.View>
     </>

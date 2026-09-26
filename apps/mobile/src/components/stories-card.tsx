@@ -88,7 +88,7 @@ function Reactions() {
   return (
     <View style={styles.pill}>
       <PressableScale onPress={toggle} hitSlop={8} scaleTo={0.9} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
-        <Animated.View style={popStyle}>
+        <Animated.View collapsable={false} style={popStyle}>
           <Icon name={liked ? 'storyLikeFilled' : 'storyLike'} width={26.8} height={23.8} />
         </Animated.View>
       </PressableScale>

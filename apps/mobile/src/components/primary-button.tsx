@@ -44,7 +44,7 @@ export function PrimaryButton({ title, onPress, enabled = true, loading = false,
       accessibilityRole="button"
       accessibilityState={{ disabled: !interactive }}
       style={style}>
-      <Animated.View style={[styles.base, outline ? styles.outline : null, bgStyle]}>
+      <Animated.View collapsable={false} style={[styles.base, outline ? styles.outline : null, bgStyle]}>
         {loading ? (
           <ActivityIndicator color={outline ? colors.text : '#FFFFFF'} />
         ) : (

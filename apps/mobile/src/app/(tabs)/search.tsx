@@ -187,14 +187,14 @@ export default function Search() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.clip}>
-      <Animated.View style={[styles.header, headerShift]}>
-        <Animated.View style={[styles.back, backStyle]} pointerEvents={mode === 'results' ? 'auto' : 'none'}>
+      <Animated.View collapsable={false} style={[styles.header, headerShift]}>
+        <Animated.View collapsable={false} style={[styles.back, backStyle]} pointerEvents={mode === 'results' ? 'auto' : 'none'}>
           <PressableScale onPress={backToTyping} hitSlop={14} scaleTo={0.85} accessibilityLabel="Back">
             <Icon name="searchBack" width={10} height={20} />
           </PressableScale>
         </Animated.View>
 
-        <Animated.View style={[styles.field, fieldStyle]}>
+        <Animated.View collapsable={false} style={[styles.field, fieldStyle]}>
           <Icon name="searchField" width={15} style={styles.fieldIcon} />
           <TextInput
             ref={inputRef}
@@ -228,13 +228,13 @@ export default function Search() {
           ) : null}
         </Animated.View>
 
-        <Animated.View style={[styles.filter, filterStyle]} pointerEvents={mode === 'explore' ? 'auto' : 'none'}>
+        <Animated.View collapsable={false} style={[styles.filter, filterStyle]} pointerEvents={mode === 'explore' ? 'auto' : 'none'}>
           <PressableScale hitSlop={10} scaleTo={0.88} accessibilityLabel="Filters">
             <Icon name="searchFilter" width={26} height={24} />
           </PressableScale>
         </Animated.View>
 
-        <Animated.View style={[styles.exit, exitStyle]} pointerEvents={mode === 'explore' ? 'none' : 'auto'}>
+        <Animated.View collapsable={false} style={[styles.exit, exitStyle]} pointerEvents={mode === 'explore' ? 'none' : 'auto'}>
           <PressableScale onPress={exit} hitSlop={12} scaleTo={0.92} accessibilityRole="button">
             <Text style={styles.exitText}>Exit</Text>
           </PressableScale>
@@ -269,7 +269,7 @@ export default function Search() {
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
             />
-            <Animated.View style={[styles.topicsOverlay, topicsShift]}>
+            <Animated.View collapsable={false} style={[styles.topicsOverlay, topicsShift]}>
               <Topics selected={topic} onSelect={setTopic} />
             </Animated.View>
           </Animated.View>
@@ -361,7 +361,7 @@ function Segmented({ tab, onChange, width }: { tab: Tab; onChange: (t: Tab) => v
     <View style={styles.segmented}>
       <View style={[styles.segment, { width: segW }]} />
       <View style={[styles.segment, { width: segW }]} />
-      <Animated.View style={[styles.segment, styles.segIndicator, { width: segW }, indicator]} />
+      <Animated.View collapsable={false} style={[styles.segment, styles.segIndicator, { width: segW }, indicator]} />
       <Pressable style={[styles.segHit, { width: segW }]} onPress={() => onChange('articles')} accessibilityRole="tab" accessibilityState={{ selected: tab === 'articles' }}>
         <AnimatedText style={[styles.segText, articlesText]}>Articles</AnimatedText>
       </Pressable>

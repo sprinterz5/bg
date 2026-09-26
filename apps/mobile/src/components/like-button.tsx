@@ -96,10 +96,10 @@ export function LikeButton({ liked, onToggle, count, format = String, icons, wid
   return (
     <PressableScale onPress={press} hitSlop={8} scaleTo={0.9} accessibilityRole="button" accessibilityLabel={liked ? 'Unlike' : 'Like'} style={[styles.row, { gap }, style]}>
       <View style={{ width, height }}>
-        <Animated.View style={[StyleSheet.absoluteFill, outline]}>
+        <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, outline]}>
           <Icon name={icons.off} width={width} height={height} />
         </Animated.View>
-        <Animated.View style={[StyleSheet.absoluteFill, filled]}>
+        <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, filled]}>
           <Icon name={icons.on} width={width} height={height} />
         </Animated.View>
       </View>

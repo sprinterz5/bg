@@ -130,10 +130,10 @@ function Reader({ article }: { article: Article }) {
       </View>
 
       <BlurTargetView ref={targetRef} style={StyleSheet.absoluteFill}>
-        <Animated.View style={[styles.cover, { height: IMG_H }, imageStyle]}>
+        <Animated.View collapsable={false} style={[styles.cover, { height: IMG_H }, imageStyle]}>
           <Image source={article.cover} style={styles.fill} contentFit="cover" />
         </Animated.View>
-        <Animated.View style={[styles.sheet, { height: H }, sheetStyle]} />
+        <Animated.View collapsable={false} style={[styles.sheet, { height: H }, sheetStyle]} />
       </BlurTargetView>
 
       {pages ? (
@@ -162,7 +162,7 @@ function Reader({ article }: { article: Article }) {
         />
       ) : null}
 
-      <Animated.View style={[styles.card, cardStyle]}>
+      <Animated.View collapsable={false} style={[styles.card, cardStyle]}>
         <Glass blurTarget={targetRef} blur={blurOn} style={styles.glassFill}>
           <View style={[styles.cardRow, { width: CARD_W_2 - 14 }]}>
             <View style={styles.author}>
@@ -183,7 +183,7 @@ function Reader({ article }: { article: Article }) {
         </Glass>
       </Animated.View>
 
-      <Animated.View style={[styles.close, { top: top + 1 }, closeStyle]}>
+      <Animated.View collapsable={false} style={[styles.close, { top: top + 1 }, closeStyle]}>
         <PressableScale onPress={() => back()} hitSlop={10} scaleTo={0.9} accessibilityLabel="Close">
           <Icon name="readerClose" width={33} />
         </PressableScale>
@@ -266,7 +266,7 @@ function Dot({ index, width, scrollX }: { index: number; width: number; scrollX:
     const distance = Math.min(1, Math.abs(scrollX.value / width - index));
     return { backgroundColor: interpolateColor(distance, [0, 1], ['#000000', colors.textSubtle]) };
   });
-  return <Animated.View style={[styles.dot, style]} />;
+  return <Animated.View collapsable={false} style={[styles.dot, style]} />;
 }
 
 function BarItem({ icon, w, h, label, onPress }: { icon: IconName; w: number; h: number; label: string; onPress?: () => void }) {

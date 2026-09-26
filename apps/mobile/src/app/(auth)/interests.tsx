@@ -105,7 +105,7 @@ function InterestRow({ label, checked, onPress }: { label: string; checked: bool
       hitSlop={{ top: 4, bottom: 4 }}>
       <View style={styles.check}>
         <Icon name="checkOff" width={24} style={StyleSheet.absoluteFill} />
-        <Animated.View style={[StyleSheet.absoluteFill, styles.checkOn, fillStyle]}>
+        <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, styles.checkOn, fillStyle]}>
           <Icon name="checkOn" width={24} style={StyleSheet.absoluteFill} />
           <Icon name="tick" width={12} />
         </Animated.View>

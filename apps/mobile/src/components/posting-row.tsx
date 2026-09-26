@@ -23,7 +23,7 @@ export function PostingRow({ coverUri }: { coverUri: string }) {
       <View style={styles.right}>
         <Text style={styles.label}>Posting...</Text>
         <View style={styles.track}>
-          <Animated.View style={[styles.fill, fillStyle]} />
+          <Animated.View collapsable={false} style={[styles.fill, fillStyle]} />
         </View>
       </View>
     </Animated.View>

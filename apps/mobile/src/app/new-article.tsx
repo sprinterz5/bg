@@ -80,7 +80,7 @@ export default function NewArticle() {
       <KeyboardStickyView offset={{ closed: 0, opened: bottomPad - KEYBOARD_GAP }}>
         <View style={[styles.footer, { paddingBottom: bottomPad }]}>
           <PressableScale haptic disabled={!canPost} scaleTo={0.97} onPress={onPost} accessibilityRole="button" accessibilityState={{ disabled: !canPost }}>
-            <Animated.View style={[styles.post, buttonStyle]}>
+            <Animated.View collapsable={false} style={[styles.post, buttonStyle]}>
               <AnimatedText style={[styles.postText, labelStyle]}>Post</AnimatedText>
             </Animated.View>
           </PressableScale>
