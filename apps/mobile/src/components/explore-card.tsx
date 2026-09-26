@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   captionBlock: { paddingLeft: 13, paddingRight: 19, marginTop: 14, gap: 9 }, // text box 358 wide (x 11.5..369.5)
   caption: { fontSize: 14.25, lineHeight: 16, letterSpacing: 14.075 * 0.0025, color: colors.text },
   lead: { fontWeight: '600' },
-  time: { fontSize: 12.35, lineHeight: 16, marginLeft: 1, color: colors.textSubtle },
+  time: { fontSize: 12.25, lineHeight: 16, marginLeft: 1, color: colors.textSubtle },
 });
 
 /** The card title's exact text style (font, size, spacing, width): used to measure titles while typing. */
