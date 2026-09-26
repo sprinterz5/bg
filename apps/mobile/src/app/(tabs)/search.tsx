@@ -38,9 +38,9 @@ const FIELD_H = 41;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
 const HEADER_BOTTOM = 8;
 const HEADER_H = FIELD_TOP + FIELD_H + HEADER_BOTTOM;
-// Topics block under the header: chips 28 tall, TOPICS_GAP under the field (15 in the frame), first post 15 below them.
+// Topics block under the header: chips 28 tall, TOPICS_GAP under the field (15 in the frame) and above the first post.
 const TOPICS_GAP = 11;
-const TOPICS_H = TOPICS_GAP - HEADER_BOTTOM + 28 + 15;
+const TOPICS_H = TOPICS_GAP - HEADER_BOTTOM + 28 + TOPICS_GAP;
 const FEED_TOP = HEADER_H + TOPICS_H;
 const FIELD_BG = '#EFF3F4';
 const PLACEHOLDER = '#536471';
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
 
   // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
   // Chips 15 under the search field, first post 15 below them.
-  topicsScroll: { marginTop: TOPICS_GAP - HEADER_BOTTOM, marginBottom: 15, flexGrow: 0 },
+  topicsScroll: { marginTop: TOPICS_GAP - HEADER_BOTTOM, marginBottom: TOPICS_GAP, flexGrow: 0 },
   topics: { paddingHorizontal: 10, gap: 9 },
   chip: {
     height: 28,
