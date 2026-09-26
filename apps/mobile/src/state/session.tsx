@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { logout, restoreSession } from '@/lib/auth';
+import { setSessionExpiredHandler } from '@/lib/api';
 import { closeChatSocket } from '@/lib/chat';
 
 export type SessionUser = {
@@ -56,6 +57,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       .finally(() => setReady(true));
   }, []);
   const [draft, setDraft] = useState<SignupDraft>(emptyDraft);
+
+  // The refresh token was rejected: drop the in-memory user so the app returns to sign-in.
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      closeChatSocket();
+      setUser(null);
+    });
+    return () => setSessionExpiredHandler(null);
+  }, []);
 
   const updateDraft = useCallback((patch: Partial<SignupDraft>) => setDraft((d) => ({ ...d, ...patch })), []);
   const resetDraft = useCallback((patch?: Partial<SignupDraft>) => setDraft({ ...emptyDraft, ...patch }), []);

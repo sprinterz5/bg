@@ -17,7 +17,15 @@ export class ApiError extends Error {
 type Tokens = { accessToken: string; refreshToken: string };
 
 let accessToken: string | null = null;
-let refreshing: Promise<boolean> | null = null;
+// One refresh at a time: the server rotates refresh tokens, so two parallel refreshes with the same token
+// make the second one fail (401) and used to wipe the session.
+let refreshing: Promise<unknown> | null = null;
+let onExpired: (() => void) | null = null;
+
+/** Called when the stored session can no longer be refreshed (the app should go back to sign-in). */
+export function setSessionExpiredHandler(handler: (() => void) | null) {
+  onExpired = handler;
+}
 
 export async function saveTokens(tokens: Tokens) {
   accessToken = tokens.accessToken;
@@ -52,16 +60,24 @@ async function send<T>(path: string, init: ApiInit): Promise<T> {
   return data as T;
 }
 
-/** Rotates the stored refresh token. Returns the /auth/refresh body, or null when the session is gone. */
-export async function refreshSession<T>(): Promise<(T & Tokens) | null> {
+/** Rotates the stored refresh token (shared by concurrent callers). Returns the /auth/refresh body, or null when the session is gone. */
+export function refreshSession<T>(): Promise<(T & Tokens) | null> {
+  refreshing ??= doRefresh().finally(() => (refreshing = null));
+  return refreshing as Promise<(T & Tokens) | null>;
+}
+
+async function doRefresh() {
   const refreshToken = await getStoredRefreshToken();
   if (!refreshToken) return null;
   try {
-    const data = await send<T & Tokens>('/auth/refresh', { body: { refreshToken } });
+    const data = await send<Tokens>('/auth/refresh', { body: { refreshToken } });
     await saveTokens(data);
     return data;
   } catch (e) {
-    if (e instanceof ApiError && e.status === 401) await clearTokens();
+    if (e instanceof ApiError && e.status === 401) {
+      await clearTokens();
+      onExpired?.();
+    }
     return null;
   }
 }
@@ -72,8 +88,7 @@ export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
     return await send<T>(path, init);
   } catch (e) {
     if (!(init.auth && e instanceof ApiError && e.status === 401)) throw e;
-    refreshing ??= refreshSession().then((d) => !!d).finally(() => (refreshing = null));
-    if (!(await refreshing)) throw e;
+    if (!(await refreshSession())) throw e;
     return send<T>(path, init);
   }
 }
