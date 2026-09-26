@@ -30,9 +30,9 @@ import { push } from '@/lib/nav';
 type Mode = 'explore' | 'typing' | 'results';
 type Tab = 'articles' | 'profiles';
 
-// Scrolled posts show 13px into the status bar area (the plain strip under the clock is 13px shorter);
+// Scrolled posts show 16px into the status bar area (the plain strip under the clock is 16px shorter);
 // the field itself stays where it was.
-const STATUS_OVERLAP = 13;
+const STATUS_OVERLAP = 16;
 const FIELD_TOP = 6 + STATUS_OVERLAP; // y 55 in the frame, 2px higher by eye
 const FIELD_H = 41;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
