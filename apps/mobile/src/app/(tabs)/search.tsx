@@ -9,6 +9,7 @@ import Animated, {
   FadeOut,
   interpolate,
   interpolateColor,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -33,6 +34,7 @@ const FIELD_TOP = 6; // y 55 in the frame, 2px higher by eye
 const FIELD_H = 37;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
 const HEADER_BOTTOM = 8;
+const HEADER_H = FIELD_TOP + FIELD_H + HEADER_BOTTOM;
 const FIELD_BG = '#EFF3F4';
 const PLACEHOLDER = '#536471';
 const MUTED = '#737A84';
@@ -76,6 +78,17 @@ export default function Search() {
     marginRight: interpolate(m.value, [0, 1, 2], [63.5, 65, 65]),
   }));
   const filterStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [1, 0], Extrapolation.CLAMP) }));
+  // Explore: the header scrolls with the feed (Instagram-style) — up with the posts, down on pull-to-refresh.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
+  useEffect(() => {
+    if (mode !== 'explore') scrollY.value = 0;
+  }, [mode, scrollY]);
+  const headerShift = useAnimatedStyle(() => ({
+    transform: [{ translateY: -scrollY.value * (1 - Math.min(Math.max(m.value, 0), 1)) }],
+  }));
   const exitStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [0, 1], Extrapolation.CLAMP) }));
   const backStyle = useAnimatedStyle(() => ({
     opacity: interpolate(m.value, [1, 2], [0, 1], Extrapolation.CLAMP),
@@ -162,7 +175,8 @@ export default function Search() {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
+      <View style={styles.clip}>
+      <Animated.View style={[styles.header, headerShift]}>
         <Animated.View style={[styles.back, backStyle]} pointerEvents={mode === 'results' ? 'auto' : 'none'}>
           <PressableScale onPress={backToTyping} hitSlop={14} scaleTo={0.85} accessibilityLabel="Back">
             <Icon name="searchBack" width={10} height={20} />
@@ -214,21 +228,28 @@ export default function Search() {
             <Text style={styles.exitText}>Exit</Text>
           </PressableScale>
         </Animated.View>
-      </View>
+      </Animated.View>
 
       <View style={styles.body}>
         {mode === 'explore' ? (
-          <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
-            {/* Topics stay pinned under the search field; only the posts scroll. */}
-            <Topics selected={topic} onSelect={setTopic} />
-            <FlatList
+          <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={styles.exploreLayer}>
+            {/* The list runs behind the header (it moves with the scroll), topics scroll with the posts. */}
+            <Animated.FlatList
               data={EXPLORE_FEED}
               keyExtractor={(p) => p.id}
               renderItem={({ item }) => <ExploreCard post={item} />}
-              style={styles.feed}
+              ListHeaderComponent={<Topics selected={topic} onSelect={setTopic} />}
+              onScroll={onScroll}
+              scrollEventThrottle={16}
               contentContainerStyle={styles.feedContent}
               refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} colors={[colors.textMuted]} />
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor={colors.textMuted}
+                  colors={[colors.textMuted]}
+                  progressViewOffset={HEADER_H}
+                />
               }
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
@@ -272,6 +293,7 @@ export default function Search() {
             />
           </Animated.View>
         ) : null}
+      </View>
       </View>
     </View>
   );
@@ -385,12 +407,13 @@ const styles = StyleSheet.create({
   exit: { position: 'absolute', right: 24, top: FIELD_TOP + 9 },
   exitText: { fontSize: 16, lineHeight: 20, color: colors.text },
   body: { flex: 1 },
-  feed: { flex: 1 },
-  feedContent: { paddingTop: 12 },
+  clip: { flex: 1, overflow: 'hidden' },
+  exploreLayer: { position: 'absolute', top: -HEADER_H, left: 0, right: 0, bottom: 0 },
+  feedContent: { paddingTop: HEADER_H },
 
   // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
-  // Feed clips 3px under the chips; the other 12 of the 15 gap is the list's top padding, so posts scroll up close to the chips.
-  topicsScroll: { marginTop: 15 - HEADER_BOTTOM, marginBottom: 3, flexGrow: 0 },
+  // Chips 5 under the search field, first post 15 below them.
+  topicsScroll: { marginTop: 5 - HEADER_BOTTOM, marginBottom: 15, flexGrow: 0 },
   topics: { paddingHorizontal: 11, gap: 9 },
   chip: {
     height: 28,
