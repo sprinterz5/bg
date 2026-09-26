@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { BackHandler, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
@@ -58,6 +58,12 @@ export default function Search() {
   const [tab, setTab] = useState<Tab>('articles');
   const [query, setQuery] = useState('');
   const [topic, setTopic] = useState<string>(EXPLORE_TOPICS[0]);
+  // Feed is still mock: the pull-to-refresh only shows the spinner.
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 800);
+  }, []);
 
   const m = useSharedValue(0);
   useEffect(() => {
@@ -220,6 +226,9 @@ export default function Search() {
               keyExtractor={(p) => p.id}
               renderItem={({ item }) => <ExploreCard post={item} />}
               style={styles.feed}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} colors={[colors.textMuted]} />
+              }
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
             />

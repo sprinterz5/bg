@@ -1,4 +1,4 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
@@ -63,13 +63,14 @@ export default function Home() {
         ListHeaderComponentStyle={publishing ? styles.postingGap : styles.storiesGap}
         contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} progressViewOffset={insets.top} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} colors={[colors.textMuted]} progressViewOffset={insets.top} />}
       />
       {/* Content scrolls under the status bar and fades out there (69px in the frame = status bar + 22). */}
-      <LinearGradient
+      {/* SVG gradient via expo-image: expo-linear-gradient is not in the Android dev build. */}
+      <Image
         pointerEvents="none"
-        colors={['#FFFDFD', 'rgba(255,254,254,0.9)', 'rgba(255,255,255,0)']}
-        locations={[0, 0.5, 1]}
+        source={require('@/assets/fade-top.svg')}
+        contentFit="fill"
         style={[styles.fade, { height: insets.top + 22 }]}
       />
     </View>
