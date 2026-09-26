@@ -29,7 +29,7 @@ import { push } from '@/lib/nav';
 type Mode = 'explore' | 'typing' | 'results';
 type Tab = 'articles' | 'profiles';
 
-const FIELD_TOP = 8; // y 55
+const FIELD_TOP = 6; // y 55 in the frame, 2px higher by eye
 const FIELD_H = 37;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
 const HEADER_BOTTOM = 8;
