@@ -36,7 +36,7 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
 
 const styles = StyleSheet.create({
 // THIS.svg Explore: 227 media, chip 292x52 (white 1px stroke included) at 4 / 5.5 from the bottom,
-// Sen 18.4/21 title; caption 13.15/16 at x 11.5, 11.8 under the media; meta 5 below; next card 23.3 below.
+// Sen 18.4/21 title; caption 13.15/16 (+0.25%) at x 11.5, 11.8 under the media; meta 5 below; next card 23.3 below.
   card: { paddingBottom: 23.3 },
   media: { height: 227, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   titleText: { fontFamily: fonts.display, fontSize: 18.4, lineHeight: 21, color: colors.text },
   captionBlock: { paddingHorizontal: 11.5, marginTop: 11.8, gap: 5 },
-  caption: { fontSize: 13.15, lineHeight: 16, color: colors.text },
+  caption: { fontSize: 13.15, lineHeight: 16, letterSpacing: 13.15 * 0.0025, color: colors.text },
   lead: { fontWeight: '600' },
   time: { fontSize: 12, lineHeight: 16, color: colors.textSubtle },
 });
