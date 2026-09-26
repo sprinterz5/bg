@@ -50,7 +50,7 @@ export default function AvatarStep() {
       footer={
         <Animated.View layout={LinearTransition.duration(260)} style={styles.buttons}>
           {uri ? (
-            <Animated.View entering={FadeInDown.duration(260)}>
+            <Animated.View collapsable={false} entering={FadeInDown.duration(260)}>
               <PrimaryButton title="Change a photo" variant="outline" onPress={pick} />
             </Animated.View>
           ) : null}
@@ -60,7 +60,7 @@ export default function AvatarStep() {
       <View style={styles.center}>
         <View style={styles.avatar}>
           {uri ? (
-            <Animated.View key={uri} entering={FadeIn.duration(350)} style={StyleSheet.absoluteFill}>
+            <Animated.View collapsable={false} key={uri} entering={FadeIn.duration(350)} style={StyleSheet.absoluteFill}>
               <Image source={{ uri }} style={styles.fill} contentFit="cover" transition={200} />
             </Animated.View>
           ) : (

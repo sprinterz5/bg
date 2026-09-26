@@ -104,7 +104,7 @@ export function LikeButton({ liked, onToggle, count, format = String, icons, wid
         </Animated.View>
       </View>
       <View style={styles.countClip}>
-        <Animated.View key={count} entering={mounted ? rollIn(dir) : undefined} exiting={rollOut(dir)}>
+        <Animated.View collapsable={false} key={count} entering={mounted ? rollIn(dir) : undefined} exiting={rollOut(dir)}>
           <Text style={countStyle}>{format(count)}</Text>
         </Animated.View>
       </View>

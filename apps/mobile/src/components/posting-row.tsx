@@ -18,7 +18,7 @@ export function PostingRow({ coverUri }: { coverUri: string }) {
   const fillStyle = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));
 
   return (
-    <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(250)} style={styles.row}>
+    <Animated.View collapsable={false} entering={FadeIn.duration(250)} exiting={FadeOut.duration(250)} style={styles.row}>
       <Image source={{ uri: coverUri }} style={styles.thumb} contentFit="cover" />
       <View style={styles.right}>
         <Text style={styles.label}>Posting...</Text>

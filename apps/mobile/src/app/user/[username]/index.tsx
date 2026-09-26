@@ -88,7 +88,7 @@ export default function UserProfile() {
         ListHeaderComponent={header}
         ListHeaderComponentStyle={styles.listHeader}
         renderItem={({ item }) => (
-          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(120)}>
+          <Animated.View collapsable={false} entering={FadeIn.duration(200)} exiting={FadeOut.duration(120)}>
             <ProfilePostRow post={item} />
           </Animated.View>
         )}

@@ -50,7 +50,7 @@ export default function Welcome() {
         </AnimatedText>
       </View>
 
-      <Animated.View entering={FadeInDown.delay(360).duration(500)} style={styles.auth}>
+      <Animated.View collapsable={false} entering={FadeInDown.delay(360).duration(500)} style={styles.auth}>
         <Text style={styles.authLabel}>Log in/ Create an account:</Text>
         <View style={styles.socialRow}>
           {(['google', 'apple'] as const).map((p) => (
@@ -74,7 +74,7 @@ export default function Welcome() {
       </Animated.View>
       </View>
 
-      <Animated.View entering={FadeIn.delay(500).duration(500)} style={[styles.bottom, { paddingBottom: insets.bottom + 18 }]}>
+      <Animated.View collapsable={false} entering={FadeIn.delay(500).duration(500)} style={[styles.bottom, { paddingBottom: insets.bottom + 18 }]}>
         <PressableScale onPress={() => push('/login')} style={styles.usernameLink} accessibilityRole="button">
           <Text style={styles.at}>@</Text>
           <Text style={styles.usernameText}>Log in by username</Text>

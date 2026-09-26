@@ -181,7 +181,7 @@ export default function Search() {
             accessibilityLabel="Search"
           />
           {query && mode !== 'explore' ? (
-            <Animated.View entering={FADE_IN} exiting={FADE_OUT}>
+            <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT}>
               <PressableScale
                 onPress={() => {
                   setQuery('');
@@ -212,7 +212,7 @@ export default function Search() {
 
       <View style={styles.body}>
         {mode === 'explore' ? (
-          <Animated.View entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
+          <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
             <FlatList
               data={EXPLORE_FEED}
               keyExtractor={(p) => p.id}
@@ -225,7 +225,7 @@ export default function Search() {
         ) : null}
 
         {mode === 'typing' ? (
-          <Animated.View entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
+          <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
             <Segmented tab={tab} onChange={setTab} width={W} />
             {tab === 'articles' ? (
               <FlatList
@@ -250,7 +250,7 @@ export default function Search() {
         ) : null}
 
         {mode === 'results' ? (
-          <Animated.View entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
+          <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
             <FlatList
               data={results}
               keyExtractor={(p) => p.id}

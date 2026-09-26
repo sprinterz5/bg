@@ -29,7 +29,7 @@ export default function Home() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
-      <Animated.View entering={FadeInDown.delay(Math.min(index, 4) * 70).duration(380)} layout={LinearTransition.duration(300)}>
+      <Animated.View collapsable={false} entering={FadeInDown.delay(Math.min(index, 4) * 70).duration(380)} layout={LinearTransition.duration(300)}>
         <PostCard post={item} />
       </Animated.View>
     ),
@@ -53,7 +53,7 @@ export default function Home() {
                 <Icon name="headerBell" width={20} height={23} />
               </PressableScale>
             </View>
-            <Animated.View entering={FadeInDown.duration(380)}>
+            <Animated.View collapsable={false} entering={FadeInDown.duration(380)}>
               <StoriesCard stories={STORIES} />
             </Animated.View>
             {publishing ? <PostingRow coverUri={publishing.coverUri} /> : null}

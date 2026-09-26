@@ -19,7 +19,7 @@ export function PlaceholderScreen({ title, note = 'Coming soon', showBack = fals
           <Icon name="back" width={19} height={17} />
         </PressableScale>
       ) : null}
-      <Animated.View entering={FadeIn.duration(300)} style={styles.center}>
+      <Animated.View collapsable={false} entering={FadeIn.duration(300)} style={styles.center}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.note}>{note}</Text>
       </Animated.View>

@@ -53,7 +53,7 @@ export function StepScreen({
         </View>
       ) : null}
 
-      <Animated.View entering={FadeInDown.duration(380).withInitialValues({ transform: [{ translateY: 10 }] })}>
+      <Animated.View collapsable={false} entering={FadeInDown.duration(380).withInitialValues({ transform: [{ translateY: 10 }] })}>
         <Text style={[styles.title, centered && styles.centerText]}>{title}</Text>
         {subtitle ? <Text style={[styles.subtitle, centered && styles.centerText]}>{subtitle}</Text> : null}
       </Animated.View>

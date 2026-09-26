@@ -38,7 +38,7 @@ export default function CreateArticle() {
         showsVerticalScrollIndicator={false}>
         <View style={[styles.cover, { height: coverH }]}>
           {draft.coverUri ? (
-            <Animated.View key={draft.coverUri} entering={FadeIn.duration(300)} style={StyleSheet.absoluteFill}>
+            <Animated.View collapsable={false} key={draft.coverUri} entering={FadeIn.duration(300)} style={StyleSheet.absoluteFill}>
               <Image source={{ uri: draft.coverUri }} style={styles.fill} contentFit="cover" transition={200} />
             </Animated.View>
           ) : (

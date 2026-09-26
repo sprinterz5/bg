@@ -59,7 +59,7 @@ export default function NewArticle() {
 
       <View style={styles.body}>
         {draft.coverUri ? (
-          <Animated.View entering={FadeIn.duration(300)} style={styles.coverCard}>
+          <Animated.View collapsable={false} entering={FadeIn.duration(300)} style={styles.coverCard}>
             <Image source={{ uri: draft.coverUri }} style={styles.fill} contentFit="cover" transition={150} />
           </Animated.View>
         ) : null}

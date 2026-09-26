@@ -9,7 +9,7 @@ type Props = { text: string; tone?: 'hint' | 'error' };
 
 export function FieldMessage({ text, tone = 'hint' }: Props) {
   return (
-    <Animated.View key={`${tone}:${text}`} entering={FadeIn.duration(220)} exiting={FadeOut.duration(150)} style={styles.row}>
+    <Animated.View collapsable={false} key={`${tone}:${text}`} entering={FadeIn.duration(220)} exiting={FadeOut.duration(150)} style={styles.row}>
       {tone === 'error' ? (
         <View style={styles.icon}>
           <Icon name="errorX" width={15} />
