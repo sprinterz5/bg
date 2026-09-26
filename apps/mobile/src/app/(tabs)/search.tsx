@@ -79,10 +79,10 @@ export default function Search() {
     m.value = withTiming(MODE_VALUE[mode], EASE);
   }, [mode, m]);
 
-  // Field: x 10.5..378.5 (explore, 368 wide, no saved/liked button) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
+  // Field: x 9.5..377.5 (explore, 368 wide, no saved/liked button) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
   const fieldStyle = useAnimatedStyle(() => ({
-    marginLeft: interpolate(m.value, [0, 1, 2], [10.5, 15, 44]),
-    marginRight: interpolate(m.value, [0, 1, 2], [11.5, 65, 65]),
+    marginLeft: interpolate(m.value, [0, 1, 2], [9.5, 15, 44]),
+    marginRight: interpolate(m.value, [0, 1, 2], [12.5, 65, 65]),
   }));
   // Explore (Instagram-style): search + topics leave with the posts when scrolling up; scrolling back down
   // brings only the search field back (topics return at the top). Neither moves on pull-to-refresh.
@@ -100,7 +100,7 @@ export default function Search() {
   const headerShift = useAnimatedStyle(() => ({
     transform: [{ translateY: -hidden.value * (1 - Math.min(Math.max(m.value, 0), 1)) }],
   }));
-  // Once the topics have scrolled away the returning field gets an 18px white strip under it (8 at the top,
+  // Once the topics have scrolled away the returning field gets a 13px white strip under it (8 at the top,
   // where the topics sit 15 below the field).
   const stripStyle = useAnimatedStyle(() => ({ opacity: interpolate(lastY.value, [TOPICS_GAP + 20, TOPICS_GAP + 30], [0, 1], Extrapolation.CLAMP) }));
   const topicsShift = useAnimatedStyle(() => ({
@@ -408,7 +408,7 @@ function ProfileRow({ profile }: { profile: Author }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  headerStrip: { position: 'absolute', left: 0, right: 0, top: HEADER_H, height: 18 - HEADER_BOTTOM, backgroundColor: colors.bg },
+  headerStrip: { position: 'absolute', left: 0, right: 0, top: HEADER_H, height: 13 - HEADER_BOTTOM, backgroundColor: colors.bg },
   header: { height: FIELD_TOP + FIELD_H + HEADER_BOTTOM, paddingTop: FIELD_TOP, zIndex: 1, backgroundColor: colors.bg },
   back: { position: 'absolute', left: 15, top: FIELD_TOP + 11 },
   field: {
