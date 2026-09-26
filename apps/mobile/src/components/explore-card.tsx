@@ -65,7 +65,8 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
-  titleText: { width: 285.2, fontFamily: fonts.display, fontSize: 20.05, lineHeight: 20.67, letterSpacing: 20.05 * 0.01, color: colors.text },
+  // Same as the caption: room below the last line so descenders aren't cut by the text box.
+  titleText: { width: 285.2, fontFamily: fonts.display, fontSize: 20.05, lineHeight: 20.67, letterSpacing: 20.05 * 0.01, paddingBottom: 3, marginBottom: -3, color: colors.text },
   captionBlock: { paddingLeft: 13, paddingRight: 19, marginTop: 14, gap: 9 }, // text box 358 wide (x 11.5..369.5)
   // The line height is tighter than the font: room below so the second line's descenders (g, y, p) aren't cut.
   caption: { fontSize: 14.25, lineHeight: 17, letterSpacing: 14.075 * 0.0025, paddingBottom: 3, marginBottom: -3, color: colors.text },
