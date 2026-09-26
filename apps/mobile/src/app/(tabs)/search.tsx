@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { BackHandler, FlatList, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
@@ -78,16 +78,21 @@ export default function Search() {
     marginRight: interpolate(m.value, [0, 1, 2], [63.5, 65, 65]),
   }));
   const filterStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [1, 0], Extrapolation.CLAMP) }));
-  // Explore: the header scrolls with the feed (Instagram-style) — up with the posts, down on pull-to-refresh.
-  const scrollY = useSharedValue(0);
+  // Explore (Instagram-style): the search header leaves with the posts when scrolling up and comes back as soon
+  // as you scroll down again (the topics stay in the list). It never follows a pull-to-refresh.
+  const hidden = useSharedValue(0); // 0..HEADER_H
+  const lastY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
-    scrollY.value = e.contentOffset.y;
+    const y = e.contentOffset.y + (Platform.OS === 'ios' ? HEADER_H : 0);
+    const next = Math.min(Math.max(hidden.value + y - lastY.value, 0), HEADER_H);
+    hidden.value = Math.min(next, Math.max(y, 0)); // near the top it stays glued to the content
+    lastY.value = y;
   });
   useEffect(() => {
-    if (mode !== 'explore') scrollY.value = 0;
-  }, [mode, scrollY]);
+    if (mode !== 'explore') hidden.value = lastY.value = 0;
+  }, [mode, hidden, lastY]);
   const headerShift = useAnimatedStyle(() => ({
-    transform: [{ translateY: -scrollY.value * (1 - Math.min(Math.max(m.value, 0), 1)) }],
+    transform: [{ translateY: -hidden.value * (1 - Math.min(Math.max(m.value, 0), 1)) }],
   }));
   const exitStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [0, 1], Extrapolation.CLAMP) }));
   const backStyle = useAnimatedStyle(() => ({
@@ -241,7 +246,12 @@ export default function Search() {
               ListHeaderComponent={<Topics selected={topic} onSelect={setTopic} />}
               onScroll={onScroll}
               scrollEventThrottle={16}
-              contentContainerStyle={styles.feedContent}
+              // The header covers the list's top: on iOS an inset keeps the refresh spinner under it, Android uses padding + progressViewOffset.
+              contentInset={Platform.OS === 'ios' ? { top: HEADER_H } : undefined}
+              contentOffset={Platform.OS === 'ios' ? { x: 0, y: -HEADER_H } : undefined}
+              scrollIndicatorInsets={Platform.OS === 'ios' ? { top: HEADER_H } : undefined}
+              automaticallyAdjustContentInsets={false}
+              contentContainerStyle={Platform.OS === 'android' ? styles.feedContent : undefined}
               refreshControl={
                 <RefreshControl
                   refreshing={refreshing}
