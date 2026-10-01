@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
+import { Platform, RefreshControl, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown, LinearTransition, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -19,6 +19,15 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const { posts, publishing } = useFeed();
+  // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
+  // and posts come down and the spinner shows between them and the header. iOS keeps the space as a content
+  // inset (the spinner lives under it), Android as padding with the spinner offset below the header.
+  const top = insets.top + HEADER_H;
+  const y = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    y.value = e.contentOffset.y + (IOS ? top : 0);
+  });
+  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.max(y.value, 0) }] }));
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -40,8 +49,26 @@ export default function Home() {
         data={posts}
         keyExtractor={(p) => p.id}
         renderItem={renderItem}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         ListHeaderComponent={
           <>
+            <Animated.View collapsable={false} entering={FadeInDown.duration(380)}>
+              <HomeStories stories={HOME_STORIES} />
+            </Animated.View>
+            {publishing ? <PostingRow coverUri={publishing.coverUri} /> : null}
+          </>
+        }
+        ItemSeparatorComponent={Separator}
+        ListHeaderComponentStyle={publishing ? styles.postingGap : styles.storiesGap}
+        contentInset={IOS ? { top } : undefined}
+        contentOffset={IOS ? { x: 0, y: -top } : undefined}
+        scrollIndicatorInsets={IOS ? { top } : undefined}
+        contentContainerStyle={[styles.content, IOS ? null : { paddingTop: top }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} colors={[colors.textMuted]} progressViewOffset={top} />}
+      />
+      <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: insets.top }, headerStyle]}>
             <View style={styles.header}>
               <PressableScale haptic onPress={() => push('/story/new')} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
                 <Icon name="homePlus" width={21} />
@@ -52,18 +79,7 @@ export default function Home() {
                 <Icon name="homeBell" width={20} height={23} />
               </PressableScale>
             </View>
-            <Animated.View collapsable={false} entering={FadeInDown.duration(380)}>
-              <HomeStories stories={HOME_STORIES} />
-            </Animated.View>
-            {publishing ? <PostingRow coverUri={publishing.coverUri} /> : null}
-          </>
-        }
-        ItemSeparatorComponent={Separator}
-        ListHeaderComponentStyle={publishing ? styles.postingGap : styles.storiesGap}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} colors={[colors.textMuted]} progressViewOffset={insets.top} />}
-      />
+      </Animated.View>
       {/* Content scrolls under the status bar and fades out there (69px in the frame = status bar + 22). */}
       {/* SVG gradient via expo-image: expo-linear-gradient is not in the Android dev build. */}
       <Image
@@ -76,17 +92,21 @@ export default function Home() {
   );
 }
 
+const IOS = Platform.OS === 'ios';
+const HEADER_H = 62.75;
+
 const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   // Frame 1049 home (status bar 47): plus 21 at (14, 64), "Smarts" (Caveat 36.5) centred 3px left of the
   // screen centre on y 73.2, bell 20x23 at (351, 62.8); story rings start at y 109.75; first avatar at 242.25.
-  header: { height: 62.75, alignItems: 'center' },
+  headerWrap: { position: 'absolute', left: 0, right: 0 },
+  header: { height: HEADER_H, alignItems: 'center' },
   plus: { position: 'absolute', left: 14, top: 17 },
   bell: { position: 'absolute', left: 351, top: 15.8 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
-  logo: { marginTop: 1.2, width: 160, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39.5, lineHeight: 50, color: colors.text, transform: [{ translateX: -3.1 }] },
+  logo: { marginTop: 1.2, width: 160, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 38.5, lineHeight: 50, color: colors.text, transform: [{ translateX: -3.1 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
   storiesGap: { marginBottom: 16.25 },
