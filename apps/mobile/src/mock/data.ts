@@ -161,7 +161,7 @@ export const FEED: Post[] = [
     id: 'p-kindergarten',
     author: miniBill,
     image: require('@/assets/mock/explore-kindergarten.jpg'),
-    title: 'Wiggling is welcome in this kindergarten',
+    title: 'Wiggling is welcome in this kindergarten classroom',
     caption: 'Kim Broomer`s classroom is one of the most unique and supportive learning environronments I`ve ever seen in life',
     timeAgo: '1 day ago',
     likes: 120,

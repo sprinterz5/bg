@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.6)',
   },
   // Sen measured against the frame: "Wiggling is welcome in this" is 276.8 wide → 20.4
-  title: { width: 278, fontFamily: fonts.display, fontSize: 21, lineHeight: 22.15, color: colors.text },
+  title: { width: 278, fontFamily: fonts.display, fontSize: 21.3, lineHeight: 22.45, color: colors.text },
   // eye 22x16 at x 11.25, count at x 42.9; send at x 87, count at x 113.8; bookmark at x 358.9 (all 11 under the photo)
   actions: { height: 19, marginTop: 11 },
   views: { position: 'absolute', left: 11.25, top: -2 },
