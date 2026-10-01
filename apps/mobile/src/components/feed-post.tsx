@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   title: { width: 278, fontFamily: fonts.display, fontSize: 21.3, lineHeight: 22.45, color: colors.text },
   // eye 22x16 at x 11.25, count at x 42.9; send at x 87, count at x 113.8; bookmark at x 358.9 (all 11 under the photo)
   actions: { height: 19, marginTop: 11 },
-  views: { position: 'absolute', left: 11.25, top: -2 },
+  views: { position: 'absolute', left: 10.25, top: -2 },
   send: { position: 'absolute', left: 86.98, top: -1.77 },
   bookmark: { position: 'absolute', left: 358.875, top: -3.2 },
   count: { position: 'absolute', top: -0.8, fontSize: 12.6, lineHeight: 16, fontWeight: '600', color: colors.text },
