@@ -19,7 +19,7 @@ const PHOTO = 85;
 // horizontally, so the stretch adds up into a wave away from the pulled edge. iOS takes back most of the
 // native bounce; Android uses the system stretch.
 const GIVE = 0.05;
-const STRETCH = 0.0005; // scaleX gained per point of overscroll
+const STRETCH = 0.00025; // scaleX gained per point of overscroll
 
 export function HomeStories({ stories }: { stories: Story[] }) {
   const x = useSharedValue(0);
