@@ -95,7 +95,10 @@ const styles = StyleSheet.create({
   logo: {
     fontFamily: fonts.logo,
     fontSize: 82,
-    lineHeight: 96,
+    // Caveat is 1.26em tall with its descenders; on Android (RN 0.78+) a shorter lineHeight clips top and bottom.
+    // 108 instead of 96, with the extra 12 taken back by negative margins so the logo stays put.
+    lineHeight: 108,
+    marginVertical: -6,
     color: colors.text,
     letterSpacing: -2.4,
     // Script glyphs overhang their box (and negative spacing shrinks it): room so Android doesn't clip the last letter.

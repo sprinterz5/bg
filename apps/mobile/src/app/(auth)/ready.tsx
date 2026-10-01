@@ -54,5 +54,6 @@ export default function Ready() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  logo: { fontFamily: fonts.logo, fontSize: 64, lineHeight: 76, color: colors.text, letterSpacing: -1.5, paddingHorizontal: 12 },
+  // lineHeight ≥ 1.26em (Caveat with descenders) so Android doesn't clip; +8 taken back by the margins.
+  logo: { fontFamily: fonts.logo, fontSize: 64, lineHeight: 84, marginVertical: -4, color: colors.text, letterSpacing: -1.5, paddingHorizontal: 12 },
 });
