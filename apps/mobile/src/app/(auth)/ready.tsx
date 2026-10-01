@@ -47,7 +47,7 @@ export default function Ready() {
 
   return (
     <View style={styles.root}>
-      <AnimatedText style={[styles.logo, logoStyle]}>Smarts</AnimatedText>
+      <AnimatedText style={[styles.logo, logoStyle]}>{' Smarts '}</AnimatedText>
     </View>
   );
 }

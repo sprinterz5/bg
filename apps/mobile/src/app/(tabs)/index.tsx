@@ -46,7 +46,8 @@ export default function Home() {
               <PressableScale haptic onPress={() => push('/story/new')} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
                 <Icon name="homePlus" width={21} />
               </PressableScale>
-              <Text style={styles.logo}>Smarts</Text>
+              {/* NBSPs on both sides: Android clips script glyphs at the line's advance width; symmetric keeps it centred. */}
+              <Text style={styles.logo}>{' Smarts '}</Text>
               <PressableScale haptic onPress={() => push('/notifications')} hitSlop={10} accessibilityLabel="Notifications" style={styles.bell}>
                 <Icon name="homeBell" width={20} height={23} />
               </PressableScale>
