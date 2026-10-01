@@ -108,5 +108,5 @@ const styles = StyleSheet.create({
   viewsCount: { left: 42.4 },
   sendCount: { left: 113.3 },
   caption: { marginTop: 5.8, paddingLeft: 11, paddingRight: 14, fontSize: 13.5, lineHeight: 16.6, letterSpacing: 13.5 * 0.005, color: colors.text },
-  time: { marginTop: 3.2, paddingLeft: 12.4, fontSize: 11.5, lineHeight: 14, color: colors.textSubtle },
+  time: { marginTop: 3.2, paddingLeft: 11.4, fontSize: 11.5, lineHeight: 14, color: colors.textSubtle },
 });
