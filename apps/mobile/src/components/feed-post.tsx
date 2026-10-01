@@ -107,6 +107,6 @@ const styles = StyleSheet.create({
   count: { position: 'absolute', top: -0.8, fontSize: 12.6, lineHeight: 16, fontWeight: '600', color: colors.text },
   viewsCount: { left: 42.4 },
   sendCount: { left: 113.3 },
-  caption: { marginTop: 5.8, paddingLeft: 11, paddingRight: 14, fontSize: 13.75, lineHeight: 16.9, letterSpacing: 13.75 * 0.005, color: colors.text },
+  caption: { marginTop: 5.8, paddingLeft: 11, paddingRight: 14, fontSize: 13.75, lineHeight: 16.9, letterSpacing: 13.75 * -0.0025, color: colors.text },
   time: { marginTop: 3.2, paddingLeft: 12.4, fontSize: 11.5, lineHeight: 14, color: colors.textSubtle },
 });
