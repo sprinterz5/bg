@@ -98,6 +98,8 @@ const styles = StyleSheet.create({
     lineHeight: 96,
     color: colors.text,
     letterSpacing: -2.4,
+    // Script glyphs overhang their box (and negative spacing shrinks it): room so Android doesn't clip the last letter.
+    paddingHorizontal: 14,
     transform: [{ rotate: '-1deg' }],
   },
   tagline: {

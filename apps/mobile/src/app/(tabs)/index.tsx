@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   header: { height: 62.75, alignItems: 'center' },
   plus: { position: 'absolute', left: 14, top: 17 },
   bell: { position: 'absolute', left: 351, top: 15.8 },
-  logo: { marginTop: 7.2, fontFamily: fonts.logo, fontSize: 36.5, lineHeight: 38, color: colors.text, transform: [{ translateX: -3.1 }] },
+  logo: { marginTop: 7.2, fontFamily: fonts.logo, fontSize: 36.5, lineHeight: 38, color: colors.text, paddingHorizontal: 8, transform: [{ translateX: -3.1 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
   storiesGap: { marginBottom: 16.25 },

@@ -54,5 +54,5 @@ export default function Ready() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  logo: { fontFamily: fonts.logo, fontSize: 64, lineHeight: 76, color: colors.text, letterSpacing: -1.5 },
+  logo: { fontFamily: fonts.logo, fontSize: 64, lineHeight: 76, color: colors.text, letterSpacing: -1.5, paddingHorizontal: 12 },
 });
