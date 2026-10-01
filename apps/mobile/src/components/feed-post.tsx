@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   views: { position: 'absolute', left: 11.25, top: -2 },
   send: { position: 'absolute', left: 86.98, top: -1.77 },
   bookmark: { position: 'absolute', left: 358.875, top: -3.2 },
-  count: { position: 'absolute', top: -1.8, fontSize: 12.6, lineHeight: 16, fontWeight: '600', color: colors.text },
+  count: { position: 'absolute', top: -0.8, fontSize: 12.6, lineHeight: 16, fontWeight: '600', color: colors.text },
   viewsCount: { left: 42.4 },
   sendCount: { left: 113.3 },
   caption: { marginTop: 5.8, paddingLeft: 11, paddingRight: 14, fontSize: 13.75, lineHeight: 16.9, color: colors.text },
