@@ -28,7 +28,7 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
   return (
     <View>
       <View style={styles.head}>
-        <AuthorAvatar author={post.author} size={30} />
+        <AuthorAvatar author={post.author} size={31} />
         <View style={styles.names}>
           <Text style={styles.name} numberOfLines={1}>
             {post.author.username}
@@ -73,7 +73,7 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
 
 const styles = StyleSheet.create({
   // avatar 30 at x 8; name baseline +12.1, "Recommended for you" baseline +26.4; menu (20x13.75) at x 356, +8.25
-  head: { height: 30, flexDirection: 'row', paddingLeft: 8 },
+  head: { height: 31, flexDirection: 'row', paddingLeft: 8 },
   names: { marginLeft: 13.1, marginTop: -1, flex: 1 },
   name: { fontSize: 13.75, lineHeight: 17, fontWeight: '600', color: colors.text },
   sub: { fontSize: 11.5, lineHeight: 14, marginTop: 0.5, color: colors.text },
