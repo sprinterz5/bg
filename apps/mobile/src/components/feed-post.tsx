@@ -74,8 +74,8 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
 const styles = StyleSheet.create({
   // avatar 30 at x 8; name baseline +12.1, "Recommended for you" baseline +26.4; menu (20x13.75) at x 356, +8.25
   head: { height: 30, flexDirection: 'row', paddingLeft: 8 },
-  names: { marginLeft: 13.1, marginTop: -0.5, flex: 1 },
-  name: { fontSize: 12.75, lineHeight: 16, fontWeight: '600', color: colors.text },
+  names: { marginLeft: 13.1, marginTop: -1, flex: 1 },
+  name: { fontSize: 13.75, lineHeight: 17, fontWeight: '600', color: colors.text },
   sub: { fontSize: 11, lineHeight: 13, marginTop: 0.5, color: colors.text },
   menu: { position: 'absolute', left: 356, top: 8.25 },
   media: { height: 270, marginTop: 7.25, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
