@@ -1,4 +1,5 @@
 import { Caveat_400Regular } from '@expo-google-fonts/caveat/400Regular';
+import { Caveat_500Medium } from '@expo-google-fonts/caveat/500Medium';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
@@ -26,6 +27,7 @@ SplashScreen.preventAutoHideAsync();
 // Android stands in Inter for SF Pro (see components/text.tsx); iOS uses the system font like Figma.
 const FONTS = {
   Caveat_400Regular,
+  Caveat_500Medium,
   Sen_800ExtraBold,
   ...(Platform.OS === 'android'
     ? { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Inter_900Black }

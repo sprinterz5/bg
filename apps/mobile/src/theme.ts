@@ -18,6 +18,8 @@ export const colors = {
 
 export const fonts = {
   logo: 'Caveat_400Regular',
+  // Home header: the frame's logo has a thin stroke, one weight up stands in for it.
+  logoMedium: 'Caveat_500Medium',
   display: 'Sen_800ExtraBold',
   serif: Platform.select({ ios: 'Georgia', default: 'serif' }),
   reading: Platform.select({ ios: 'Iowan Old Style', default: 'serif' }),

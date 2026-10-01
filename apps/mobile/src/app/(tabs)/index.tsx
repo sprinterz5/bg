@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   plus: { position: 'absolute', left: 14, top: 17 },
   bell: { position: 'absolute', left: 351, top: 15.8 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
-  logo: { marginTop: 1.2, width: 160, height: 50, textAlign: 'center', fontFamily: fonts.logo, fontSize: 36.5, lineHeight: 50, color: colors.text, transform: [{ translateX: -3.1 }] },
+  logo: { marginTop: 1.2, width: 160, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39.5, lineHeight: 50, color: colors.text, transform: [{ translateX: -3.1 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
   storiesGap: { marginBottom: 16.25 },
