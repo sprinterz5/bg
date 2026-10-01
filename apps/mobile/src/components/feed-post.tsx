@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   head: { height: 30, flexDirection: 'row', paddingLeft: 8 },
   names: { marginLeft: 13.1, marginTop: -1, flex: 1 },
   name: { fontSize: 13.75, lineHeight: 17, fontWeight: '600', color: colors.text },
-  sub: { fontSize: 11, lineHeight: 13, marginTop: 0.5, color: colors.text },
+  sub: { fontSize: 11.5, lineHeight: 14, marginTop: 0.5, color: colors.text },
   menu: { position: 'absolute', left: 356, top: 8.25 },
   media: { height: 270, marginTop: 7.25, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     bottom: 6.75,
     width: 286,
     height: 51,
-    paddingTop: 2.45,
+    paddingTop: 4.45,
     paddingLeft: 4.1,
     borderRadius: 14,
     borderWidth: 1,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.6)',
   },
   // Sen measured against the frame: "Wiggling is welcome in this" is 276.8 wide → 20.4
-  title: { width: 278, fontFamily: fonts.display, fontSize: 20.4, lineHeight: 21.5, color: colors.text },
+  title: { width: 278, fontFamily: fonts.display, fontSize: 22, lineHeight: 23.2, color: colors.text },
   // eye 22x16 at x 11.25, count at x 42.9; send at x 87, count at x 113.8; bookmark at x 358.9 (all 11 under the photo)
   actions: { height: 19, marginTop: 11 },
   views: { position: 'absolute', left: 11.25, top: 0 },
@@ -104,6 +104,6 @@ const styles = StyleSheet.create({
   count: { position: 'absolute', top: -0.8, fontSize: 12.6, lineHeight: 16, fontWeight: '600', color: colors.text },
   viewsCount: { left: 42.4 },
   sendCount: { left: 113.3 },
-  caption: { marginTop: 5.8, paddingLeft: 11, paddingRight: 14, fontSize: 12.5, lineHeight: 15.4, color: colors.text },
+  caption: { marginTop: 5.8, paddingLeft: 11, paddingRight: 14, fontSize: 13.25, lineHeight: 16.3, color: colors.text },
   time: { marginTop: 3.2, paddingLeft: 12.4, fontSize: 11.5, lineHeight: 14, color: colors.textSubtle },
 });

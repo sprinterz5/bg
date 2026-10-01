@@ -42,5 +42,5 @@ const styles = StyleSheet.create({
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
-  name: { marginTop: 4.75, maxWidth: RING + 10, fontSize: 11.5, lineHeight: 14, color: colors.text },
+  name: { marginTop: 4.75, maxWidth: RING + 10, fontSize: 12, lineHeight: 15, color: colors.text },
 });
