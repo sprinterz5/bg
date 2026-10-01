@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Platform, RefreshControl, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, LinearTransition, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { FadeInDown, LinearTransition, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -9,6 +10,7 @@ import { FeedPost } from '@/components/feed-post';
 import { PostingRow } from '@/components/posting-row';
 import { PressableScale } from '@/components/pressable-scale';
 import { HomeStories } from '@/components/home-stories';
+import { PullSpinner } from '@/components/pull-spinner';
 import { HOME_STORIES, type Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
@@ -20,8 +22,9 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const { posts, publishing } = useFeed();
   // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
-  // and posts come down and the spinner shows between them and the header. iOS keeps the space as a content
-  // inset (the spinner lives under it), Android as padding with the spinner offset below the header.
+  // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
+  // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
+  // overscroll, so there a pan gesture drags the list down past the top.
   const top = insets.top + HEADER_H;
   const y = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -34,6 +37,39 @@ export default function Home() {
     setTimeout(() => setRefreshing(false), 800);
   }, []);
 
+  const drag = useSharedValue(0);
+  const base = useSharedValue(0);
+  const pull = useDerivedValue(() => (IOS ? Math.max(0, -y.value) : drag.value));
+  useEffect(() => {
+    if (!IOS) drag.value = withTiming(refreshing ? HOLD : 0, { duration: 220 });
+  }, [refreshing, drag]);
+  const pan = Gesture.Pan()
+    .enabled(!IOS)
+    .activeOffsetY(8)
+    .failOffsetX([-12, 12])
+    .onBegin(() => {
+      base.value = 0;
+    })
+    .onUpdate((e) => {
+      // Start counting from where the list reached its top; resistance like a rubber band.
+      if (y.value > 0.5 && drag.value === 0) {
+        base.value = e.translationY;
+        return;
+      }
+      const d = Math.max(0, e.translationY - base.value);
+      drag.value = Math.min(MAX_PULL, d * 0.5);
+    })
+    .onFinalize(() => {
+      if (drag.value >= THRESHOLD) {
+        drag.value = withTiming(HOLD, { duration: 180 });
+        runOnJS(onRefresh)();
+      } else {
+        drag.value = withTiming(0, { duration: 220 });
+      }
+    });
+  const native = Gesture.Native();
+  const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
+
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
       <Animated.View collapsable={false} entering={FadeInDown.delay(Math.min(index, 4) * 70).duration(380)} layout={LinearTransition.duration(300)}>
@@ -45,6 +81,9 @@ export default function Home() {
 
   return (
     <View style={styles.root}>
+      <PullSpinner pull={pull} threshold={THRESHOLD} refreshing={refreshing} top={top} />
+      <GestureDetector gesture={Gesture.Simultaneous(pan, native)}>
+      <Animated.View collapsable={false} style={[styles.list, listStyle]}>
       <Animated.FlatList
         data={posts}
         keyExtractor={(p) => p.id}
@@ -66,8 +105,10 @@ export default function Home() {
         scrollIndicatorInsets={IOS ? { top } : undefined}
         contentContainerStyle={[styles.content, IOS ? null : { paddingTop: top }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} colors={[colors.textMuted]} progressViewOffset={top} />}
+        refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
       />
+      </Animated.View>
+      </GestureDetector>
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: insets.top }, headerStyle]}>
             <View style={styles.header}>
               <PressableScale haptic onPress={() => push('/story/new')} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
@@ -94,11 +135,16 @@ export default function Home() {
 
 const IOS = Platform.OS === 'ios';
 const HEADER_H = 62.75;
+// Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
+const THRESHOLD = 64;
+const HOLD = 52;
+const MAX_PULL = 140;
 
 const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
+  list: { flex: 1 },
   // Frame 1049 home (status bar 47): plus 21 at (14, 64), "Smarts" (Caveat 36.5) centred 3px left of the
   // screen centre on y 73.2, bell 20x23 at (351, 62.8); story rings start at y 109.75; first avatar at 242.25.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
