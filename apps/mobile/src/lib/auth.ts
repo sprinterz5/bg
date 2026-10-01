@@ -11,7 +11,7 @@ type GoogleModule = typeof import('@react-native-google-signin/google-signin');
 let google: GoogleModule | null = null;
 
 function getGoogle(): GoogleModule {
-  if (!googleSignInAvailable) throw new Error('Google sign-in works only in the Bookgram dev build, not in Expo Go');
+  if (!googleSignInAvailable) throw new Error('Google sign-in works only in the Smarts dev build, not in Expo Go');
   if (!google) {
     google = require('@react-native-google-signin/google-signin') as GoogleModule;
     // OAuth client ids are public. The ID token's audience is the web client; the backend accepts all three.

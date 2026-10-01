@@ -62,6 +62,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ animation: 'fade', gestureEnabled: false }} />
             <Stack.Screen name="article/[id]" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
             <Stack.Screen name="story/new" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="story/[id]" options={{ animation: 'fade', contentStyle: { backgroundColor: '#000000' } }} />
             <Stack.Screen name="notifications" />
             <Stack.Screen name="new-article" />
           </Stack>

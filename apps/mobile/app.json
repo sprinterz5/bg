@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Bookgram",
+    "name": "Smarts",
     "slug": "bookgram",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -40,7 +40,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Bookgram needs access to your photos to set a profile picture and article covers."
+          "photosPermission": "Smarts needs access to your photos to set a profile picture and article covers."
         }
       ],
       [

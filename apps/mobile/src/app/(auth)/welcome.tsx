@@ -43,7 +43,7 @@ export default function Welcome() {
       <View style={[styles.main, { paddingTop: insets.top + LOGO_TOP }]}>
       <View style={styles.hero}>
         <AnimatedText entering={FadeIn.duration(700)} style={styles.logo}>
-          Bookgram
+          Smarts
         </AnimatedText>
         <AnimatedText entering={FadeInDown.delay(180).duration(500)} style={styles.tagline}>
           The world`s first healthy social media

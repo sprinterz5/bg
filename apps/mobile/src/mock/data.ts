@@ -36,6 +36,8 @@ export type Story = {
   image: ImageSourcePropType;
   caption: string;
   timeAgo: string;
+  /** Already watched: grey ring on the home row. */
+  seen?: boolean;
 };
 
 export type Post = {
@@ -48,6 +50,8 @@ export type Post = {
   likes: number;
   comments: number;
   shares: number;
+  /** Eye counter on the home card (Frame 1049); falls back to likes. */
+  views?: number;
   articleId: string;
 };
 
@@ -62,7 +66,7 @@ export type Article = {
   shares: number;
 };
 
-const bookgram: Author = { username: 'bookgram', avatar: require('@/assets/mock/avatar-bookgram.jpg'), subtitle: 'Bookgram', verified: true };
+const bookgram: Author = { username: 'smarts', avatar: require('@/assets/mock/avatar-bookgram.jpg'), subtitle: 'Smarts', verified: true };
 const sam: Author = { username: 'sam_altman', avatar: require('@/assets/mock/avatar-sam.png'), subtitle: 'Recommended' };
 const nori: Author = { username: 'j_nori_k', avatar: require('@/assets/mock/avatar-nori.png'), subtitle: 'Recommended' };
 
@@ -139,7 +143,46 @@ export const ARTICLES: Record<string, Article> = {
   },
 };
 
+const miniBill: Author = { username: 'mini.bill_g', avatar: require('@/assets/mock/avatar-mini-bill.jpg'), subtitle: 'Recommended for you' };
+const billijean: Author = { username: 'billijean', avatar: require('@/assets/mock/avatar-billijean.jpg'), subtitle: 'Recommended for you' };
+const dinara: Author = { username: 'dinara_satzhan', avatar: require('@/assets/mock/avatar-billijean.jpg'), subtitle: '' };
+
+/** Home stories row (Frame 1049): the circles show the story photo; the last one is already watched. */
+export const HOME_STORIES: Story[] = [
+  { id: 'hs-timcook', author: { ...dinara, username: 'timcook' }, image: require('@/assets/mock/story-timcook.jpg'), caption: 'Keynote day. Thank you all for watching — more tomorrow!', timeAgo: '1h ago' },
+  { id: 'hs-diamo1', author: { ...dinara, username: 'diamo1' }, image: require('@/assets/mock/story-diamo1.jpg'), caption: 'My love and my whole heart is this person, the person whom I love more than anyone in the world is here tonight', timeAgo: '2h ago' },
+  { id: 'hs-mason', author: { ...dinara, username: 'mason_th' }, image: require('@/assets/mock/story-mason.jpg'), caption: 'Best night with the best people', timeAgo: '3h ago' },
+  { id: 'hs-stevie', author: { ...dinara, username: 'stevie1' }, image: require('@/assets/mock/story-stevie.jpg'), caption: '1984. Still the best launch ever.', timeAgo: '5h ago', seen: true },
+  { id: 'hs-rainbow', author: dinara, image: require('@/assets/mock/story-rainbow.jpg'), caption: 'My love and my whole heart is this person, the person whom I love more than anyone in the world is here tonight', timeAgo: '2h ago', seen: true },
+];
+
 export const FEED: Post[] = [
+  {
+    id: 'p-kindergarten',
+    author: miniBill,
+    image: require('@/assets/mock/explore-kindergarten.jpg'),
+    title: 'Wiggling is welcome in this kindergarten classroom',
+    caption: 'Kim Broomer`s classroom is one of the most unique and supportive learning environronments I`ve ever seen in life',
+    timeAgo: '1 day ago',
+    likes: 120,
+    comments: 0,
+    shares: 39,
+    views: 520,
+    articleId: 'journal',
+  },
+  {
+    id: 'p-foldables',
+    author: billijean,
+    image: require('@/assets/mock/post-foldables.jpg'),
+    title: 'Are foldables finally worth buying this year?',
+    caption: 'We used three foldable phones for a month. Here is what surprised us and what still needs work',
+    timeAgo: '2 days ago',
+    likes: 88,
+    comments: 0,
+    shares: 12,
+    views: 1240,
+    articleId: 'iphoneDuo',
+  },
   {
     id: 'p1',
     author: sam,

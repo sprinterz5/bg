@@ -5,17 +5,15 @@ import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
-import { PostCard } from '@/components/post-card';
+import { FeedPost } from '@/components/feed-post';
 import { PostingRow } from '@/components/posting-row';
 import { PressableScale } from '@/components/pressable-scale';
-import { StoriesCard } from '@/components/stories-card';
-import { FOLLOWING_STORIES, WELCOME_STORY, type Post } from '@/mock/data';
+import { HomeStories } from '@/components/home-stories';
+import { HOME_STORIES, type Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { Text } from '@/components/text';
 import { push } from '@/lib/nav';
-
-const STORIES = [WELCOME_STORY, ...FOLLOWING_STORIES];
 
 export default function Home() {
   const insets = useSafeAreaInsets();
@@ -30,7 +28,7 @@ export default function Home() {
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
       <Animated.View collapsable={false} entering={FadeInDown.delay(Math.min(index, 4) * 70).duration(380)} layout={LinearTransition.duration(300)}>
-        <PostCard post={item} />
+        <FeedPost post={item} />
       </Animated.View>
     ),
     [],
@@ -45,16 +43,16 @@ export default function Home() {
         ListHeaderComponent={
           <>
             <View style={styles.header}>
-              <PressableScale haptic onPress={() => push('/story/new')} hitSlop={8} accessibilityLabel="New story" style={styles.plus}>
-                <Icon name="plus" width={43} />
+              <PressableScale haptic onPress={() => push('/story/new')} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
+                <Icon name="homePlus" width={21} />
               </PressableScale>
-              <Text style={styles.logo}>Bookgram</Text>
-              <PressableScale haptic onPress={() => push('/notifications')} hitSlop={8} accessibilityLabel="Notifications" style={styles.bell}>
-                <Icon name="headerBell" width={20} height={23} />
+              <Text style={styles.logo}>Smarts</Text>
+              <PressableScale haptic onPress={() => push('/notifications')} hitSlop={10} accessibilityLabel="Notifications" style={styles.bell}>
+                <Icon name="homeBell" width={20} height={23} />
               </PressableScale>
             </View>
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)}>
-              <StoriesCard stories={STORIES} />
+              <HomeStories stories={HOME_STORIES} />
             </Animated.View>
             {publishing ? <PostingRow coverUri={publishing.coverUri} /> : null}
           </>
@@ -81,15 +79,15 @@ const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  // Section 7 home: plus centred at (25.5, 75), logo centred 2.5px left of the screen centre,
-  // bell 20x23 centred at (361, 74.8); the first card's avatar is at y 126.4.
-  header: { height: 56, marginBottom: 23.4, alignItems: 'center', justifyContent: 'center' },
-  plus: { position: 'absolute', left: 3, top: 5.5 },
-  bell: { position: 'absolute', right: 19, top: 16.3 },
-  logo: { fontFamily: fonts.logo, fontSize: 39, lineHeight: 46, color: colors.text, letterSpacing: 0.4, transform: [{ translateX: -2.5 }] },
+  // Frame 1049 home (status bar 47): plus 21 at (14, 64), "Smarts" (Caveat 36.5) centred 3px left of the
+  // screen centre on y 73.2, bell 20x23 at (351, 62.8); story rings start at y 109.75; first avatar at 242.25.
+  header: { height: 62.75, alignItems: 'center' },
+  plus: { position: 'absolute', left: 14, top: 17 },
+  bell: { position: 'absolute', left: 351, top: 15.8 },
+  logo: { marginTop: 7.2, fontFamily: fonts.logo, fontSize: 36.5, lineHeight: 38, color: colors.text, transform: [{ translateX: -3.1 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
-  storiesGap: { marginBottom: 41.8 },
+  storiesGap: { marginBottom: 16.25 },
   postingGap: { marginBottom: 32 },
-  separator: { height: 37.9 },
+  separator: { height: 29.95 },
 });
