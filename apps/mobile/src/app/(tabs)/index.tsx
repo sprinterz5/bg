@@ -30,7 +30,8 @@ export default function Home() {
   const onScroll = useAnimatedScrollHandler((e) => {
     y.value = e.contentOffset.y + (IOS ? top : 0);
   });
-  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.max(y.value, 0) }] }));
+  // Clamped once it is off screen, so scrolling further down doesn't push a style update every frame.
+  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.min(Math.max(y.value, 0), top) }] }));
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
