@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   avatar: { marginTop: -0.75 },
   names: { marginLeft: 13.1, marginTop: -1, flex: 1 },
   name: { fontSize: 13.5, lineHeight: 17, fontWeight: '700', color: colors.text },
-  sub: { fontSize: 11.5, lineHeight: 14, marginTop: 0.5, color: colors.text },
+  sub: { fontSize: 11.5, lineHeight: 14, marginTop: 1.5, color: colors.text },
   menu: { position: 'absolute', left: 356, top: 8.25 },
   media: { height: 270, marginTop: 7.25, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
