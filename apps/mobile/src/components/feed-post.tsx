@@ -29,7 +29,7 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
     <View>
       <View style={styles.head}>
         <View style={styles.avatar}>
-          <AuthorAvatar author={post.author} size={31} />
+          <AuthorAvatar author={post.author} size={31.5} />
         </View>
         <View style={styles.names}>
           <Text style={styles.name} numberOfLines={1}>
