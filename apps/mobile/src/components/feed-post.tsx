@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   head: { height: 31, flexDirection: 'row', paddingLeft: 8 },
   avatar: { marginTop: -0.75 },
   names: { marginLeft: 13.1, marginTop: -1, flex: 1 },
-  name: { fontSize: 13.9, lineHeight: 17, fontWeight: '600', color: colors.text },
+  name: { fontSize: 13.9, lineHeight: 17, fontWeight: '700', color: colors.text },
   sub: { fontSize: 11.5, lineHeight: 14, marginTop: 0.5, color: colors.text },
   menu: { position: 'absolute', left: 356, top: 8.25 },
   media: { height: 270, marginTop: 7.25, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
