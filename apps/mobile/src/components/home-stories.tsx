@@ -16,7 +16,7 @@ const PHOTO = 85;
 
 export function HomeStories({ stories }: { stories: Story[] }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <ScrollView horizontal bounces={false} overScrollMode="never" showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       {stories.map((s) => (
         <PressableScale
           key={s.id}
