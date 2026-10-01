@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   chip: {
     position: 'absolute',
     left: 4,
-    bottom: 6.75,
+    bottom: 8.75,
     width: 286,
     height: 51,
     paddingTop: 4.45,
