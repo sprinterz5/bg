@@ -17,8 +17,8 @@ const PHOTO = 85;
 
 // Overscroll like Instagram: the row barely gives at either end and the rings fan out a little, the ones
 // at the pulled edge least. iOS takes back most of the native bounce; Android uses the system stretch.
-const GIVE = 0.12;
-const WAVE = 0.05;
+const GIVE = 0.05;
+const WAVE = 0.02;
 
 export function HomeStories({ stories }: { stories: Story[] }) {
   const x = useSharedValue(0);
