@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, RefreshControl, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, LinearTransition, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, LinearTransition, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -27,31 +27,8 @@ export default function Home() {
   // overscroll, so there a pan gesture drags the list down past the top.
   const top = insets.top + HEADER_H;
   const y = useSharedValue(0);
-  const maxY = useSharedValue(0);
-  const dragging = useSharedValue(false);
-  const drag = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      const prev = y.value;
-      y.value = e.contentOffset.y + (IOS ? top : 0);
-      maxY.value = e.contentSize.height - e.layoutMeasurement.height;
-      // Android: a fling that runs into either end bounces like iOS instead of stopping dead.
-      if (!IOS && !dragging.value && drag.value === 0) {
-        const v = e.velocity?.y ?? 0;
-        const hitTop = prev > 0.5 && y.value <= 0.5;
-        const hitBottom = prev < maxY.value - 0.5 && y.value >= maxY.value - 0.5;
-        if ((hitTop || hitBottom) && Math.abs(v) > 0.3) {
-          const kick = Math.min(Math.abs(v) * FLING_KICK, MAX_KICK) * (hitTop ? 1 : -1);
-          drag.value = withSequence(withTiming(kick, { duration: 110 }), withSpring(0, SPRING));
-        }
-      }
-    },
-    onBeginDrag: () => {
-      dragging.value = true;
-    },
-    onEndDrag: () => {
-      dragging.value = false;
-    },
+  const onScroll = useAnimatedScrollHandler((e) => {
+    y.value = e.contentOffset.y + (IOS ? top : 0);
   });
   const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.max(y.value, 0) }] }));
 
@@ -60,6 +37,7 @@ export default function Home() {
     setTimeout(() => setRefreshing(false), 800);
   }, []);
 
+  const drag = useSharedValue(0);
   const base = useSharedValue(0);
   const pull = useDerivedValue(() => (IOS ? Math.max(0, -y.value) : drag.value));
   useEffect(() => {
@@ -73,24 +51,20 @@ export default function Home() {
       base.value = 0;
     })
     .onUpdate((e) => {
-      // Rubber band past either end, counted from where the list reached it (iOS-like resistance).
-      const atTop = y.value <= 0.5;
-      const atBottom = y.value >= maxY.value - 0.5;
-      const d = e.translationY - base.value;
-      if (drag.value > 0 || (drag.value === 0 && atTop && d > 0)) {
-        drag.value = Math.min(MAX_PULL, Math.max(0, d) * 0.5);
-      } else if (drag.value < 0 || (drag.value === 0 && atBottom && d < 0)) {
-        drag.value = Math.max(-MAX_PULL, Math.min(0, d) * 0.5);
-      } else {
+      // Start counting from where the list reached its top; resistance like a rubber band.
+      if (y.value > 0.5 && drag.value === 0) {
         base.value = e.translationY;
+        return;
       }
+      const d = Math.max(0, e.translationY - base.value);
+      drag.value = Math.min(MAX_PULL, d * 0.5);
     })
     .onFinalize(() => {
       if (drag.value >= THRESHOLD) {
         drag.value = withTiming(HOLD, { duration: 180 });
         runOnJS(onRefresh)();
-      } else if (drag.value !== 0) {
-        drag.value = withSpring(0, SPRING);
+      } else {
+        drag.value = withTiming(0, { duration: 220 });
       }
     });
   const native = Gesture.Native();
@@ -131,8 +105,6 @@ export default function Home() {
         scrollIndicatorInsets={IOS ? { top } : undefined}
         contentContainerStyle={[styles.content, IOS ? null : { paddingTop: top }]}
         showsVerticalScrollIndicator={false}
-        overScrollMode="never"
-        decelerationRate={IOS ? 'normal' : 0.998}
         refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
       />
       </Animated.View>
@@ -167,10 +139,6 @@ const HEADER_H = 62.75;
 const THRESHOLD = 64;
 const HOLD = 52;
 const MAX_PULL = 140;
-// Android iOS-feel: fling bounce size per px/ms of velocity, its cap, and the spring back.
-const FLING_KICK = 10;
-const MAX_KICK = 48;
-const SPRING = { damping: 20, stiffness: 220, mass: 0.6 };
 
 const Separator = () => <View style={styles.separator} />;
 
