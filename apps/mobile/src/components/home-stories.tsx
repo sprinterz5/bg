@@ -15,10 +15,11 @@ import { push } from '@/lib/nav';
 const RING = 97.5;
 const PHOTO = 85;
 
-// Overscroll like Instagram: the row barely gives at either end and the rings fan out a little, the ones
-// at the pulled edge least. iOS takes back most of the native bounce; Android uses the system stretch.
+// Overscroll like Instagram: the row barely gives at either end and every story stretches a touch
+// horizontally, so the stretch adds up into a wave away from the pulled edge. iOS takes back most of the
+// native bounce; Android uses the system stretch.
 const GIVE = 0.05;
-const WAVE = 0.02;
+const STRETCH = 0.0005; // scaleX gained per point of overscroll
 
 export function HomeStories({ stories }: { stories: Story[] }) {
   const x = useSharedValue(0);
@@ -48,10 +49,12 @@ export function HomeStories({ stories }: { stories: Story[] }) {
 function Item({ story: s, index, count, x, max }: { story: Story; index: number; count: number; x: SharedValue<number>; max: SharedValue<number> }) {
   const style = useAnimatedStyle(() => {
     const o = x.value < 0 ? x.value : x.value > max.value ? x.value - max.value : 0;
-    if (o === 0) return { transform: [{ translateX: 0 }] };
-    const fromEdge = Math.min(o < 0 ? index : count - 1 - index, 3);
-    const share = GIVE + WAVE * fromEdge;
-    return { transform: [{ translateX: o * (1 - share) }] };
+    if (o === 0) return { transform: [{ translateX: 0 }, { scaleX: 1 }] };
+    const grow = STRETCH * Math.abs(o);
+    const extra = (RING + 108 - RING) * grow; // each stretched story pushes the next one along
+    const fromEdge = o < 0 ? index : count - 1 - index;
+    const wave = (fromEdge * extra + (RING * grow) / 2) * (o < 0 ? 1 : -1);
+    return { transform: [{ translateX: o * (1 - GIVE) + wave }, { scaleX: 1 + grow }] };
   });
 
   return (
