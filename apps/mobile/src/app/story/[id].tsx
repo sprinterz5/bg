@@ -159,32 +159,41 @@ export default function StoryViewer() {
     return Math.max(-0.3, Math.min(0.3, a));
   };
 
+  const pick = (dx: number, y: number) => {
+    'worklet';
+    if (dx < 0) {
+      if (canForward) {
+        mode.value = 1;
+        angle.value = tilt(y, y);
+        progress.value = 0;
+        if (nextSnapped) under.value = nextId;
+        else hidden.value = currentId;
+        active.value = currentId;
+      } else mode.value = hasNext ? 3 : 2;
+    } else if (canBack) {
+      mode.value = -1;
+      angle.value = tilt(y, y);
+      progress.value = 1;
+      under.value = currentId;
+      active.value = prevId;
+    } else if (hasPrev) mode.value = -3;
+    else owner.value = 0; // nothing before the first story
+  };
+
   const pan = Gesture.Pan()
     .activeOffsetX([-12, 12])
     .failOffsetY([-16, 16])
     .onStart((e) => {
       owner.value = mode.value === 0 ? 1 : 0;
-      if (!owner.value) return;
       startY.value = e.y;
-      if (e.translationX < 0) {
-        if (canForward) {
-          mode.value = 1;
-          angle.value = tilt(e.y, e.y);
-          progress.value = 0;
-          if (nextSnapped) under.value = nextId;
-          else hidden.value = currentId;
-          active.value = currentId;
-        } else mode.value = hasNext ? 3 : 2;
-      } else if (canBack) {
-        mode.value = -1;
-        angle.value = tilt(e.y, e.y);
-        progress.value = 1;
-        under.value = currentId;
-        active.value = prevId;
-      } else mode.value = hasPrev ? -3 : 0;
     })
     .onUpdate((e) => {
       if (!owner.value) return;
+      // Direction is picked on the first move: Android reports translationX 0 in onStart.
+      if (mode.value === 0) {
+        if (e.translationX === 0) return;
+        pick(e.translationX, e.y);
+      }
       angle.value = tilt(startY.value, e.y);
       if (mode.value === 1) progress.value = Math.max(0, Math.min(1, -e.translationX / width));
       else if (mode.value === -1) progress.value = Math.max(0, Math.min(1, 1 - e.translationX / width));
