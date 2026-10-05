@@ -100,8 +100,9 @@ export default function Home() {
   return (
     <View style={styles.root}>
       <PullSpinner pull={pull} threshold={THRESHOLD} refreshing={refreshing} top={top} />
-      <GestureDetector gesture={Gesture.Simultaneous(pan, native)}>
       <Animated.View collapsable={false} style={[styles.list, listStyle]}>
+      {/* The native gesture goes on the list itself: on a wrapping view Android forwards touches to it and the scroll got stuck. */}
+      <GestureDetector gesture={Gesture.Simultaneous(pan, native)}>
       <Animated.FlatList
         ref={listRef}
         data={posts}
@@ -126,8 +127,8 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
         refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
       />
-      </Animated.View>
       </GestureDetector>
+      </Animated.View>
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: insets.top }, headerStyle]}>
             <View style={styles.header}>
               <PressableScale haptic onPress={() => push('/story/new')} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
