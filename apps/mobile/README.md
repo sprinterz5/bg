@@ -1,14 +1,10 @@
 # Bookgram — mobile
 
-React Native app on Expo SDK 57 (RN 0.86, React 19, expo-router with typed routes, React Compiler, Reanimated 4). iOS + Android. Mock data only — no backend calls yet.
+React Native app on Expo SDK 57 (RN 0.86, React 19, expo-router with typed routes, React Compiler, Reanimated 4). iOS + Android. Auth, profiles, media uploads and chat go to the backend; feed, search and stories still use mock data.
 
 ## Running
 
-All commands from `apps/mobile`, with the repo's portable Node on PATH:
-
-```bash
-export PATH="/c/Users/begot/Documents/ProjectRed/.tools/node:$PATH"
-```
+All commands from `apps/mobile` with the system Node (run `npm ci` once after cloning).
 
 | Task | Command |
 | --- | --- |
@@ -17,7 +13,7 @@ export PATH="/c/Users/begot/Documents/ProjectRed/.tools/node:$PATH"
 | Add a dependency | `npx expo install <pkg>` (keeps versions in line with the SDK) |
 | Android dev build (EAS cloud, APK) | `npx eas-cli build -p android --profile development` |
 
-- **Dev build (preferred on Android).** The APK from the `development` profile replaces Expo Go: it draws edge-to-edge under the status bar, has full photo-library access and supports native sign-in. Open it and connect to `http://<PC LAN IP>:8081` (same Wi‑Fi). Rebuild only when native dependencies or `app.json` plugins change; JS changes arrive over Metro.
+- **Dev build (preferred on Android).** The APK from the `development` profile replaces Expo Go: it draws edge-to-edge under the status bar, has full photo-library access and supports native sign-in. Open it and connect to the VPS Metro (`exp://31.220.92.154:8081`, picks up pushes to `main`) or to a local one at `http://<PC LAN IP>:8081` (same Wi‑Fi; IP from `ip -4 addr`). Rebuild only when native dependencies or `app.json` plugins change; JS changes arrive over Metro.
 - **Expo Go** still works for quick checks, but on Android it paints an opaque status bar and has no full media-library access (the cover picker falls back to the system photo picker).
 - **Web** (`npx expo start --web`) is only a smoke test; visual checks happen on a phone.
 
@@ -27,7 +23,7 @@ Figma file `Pmz1oSWfWGmewyNAWMmn8e` ("AutoLayouts finals"), section `3193:1049`.
 
 - Frames are 390×844 with a 47px status bar: design `y` → `insets.top + (y - 47)`.
 - Icons are exported from Figma into `assets/icons` (viewBoxes cropped with `scripts/crop-svg.cjs`). Never hand-draw icons; recoloring an exported SVG for a state is fine.
-- Fallback when frames can't be exported: `docs/design/figma-section-3193-1049.png` is a 1:1 screenshot of the section; `docs/design/crop-frame.ps1 -FrameX <x> -Out <png>` crops one frame to measure from pixels.
+- Fallback when frames can't be exported: `docs/design/figma-section-3193-1049.png` is a 1:1 screenshot of the section; `magick docs/design/figma-section-3193-1049.png -crop 390x844+$((X-100))+0 +repage frame.png` crops one frame (`X` = frame x from the map below) to measure from pixels.
 - Fonts: Figma uses SF Pro (iOS system font). Android uses **Inter** instead (SF Pro's license is Apple-only) — see `src/components/text.tsx`. Logo: Caveat; post/article titles: Sen ExtraBold; article body: Iowan Old Style on iOS, serif on Android.
 
 ### Frame map (left → right on the canvas; `x` is section-relative)

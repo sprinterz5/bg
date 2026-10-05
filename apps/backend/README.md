@@ -13,26 +13,15 @@ Backend for Bookgram: a social network around books, articles, reviews, reading 
 - Local, Cloudflare R2, or S3-compatible media storage
 - AI embedding pipeline prepared but disabled by default
 
-## Local Runtime
-
-A portable Node.js runtime was downloaded into `.tools/node` because the system Node/npm were unavailable in this workspace.
-
-Use:
-
-```powershell
-.\.tools\node\npm.cmd run dev
-```
-
-If you install Node.js normally later, regular `npm run dev` will work too.
-
 ## Setup
 
-```powershell
-Copy-Item .env.example .env
-docker compose up -d
-.\.tools\node\npm.cmd run prisma:migrate
-.\.tools\node\npm.cmd run db:seed
-.\.tools\node\npm.cmd run dev
+```bash
+cp .env.example .env
+npm ci
+docker compose up -d   # or: podman compose up -d
+npm run prisma:migrate
+npm run db:seed
+npm run dev
 ```
 
 API: `http://localhost:4000`
@@ -43,18 +32,18 @@ Health check: `http://localhost:4000/health`
 
 ## Useful Commands
 
-```powershell
-.\.tools\node\npm.cmd run typecheck
-.\.tools\node\npm.cmd run build
-.\.tools\node\npm.cmd test
-.\.tools\node\npm.cmd run test:integration
-.\.tools\node\npm.cmd run test:all
-.\.tools\node\npm.cmd run prisma:generate
-.\.tools\node\npm.cmd run prisma:studio
-.\.tools\node\npm.cmd run jobs:spam-score
-.\.tools\node\npm.cmd run jobs:ai-embeddings
-.\.tools\node\npm.cmd run docs:openapi
-.\.tools\node\npm.cmd audit
+```bash
+npm run typecheck
+npm run build
+npm test
+npm run test:integration
+npm run test:all
+npm run prisma:generate
+npm run prisma:studio
+npm run jobs:spam-score
+npm run jobs:ai-embeddings
+npm run docs:openapi
+npm audit
 ```
 
 ## Seed Users
@@ -191,25 +180,13 @@ Current ranking/safety algorithms:
 - Media: `LOCAL`, `R2`, and `S3` providers
 - AI prep: provider abstraction, embedding storage, local hash dev provider, OpenAI-compatible embedding endpoint mode
 
-## Home Server Guide
-
-[docs/HOME_SERVER_DEPLOYMENT.md](docs/HOME_SERVER_DEPLOYMENT.md)
-
 ## Production Notes
 
-[docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md)
+[docs/PRODUCTION_DEPLOYMENT.md](../../docs/PRODUCTION_DEPLOYMENT.md)
 
 ## AI Deployment Prep
 
-[docs/AI_DEPLOYMENT_PREP.md](docs/AI_DEPLOYMENT_PREP.md)
-
-## SwiftUI Agent Handoff
-
-For the Codex agent working on the Mac VM / SwiftUI client, use:
-
-[docs/MAC_SWIFTUI_AGENT_HANDOFF.md](docs/MAC_SWIFTUI_AGENT_HANDOFF.md)
-
-It contains the endpoint catalog, DTO guidance, auth flow, seed users, realtime events, Bookgram-specific behavior, and known backend gaps.
+[docs/AI_DEPLOYMENT_PREP.md](../../docs/AI_DEPLOYMENT_PREP.md)
 
 ## Realtime
 

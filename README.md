@@ -10,10 +10,8 @@ Social reading app: people publish short articles and everyday stories, others r
 | `apps/mobile` | React Native / Expo app for iOS and Android — see [apps/mobile/README.md](apps/mobile/README.md) |
 | `docs` | Backend guides, deployment notes, OpenAPI spec, design references (`docs/design`) |
 
-`docs/MAC_SWIFTUI_AGENT_HANDOFF.md` is obsolete: the client is React Native, not SwiftUI.
+## Environment (Linux)
 
-## Environment (Windows)
-
-- Node 24 + npm 11 live in `.tools/node` (portable, git-ignored); there is no system Node. Call it directly, e.g. from `apps/backend`: `../../.tools/node/npm.cmd run typecheck`, or prepend it to PATH for `npx`.
-- Postgres and Redis run in Docker (`apps/backend/docker-compose.yml`). Integration tests return 500s when Docker is off.
+- System Node (22+) and npm: plain `npm run <script>` / `npx` from the app folder. Run `npm ci` in `apps/backend` and `apps/mobile` after cloning.
+- Postgres and Redis for local backend work run in containers (`apps/backend/docker-compose.yml`) via `podman compose` (needs `podman-compose`) or `docker compose`. Integration tests return 500s when they are not running.
 - No Mac: iOS is tested on a real iPhone (Expo Go / dev build), release builds go through EAS Build.
