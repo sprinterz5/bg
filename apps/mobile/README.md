@@ -73,3 +73,4 @@ src/
 - **Chats tab** — list screen from the last frame: centred username, compose button, search, people with Following buttons.
 - **Tab bar & motion** — active/inactive tab icons with crossfade, new like animation (filled heart grows out of the outline, counter rolls), navigation lock against double taps and back presses mid-transition.
 - **Android polish** — EAS development build (edge-to-edge status bar, full media access), Inter in place of SF Pro, cover-picker Next button kept above the navigation bar, `bookgram` brand avatar from Figma.
+- **Story page turn** — swipe or tap turns stories with a page curl (Skia shader over snapshots of the stacked previous/current/next pages); the viewer uses the core `Image` so Android snapshots can draw it. Needs a dev build with Skia.
