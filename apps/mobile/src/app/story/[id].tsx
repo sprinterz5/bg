@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import { Easing, runOnJS, runOnUI, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthorAvatar } from '@/components/author-row';
@@ -54,6 +54,9 @@ export default function StoryViewer() {
   const angle = useSharedValue(0);
   const active = useSharedValue(''); // snapshot being turned
   const under = useSharedValue(''); // snapshot drawn flat under it
+  // Fallback when the next page has no snapshot: its live view is shown under the curl and the current live page
+  // is hidden, but only once the turn is under way (the canvas then surely draws already).
+  const hidden = useSharedValue('');
   // 1 / -1: turning forward / back; 3 / -3: switching without the curl (no snapshot yet); 2: swiping past the last story.
   const mode = useSharedValue(0);
   const owner = useSharedValue(0); // the running pan started the current turn
@@ -72,6 +75,7 @@ export default function StoryViewer() {
           'worklet';
           active.value = '';
           under.value = '';
+          hidden.value = '';
           progress.value = 0;
           mode.value = 0;
         })(),
@@ -91,9 +95,10 @@ export default function StoryViewer() {
       return dropped ? out : s;
     });
     return () => cancelAnimationFrame(raf);
-  }, [index, active, under, progress, mode]);
+  }, [index, active, under, hidden, progress, mode]);
 
-  const canForward = CURL_SUPPORTED && !!next && !!snaps[story.id] && !!snaps[next.id];
+  const canForward = CURL_SUPPORTED && !!next && !!snaps[story.id];
+  const nextSnapped = !!next && !!snaps[next.id];
   const canBack = CURL_SUPPORTED && !!prev && !!snaps[prev.id] && !!snaps[story.id];
   const currentId = story.id;
   const prevId = prev?.id ?? '';
@@ -131,7 +136,8 @@ export default function StoryViewer() {
     mode.value = step;
     angle.value = tilt;
     progress.value = step === 1 ? 0 : 1;
-    under.value = base;
+    if (step === 1 && !nextSnapped) hidden.value = layer;
+    else under.value = base;
     active.value = layer;
     progress.value = withTiming(step === 1 ? 1 : 0, { duration: TURN_MS, easing: TURN_EASING }, (done) => {
       if (done) runOnJS(commit)(step);
@@ -165,7 +171,8 @@ export default function StoryViewer() {
           mode.value = 1;
           angle.value = tilt(e.y, e.y);
           progress.value = 0;
-          under.value = nextId;
+          if (nextSnapped) under.value = nextId;
+          else hidden.value = currentId;
           active.value = currentId;
         } else mode.value = hasNext ? 3 : 2;
       } else if (canBack) {
@@ -197,6 +204,7 @@ export default function StoryViewer() {
           else {
             active.value = '';
             under.value = '';
+            hidden.value = '';
             mode.value = 0;
           }
         });
@@ -218,7 +226,7 @@ export default function StoryViewer() {
         {/* Not flattened on Android, or the pan has no view to attach to. */}
         <View collapsable={false} style={StyleSheet.absoluteFill}>
           {pages.map((s) => (
-            <StoryPage key={s.id} story={s} top={s.id === story.id} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+            <StoryPage key={s.id} story={s} top={s.id === story.id} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
           ))}
           {/* Inside the gesture view: on Android the gesture handler hit-tests views itself and stops at the
               first leaf view under the finger (the canvas), so a canvas above it would swallow the swipe. */}
@@ -247,6 +255,8 @@ type PageProps = {
   story: Story;
   /** The visible page; the ones under it only wait to be turned to. */
   top: boolean;
+  hidden: SharedValue<string>;
+  progress: SharedValue<number>;
   barH: number;
   onTap: (step: 1 | -1) => void;
   onSnapshot: (storyId: string, image: Snapshot) => void;
@@ -254,45 +264,59 @@ type PageProps = {
 
 // Pictures use the core Image: the snapshot draws the view tree in software on Android, and expo-image's
 // hardware bitmaps can't be drawn there.
-function StoryPage({ story, top, barH, onTap, onSnapshot }: PageProps) {
+function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: PageProps) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const ref = useRef<View>(null);
   const [expanded, setExpanded] = useState(false);
   const [photoReady, setPhotoReady] = useState(false);
   const [avatarReady, setAvatarReady] = useState(!story.author.avatar);
+  // Snapshot anyway if a picture never reports onLoad (seen on Android for pages under the top one).
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 800);
+    return () => clearTimeout(t);
+  }, []);
 
   const src = Image.resolveAssetSource(story.image as number);
   const photoH = Math.min(MAX_H, src ? (width * src.height) / src.width : MAX_H);
   const photoTop = insets.top + (385 - 47) - photoH / 2;
 
   // Snapshot for the page turn once the pictures are on screen, and again after the caption opens or closes.
+  const ready = (photoReady && avatarReady) || timedOut;
   useEffect(() => {
-    if (!CURL_SUPPORTED || !photoReady || !avatarReady) return;
+    if (!CURL_SUPPORTED || !ready) return;
     let cancelled = false;
-    let raf = requestAnimationFrame(() => {
-      raf = requestAnimationFrame(() => {
-        snapshotView(ref).then((image) => {
-          if (!image) return;
-          if (cancelled) disposeSnapshot(image);
-          else onSnapshot(story.id, image);
-        });
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const take = (attempt: number) =>
+      snapshotView(ref).then((image) => {
+        if (!image) {
+          if (attempt === 0 && !cancelled) retry = setTimeout(() => take(1), 400);
+          return;
+        }
+        if (cancelled) disposeSnapshot(image);
+        else onSnapshot(story.id, image);
       });
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(() => take(0));
     });
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
+      clearTimeout(retry);
     };
-  }, [photoReady, avatarReady, expanded, story.id, onSnapshot]);
+  }, [ready, expanded, story.id, onSnapshot]);
+
+  const hideStyle = useAnimatedStyle(() => ({ opacity: hidden.value === story.id && progress.value > 0.03 ? 0 : 1 }));
 
   return (
-    <View
+    <Animated.View
       ref={ref}
       collapsable={false}
       pointerEvents={top ? 'auto' : 'none'}
       accessibilityElementsHidden={!top}
       importantForAccessibility={top ? 'auto' : 'no-hide-descendants'}
-      style={styles.page}>
+      style={[styles.page, hideStyle]}>
       <Image
         source={story.image}
         fadeDuration={0}
@@ -321,7 +345,7 @@ function StoryPage({ story, top, barH, onTap, onSnapshot }: PageProps) {
           </Text>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
