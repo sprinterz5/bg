@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useFocusEffect, type Href } from 'expo-router';
+import { useFocusEffect, useScrollToTop, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, FlatList, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
@@ -63,6 +63,13 @@ export default function Search() {
   const insets = useSafeAreaInsets();
   const { width: W } = useWindowDimensions();
   const inputRef = useRef<TextInput>(null);
+  // Tapping the Search tab again scrolls Explore back to the top (iOS: the list's top is -FEED_TOP, under the header).
+  const feedRef = useRef<FlatList<(typeof EXPLORE_FEED)[number]>>(null);
+  const scrollTarget = useMemo(
+    () => ({ current: { scrollToTop: () => feedRef.current?.scrollToOffset({ offset: Platform.OS === 'ios' ? -FEED_TOP : 0, animated: true }) } }),
+    [],
+  );
+  useScrollToTop(scrollTarget);
   const [mode, setMode] = useState<Mode>('explore');
   const [tab, setTab] = useState<Tab>('articles');
   const [query, setQuery] = useState('');
@@ -247,6 +254,7 @@ export default function Search() {
           <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={styles.exploreLayer}>
             {/* The list runs behind the header and the topics; both are overlays moved by the scroll. */}
             <Animated.FlatList
+              ref={feedRef}
               data={EXPLORE_FEED}
               keyExtractor={(p) => p.id}
               renderItem={({ item }) => <ExploreCard post={item} />}

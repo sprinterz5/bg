@@ -1,5 +1,5 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router, useFocusEffect, useScrollToTop } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,6 +18,9 @@ export default function Profile() {
   const { user, signOut } = useSession();
   const [tab, setTab] = useState<'posts' | 'liked'>('posts');
   const [data, setData] = useState<ProfileData | null>(null);
+  // Tapping the Profile tab again scrolls back to the top.
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToTop(scrollRef);
   const username = user?.username;
 
   // Refetch on every visit so counts and new articles show up.
@@ -58,7 +61,7 @@ export default function Profile() {
         </PressableScale>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         <ProfileSummary
           username={user.username}
           name={data?.name ?? user.name}

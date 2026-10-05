@@ -1,8 +1,9 @@
 import { Image } from 'expo-image';
-import { useCallback, useEffect, useState } from 'react';
-import { Platform, RefreshControl, StyleSheet, View } from 'react-native';
+import { useScrollToTop } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, LinearTransition, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -71,14 +72,30 @@ export default function Home() {
   const native = Gesture.Native();
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: Post; index: number }) => (
-      <Animated.View collapsable={false} entering={FadeInDown.delay(Math.min(index, 4) * 70).duration(380)} layout={LinearTransition.duration(300)}>
+  // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
+  const listRef = useRef<FlatList<Post>>(null);
+  const scrollTarget = useMemo(
+    () => ({ current: { scrollToTop: () => listRef.current?.scrollToOffset({ offset: IOS ? -top : 0, animated: true }) } }),
+    [top],
+  );
+  useScrollToTop(scrollTarget);
+
+  // FlatList mounts posts lazily while scrolling and remounts ones it dropped off-screen: those must appear as they
+  // are, not fade in mid-scroll. A post animates in only on its first mount, while the screen opens or at the top (new post).
+  const seen = useRef(new Set<string>());
+  const introUntil = useRef<number | null>(null);
+  const renderItem = useCallback(({ item, index }: { item: Post; index: number }) => {
+    const now = Date.now();
+    introUntil.current ??= now + INTRO_MS;
+    const first = !seen.current.has(item.id);
+    seen.current.add(item.id);
+    const animate = first && (now < introUntil.current || index < 3);
+    return (
+      <Animated.View collapsable={false} entering={animate ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : undefined}>
         <FeedPost post={item} />
       </Animated.View>
-    ),
-    [],
-  );
+    );
+  }, []);
 
   return (
     <View style={styles.root}>
@@ -86,6 +103,7 @@ export default function Home() {
       <GestureDetector gesture={Gesture.Simultaneous(pan, native)}>
       <Animated.View collapsable={false} style={[styles.list, listStyle]}>
       <Animated.FlatList
+        ref={listRef}
         data={posts}
         keyExtractor={(p) => p.id}
         renderItem={renderItem}
@@ -140,6 +158,8 @@ const HEADER_H = 62.75;
 const THRESHOLD = 64;
 const HOLD = 52;
 const MAX_PULL = 140;
+// Posts first mounted within this time after the screen opens get the staggered entrance.
+const INTRO_MS = 1000;
 
 const Separator = () => <View style={styles.separator} />;
 
