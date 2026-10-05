@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, { Easing, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
+import { Easing, runOnJS, runOnUI, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthorAvatar } from '@/components/author-row';
@@ -23,8 +23,9 @@ const MUTED = '#8E8E93';
 const MAX_H = 540;
 
 // Page turn between stories (not in the design): swipe or tap the right/left half. The previous, current and
-// next pages are mounted on top of each other (current on top) and snapshotted; the curl canvas turns the
-// current snapshot away over the live next page, or brings the previous snapshot back over the current one.
+// next pages are mounted on top of each other (current on top) and snapshotted. During a turn the curl canvas
+// paints the whole frame over the live pages: the current snapshot turning away over the next one, or the
+// previous one coming back over the current one; when the turn is done the live page under it is the same.
 const TURN_EASING = Easing.bezier(0.45, 0.05, 0.25, 1);
 const RELEASE_EASING = Easing.out(Easing.cubic);
 const TURN_MS = 620;
@@ -51,8 +52,8 @@ export default function StoryViewer() {
 
   const progress = useSharedValue(0); // 0 = page flat, 1 = turned away
   const angle = useSharedValue(0);
-  const active = useSharedValue(''); // snapshot drawn by the curl canvas
-  const hidden = useSharedValue(''); // live page hidden while its snapshot turns away
+  const active = useSharedValue(''); // snapshot being turned
+  const under = useSharedValue(''); // snapshot drawn flat under it
   // 1 / -1: turning forward / back; 3 / -3: switching without the curl (no snapshot yet); 2: swiping past the last story.
   const mode = useSharedValue(0);
   const owner = useSharedValue(0); // the running pan started the current turn
@@ -70,7 +71,7 @@ export default function StoryViewer() {
         runOnUI(() => {
           'worklet';
           active.value = '';
-          hidden.value = '';
+          under.value = '';
           progress.value = 0;
           mode.value = 0;
         })(),
@@ -90,22 +91,48 @@ export default function StoryViewer() {
       return dropped ? out : s;
     });
     return () => cancelAnimationFrame(raf);
-  }, [index, active, hidden, progress, mode]);
+  }, [index, active, under, progress, mode]);
 
-  const canForward = CURL_SUPPORTED && !!next && !!snaps[story.id];
-  const canBack = CURL_SUPPORTED && !!prev && !!snaps[prev.id];
+  const canForward = CURL_SUPPORTED && !!next && !!snaps[story.id] && !!snaps[next.id];
+  const canBack = CURL_SUPPORTED && !!prev && !!snaps[prev.id] && !!snaps[story.id];
   const currentId = story.id;
   const prevId = prev?.id ?? '';
+  const nextId = next?.id ?? '';
+
+  // The first draw of the curl shader compiles it on the GPU (a visible hitch): do it once up front, turned fully
+  // away so nothing shows.
+  const warmed = useRef(false);
+  useEffect(() => {
+    if (!CURL_SUPPORTED || warmed.current || !snaps[currentId]) return;
+    warmed.current = true;
+    runOnUI((id: string) => {
+      'worklet';
+      if (mode.value !== 0) return;
+      progress.value = 1;
+      active.value = id;
+    })(currentId);
+    const t = setTimeout(
+      () =>
+        runOnUI(() => {
+          'worklet';
+          if (mode.value !== 0) return;
+          active.value = '';
+          progress.value = 0;
+        })(),
+      200,
+    );
+    return () => clearTimeout(t);
+  }, [snaps, currentId, mode, progress, active]);
   const hasNext = !!next;
   const hasPrev = !!prev;
 
-  const startTurn = (step: number, layer: string, tilt: number) => {
+  const startTurn = (step: number, layer: string, base: string, tilt: number) => {
     'worklet';
     mode.value = step;
     angle.value = tilt;
     progress.value = step === 1 ? 0 : 1;
+    under.value = base;
     active.value = layer;
-    if (step === 1) hidden.value = layer;
     progress.value = withTiming(step === 1 ? 1 : 0, { duration: TURN_MS, easing: TURN_EASING }, (done) => {
       if (done) runOnJS(commit)(step);
     });
@@ -115,7 +142,7 @@ export default function StoryViewer() {
   const turn = (step: 1 | -1) => {
     if (!(step === 1 ? hasNext : hasPrev)) return back();
     if (mode.value !== 0) return;
-    if (step === 1 ? canForward : canBack) runOnUI(startTurn)(step, step === 1 ? currentId : prevId, 0.08);
+    if (step === 1 ? canForward : canBack) runOnUI(startTurn)(step, step === 1 ? currentId : prevId, step === 1 ? nextId : currentId, 0.08);
     else commit(step);
   };
 
@@ -138,13 +165,14 @@ export default function StoryViewer() {
           mode.value = 1;
           angle.value = tilt(e.y, e.y);
           progress.value = 0;
+          under.value = nextId;
           active.value = currentId;
-          hidden.value = currentId;
         } else mode.value = hasNext ? 3 : 2;
       } else if (canBack) {
         mode.value = -1;
         angle.value = tilt(e.y, e.y);
         progress.value = 1;
+        under.value = currentId;
         active.value = prevId;
       } else mode.value = hasPrev ? -3 : 0;
     })
@@ -167,8 +195,8 @@ export default function StoryViewer() {
           if (!fin) return;
           if (done) runOnJS(commit)(m);
           else {
-            hidden.value = '';
             active.value = '';
+            under.value = '';
             mode.value = 0;
           }
         });
@@ -181,19 +209,20 @@ export default function StoryViewer() {
     });
 
   const pages = [prev, next, story].filter((s): s is Story => !!s);
-  const layers = [prev, story].filter((s): s is Story => !!s && !!snaps[s.id]).map((s) => ({ id: s.id, image: snaps[s.id] }));
+  const layers = pages.filter((s) => !!snaps[s.id]).map((s) => ({ id: s.id, image: snaps[s.id] }));
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       <GestureDetector gesture={pan}>
-        <View style={StyleSheet.absoluteFill}>
+        {/* Not flattened on Android, or the pan has no view to attach to. */}
+        <View collapsable={false} style={StyleSheet.absoluteFill}>
           {pages.map((s) => (
-            <StoryPage key={s.id} story={s} top={s.id === story.id} hidden={hidden} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+            <StoryPage key={s.id} story={s} top={s.id === story.id} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
           ))}
         </View>
       </GestureDetector>
-      <PageCurlCanvas layers={layers} active={active} progress={progress} angle={angle} width={width} height={height} />
+      <PageCurlCanvas layers={layers} active={active} under={under} progress={progress} angle={angle} width={width} height={height} />
       <View style={[styles.statusBar, { height: insets.top }]} />
 
       <PressableScale onPress={() => back()} hitSlop={14} accessibilityLabel="Close" style={[styles.back, { top: insets.top + 18 }]}>
@@ -216,7 +245,6 @@ type PageProps = {
   story: Story;
   /** The visible page; the ones under it only wait to be turned to. */
   top: boolean;
-  hidden: SharedValue<string>;
   barH: number;
   onTap: (step: 1 | -1) => void;
   onSnapshot: (storyId: string, image: Snapshot) => void;
@@ -224,7 +252,7 @@ type PageProps = {
 
 // Pictures use the core Image: the snapshot draws the view tree in software on Android, and expo-image's
 // hardware bitmaps can't be drawn there.
-function StoryPage({ story, top, hidden, barH, onTap, onSnapshot }: PageProps) {
+function StoryPage({ story, top, barH, onTap, onSnapshot }: PageProps) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const ref = useRef<View>(null);
@@ -255,16 +283,14 @@ function StoryPage({ story, top, hidden, barH, onTap, onSnapshot }: PageProps) {
     };
   }, [photoReady, avatarReady, expanded, story.id, onSnapshot]);
 
-  const hideStyle = useAnimatedStyle(() => ({ opacity: hidden.value === story.id ? 0 : 1 }));
-
   return (
-    <Animated.View
+    <View
       ref={ref}
       collapsable={false}
       pointerEvents={top ? 'auto' : 'none'}
       accessibilityElementsHidden={!top}
       importantForAccessibility={top ? 'auto' : 'no-hide-descendants'}
-      style={[styles.page, hideStyle]}>
+      style={styles.page}>
       <Image
         source={story.image}
         fadeDuration={0}
@@ -293,7 +319,7 @@ function StoryPage({ story, top, hidden, barH, onTap, onSnapshot }: PageProps) {
           </Text>
         </Pressable>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 

@@ -16,6 +16,7 @@ export function disposeSnapshot(_image: Snapshot) {}
 type Props = {
   layers: { id: string; image: Snapshot }[];
   active: SharedValue<string>;
+  under: SharedValue<string>;
   progress: SharedValue<number>;
   angle: SharedValue<number>;
   width: number;

@@ -1,4 +1,4 @@
-import { Canvas, Fill, Group, ImageShader, Shader, Skia, makeImageFromView, type SkImage } from '@shopify/react-native-skia';
+import { Canvas, Fill, Group, Image, ImageShader, Shader, Skia, makeImageFromView, type SkImage } from '@shopify/react-native-skia';
 import { useMemo, type RefObject } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useDerivedValue, type DerivedValue, type SharedValue } from 'react-native-reanimated';
@@ -6,6 +6,8 @@ import { useDerivedValue, type DerivedValue, type SharedValue } from 'react-nati
 // Page turn: a snapshot of the page is wrapped around a cylinder lying on the screen (GPU shader).
 // The fold line moves from the right edge to past the left one as `progress` goes 0 → 1; the lifted part
 // rolls over the cylinder and lies flipped on top (paper back), the page underneath gets a soft shadow.
+// The page underneath is drawn here too (`under`), so the canvas paints the whole frame by itself: nothing
+// in the live views has to be hidden at the start of a turn (Skia on Android draws a frame later than views).
 
 export const CURL_SUPPORTED = true;
 export type Snapshot = SkImage;
@@ -85,6 +87,8 @@ type Props = {
   layers: Layer[];
   /** Id of the layer being turned; '' = nothing drawn. */
   active: SharedValue<string>;
+  /** Id of the layer drawn flat under the turning one; '' = none. */
+  under: SharedValue<string>;
   /** 0 = page flat, 1 = turned away. */
   progress: SharedValue<number>;
   /** Fold tilt in radians. */
@@ -93,7 +97,7 @@ type Props = {
   height: number;
 };
 
-export function PageCurlCanvas({ layers, active, progress, angle, width, height }: Props) {
+export function PageCurlCanvas({ layers, active, under, progress, angle, width, height }: Props) {
   const effect = useMemo(() => Skia.RuntimeEffect.Make(SKSL), []);
   const uniforms = useDerivedValue((): Uniforms => {
     const c = Math.cos(angle.value);
@@ -113,11 +117,19 @@ export function PageCurlCanvas({ layers, active, progress, angle, width, height 
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Canvas style={StyleSheet.absoluteFill}>
         {layers.map((l) => (
+          <UnderLayer key={l.id} id={l.id} image={l.image} under={under} width={width} height={height} />
+        ))}
+        {layers.map((l) => (
           <CurlLayer key={l.id} id={l.id} image={l.image} active={active} effect={effect} uniforms={uniforms} width={width} height={height} />
         ))}
       </Canvas>
     </View>
   );
+}
+
+function UnderLayer({ id, image, under, width, height }: { id: string; image: Snapshot; under: SharedValue<string>; width: number; height: number }) {
+  const opacity = useDerivedValue(() => (under.value === id ? 1 : 0));
+  return <Image image={image} fit="fill" x={0} y={0} width={width} height={height} opacity={opacity} />;
 }
 
 function CurlLayer({
