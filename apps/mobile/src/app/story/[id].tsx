@@ -220,9 +220,11 @@ export default function StoryViewer() {
           {pages.map((s) => (
             <StoryPage key={s.id} story={s} top={s.id === story.id} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
           ))}
+          {/* Inside the gesture view: on Android the gesture handler hit-tests views itself and stops at the
+              first leaf view under the finger (the canvas), so a canvas above it would swallow the swipe. */}
+          <PageCurlCanvas layers={layers} active={active} under={under} progress={progress} angle={angle} width={width} height={height} />
         </View>
       </GestureDetector>
-      <PageCurlCanvas layers={layers} active={active} under={under} progress={progress} angle={angle} width={width} height={height} />
       <View style={[styles.statusBar, { height: insets.top }]} />
 
       <PressableScale onPress={() => back()} hitSlop={14} accessibilityLabel="Close" style={[styles.back, { top: insets.top + 18 }]}>

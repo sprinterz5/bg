@@ -114,7 +114,7 @@ export function PageCurlCanvas({ layers, active, under, progress, angle, width, 
 
   if (!effect) return null;
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View collapsable={false} pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Canvas style={StyleSheet.absoluteFill}>
         {layers.map((l) => (
           <UnderLayer key={l.id} id={l.id} image={l.image} under={under} width={width} height={height} />
