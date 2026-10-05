@@ -43,19 +43,45 @@ export function getStoredRefreshToken() {
 
 type ApiInit = { method?: string; body?: unknown; form?: FormData; auth?: boolean };
 
+// Without a timeout a request on a dead connection hangs forever. Uploads get more time.
+const TIMEOUT_MS = 20_000;
+const UPLOAD_TIMEOUT_MS = 60_000;
+
 async function send<T>(path: string, init: ApiInit): Promise<T> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   // Multipart: fetch sets the Content-Type with the boundary itself.
   if (init.body !== undefined) headers['Content-Type'] = 'application/json';
   if (init.auth && accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
-  const res = await fetch(`${API_URL}${path}`, {
-    method: init.method ?? (init.body === undefined && !init.form ? 'GET' : 'POST'),
-    headers,
-    body: init.form ?? (init.body === undefined ? undefined : JSON.stringify(init.body)),
-  });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), init.form ? UPLOAD_TIMEOUT_MS : TIMEOUT_MS);
+  let res: Response;
+  let text: string;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method: init.method ?? (init.body === undefined && !init.form ? 'GET' : 'POST'),
+      headers,
+      body: init.form ?? (init.body === undefined ? undefined : JSON.stringify(init.body)),
+      signal: controller.signal,
+    });
+    text = await res.text();
+  } catch (e) {
+    // Status 0 = no HTTP response (timeout or network error).
+    if (controller.signal.aborted) throw new ApiError(0, 'timeout');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+
+  let data: unknown = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Not JSON (e.g. an HTML 502 page from the proxy): still an API error, not a crash in the caller.
+      throw new ApiError(res.status, text);
+    }
+  }
   if (!res.ok) throw new ApiError(res.status, data);
   return data as T;
 }

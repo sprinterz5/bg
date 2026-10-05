@@ -53,6 +53,9 @@ const projectRoot = path.resolve(__dirname, "..");
 
 export async function buildApp() {
   const app = Fastify({
+    // Behind Caddy (Docker network): take the client IP from X-Forwarded-For, but only when the
+    // request comes from a private/loopback address, so the header can't be spoofed from outside.
+    trustProxy: ["loopback", "linklocal", "uniquelocal"],
     logger:
       env.NODE_ENV === "test"
         ? false

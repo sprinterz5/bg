@@ -16,7 +16,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-bookgram}:${POSTGRES_PASSWORD:-bookgram}@postgres:5432/${POSTGRES_DB:-bookgram}?schema=public
       REDIS_URL: redis://redis:6379
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
     volumes:
       - bookgram-media:/app/storage/uploads
     restart: unless-stopped

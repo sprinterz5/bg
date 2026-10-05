@@ -6,7 +6,7 @@ export const notificationRoutes: FastifyPluginAsync = async (app) => {
   app.get("/notifications", { preHandler: [app.authenticate] }, async (request) => {
     const query = z
       .object({
-        unreadOnly: z.coerce.boolean().default(false)
+        unreadOnly: z.stringbool().default(false)
       })
       .merge(z.object({ limit: z.coerce.number().int().min(1).max(100).default(30), cursor: z.string().optional() }))
       .parse(request.query);

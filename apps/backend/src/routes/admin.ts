@@ -91,7 +91,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       .object({
         q: z.string().min(1).max(120).optional(),
         role: z.nativeEnum(UserRole).optional(),
-        emailVerified: z.coerce.boolean().optional()
+        emailVerified: z.stringbool().optional()
       })
       .merge(adminPageSchema)
       .parse(request.query);
