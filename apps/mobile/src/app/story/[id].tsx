@@ -52,7 +52,9 @@ export default function StoryViewer() {
 
   // Free the GPU snapshots when the viewer closes.
   const snapsRef = useRef(snaps);
-  snapsRef.current = snaps;
+  useEffect(() => {
+    snapsRef.current = snaps;
+  }, [snaps]);
   useEffect(() => () => Object.values(snapsRef.current).forEach((img) => setTimeout(() => disposeSnapshot(img), 1000)), []);
 
   const progress = useSharedValue(0); // 0 = page flat, 1 = turned away
