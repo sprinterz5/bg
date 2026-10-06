@@ -249,9 +249,8 @@ export default function StoryViewer() {
           <PageCurlCanvas layers={layers} active={active} under={under} progress={progress} angle={angle} width={width} height={height} />
         </View>
       </GestureDetector>
-      <View style={[styles.statusBar, { height: insets.top }]} />
 
-      <PressableScale onPress={() => back()} hitSlop={14} accessibilityLabel="Close" style={[styles.back, { top: insets.top + 18 }]}>
+      <PressableScale onPress={() => back()} hitSlop={14} accessibilityLabel="Close" style={[styles.back, { top: insets.top + 13 }]}>
         <Icon name="storyBack" width={15.7} height={27.06} />
       </PressableScale>
 
@@ -368,7 +367,6 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000000' },
   page: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000' },
-  statusBar: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: BAR },
   half: { position: 'absolute', top: 0 },
   back: { position: 'absolute', left: 15.775 },
   info: { position: 'absolute', left: 14, right: 54 },
@@ -380,16 +378,15 @@ const styles = StyleSheet.create({
   time: { marginTop: -1.7, marginLeft: 1.3, fontSize: 12, lineHeight: 14, color: MUTED },
   caption: { marginTop: 18.9, marginBottom: 14.1, fontSize: 12.65, lineHeight: 15.65, color: '#FFFFFF' },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: BAR },
-  // 286.5x41.5 pill with a 0.5 #A6A6A6 stroke at x 14.75, 11.75 under the bar top; text at x 37.2
+  // Frame 1081: 286x41 #181C1F pill (no stroke) at x 14, 12 under the bar top; text at x 36.2
   pill: {
     position: 'absolute',
-    left: 14.5,
-    top: 11.5,
-    width: 287,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 0.5,
-    borderColor: '#A6A6A6',
+    left: 14,
+    top: 12,
+    width: 286,
+    height: 41,
+    borderRadius: 20.5,
+    backgroundColor: '#181C1F',
     justifyContent: 'center',
     paddingLeft: 22.2,
     paddingRight: 16,

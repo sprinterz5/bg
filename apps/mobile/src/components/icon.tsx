@@ -9,6 +9,8 @@ const icons = {
   searchField: require('@/assets/icons/search-field.svg'),
   // Same glyph, stroke 1.13 so it renders 1.25px at the Explore size (16.6).
   searchFieldThin: require('@/assets/icons/search-field-thin.svg'),
+  exploreSearch: require('@/assets/icons/explore-search.svg'),
+  cardMore: require('@/assets/icons/card-more.svg'),
   searchFilter: require('@/assets/icons/search-filter.svg'),
   searchClear: require('@/assets/icons/search-clear.svg'),
   searchBack: require('@/assets/icons/search-back.svg'),

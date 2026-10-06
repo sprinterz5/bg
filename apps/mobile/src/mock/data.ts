@@ -270,7 +270,7 @@ ARTICLES.steveIve = {
 };
 
 /** Figma 3163:1520 — Explore topics row ("+" sits after the selected topic). */
-export const EXPLORE_TOPICS = ['For You', 'Books', 'Science', 'Health', 'History', 'Philosophy'] as const;
+export const EXPLORE_TOPICS = ['For You', 'Books', 'Following', 'News'] as const;
 
 export type ExplorePost = {
   id: string;

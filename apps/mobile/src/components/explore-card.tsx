@@ -3,6 +3,8 @@ import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
+import { Icon } from './icon';
+
 import { Text } from '@/components/text';
 import type { ExplorePost } from '@/mock/data';
 import { colors, fonts } from '@/theme';
@@ -23,9 +25,9 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
       <View style={styles.media}>
         <Image source={post.image} style={styles.image} contentFit="cover" transition={200} />
         <View style={styles.titleChip}>
-          {/* Figma: background blur 3 under the 80% white fill. iOS only — on Android every card in a scrolling
-              list would need its own blur target, the white fill alone reads the same at this strength. */}
-          {Platform.OS === 'ios' ? <BlurView intensity={9} tint="light" style={StyleSheet.absoluteFill} /> : null}
+          {/* Frame 1081: background blur 4 under a 47.5% white fill. iOS only — on Android every card in a scrolling
+              list would need its own blur target, so there the fill is a bit denser instead. */}
+          {Platform.OS === 'ios' ? <BlurView intensity={14} tint="light" style={StyleSheet.absoluteFill} /> : null}
           <View style={[StyleSheet.absoluteFill, styles.titleFill]} />
           <Text style={styles.titleText} numberOfLines={2}>
             {post.title}
@@ -34,11 +36,14 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
       </View>
       <View style={styles.captionBlock}>
         <Text style={styles.caption} numberOfLines={2}>
-          <Text style={styles.lead}>{post.lead}</Text>
+          {post.lead}
           {post.rest}
         </Text>
-        <Text style={styles.time}>{post.reads ? `${post.reads} reads · ${post.timeAgo}` : post.timeAgo}</Text>
+        <Text style={styles.time}>{post.reads ? `${post.reads} reads • ${post.timeAgo}` : post.timeAgo}</Text>
       </View>
+      <PressableScale hitSlop={12} accessibilityLabel="More" style={styles.more}>
+        <Icon name="cardMore" width={3.4} height={17.33} />
+      </PressableScale>
     </PressableScale>
   );
 });
@@ -48,7 +53,7 @@ const styles = StyleSheet.create({
 // at 4 / 5.5 from the bottom, Sen 800 18.4/20 +0.1% with baselines at chip top +23.7 / +43.7;
 // caption SF 14.075/16 +0.25% (lead 590) at x 11.5, 12 under the media; meta 12.15 at x 12.5, 5 below; next card 23 below.
   card: { paddingBottom: 38  }, // Figma gap between posts 16 (was 14 in THIS.svg → 23 here)
-  media: { height: 227, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
+  media: { height: 232, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   titleChip: {
     position: 'absolute',
@@ -61,16 +66,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: 13.5,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
   },
-  titleFill: { backgroundColor: 'rgba(255,255,255,0.8)' },
+  // Frame 1081: 47.5% white over a 4px background blur, no stroke.
+  titleFill: { backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.475)' : 'rgba(255,255,255,0.62)' },
   // Same as the caption: room below the last line so descenders aren't cut by the text box.
   titleText: { width: 285.2, fontFamily: fonts.display, fontSize: 20.05, lineHeight: 20.67, letterSpacing: 20.05 * 0.01, paddingBottom: 3, marginBottom: -3, color: colors.text },
-  captionBlock: { paddingLeft: 13, paddingRight: 19, marginTop: 14, gap: 9 }, // text box 358 wide (x 11.5..369.5)
+  // Frame 1081: caption up to x 315, the ⋮ (3.4x17.3) at x 341.3 level with its first line.
+  captionBlock: { paddingLeft: 13, paddingRight: 70, marginTop: 14, gap: 9 }, // text box 358 wide (x 11.5..369.5)
   // The line height is tighter than the font: room below so the second line's descenders (g, y, p) aren't cut.
   caption: { fontSize: 14.25, lineHeight: 17.5, letterSpacing: 14.075 * 0.0025, paddingBottom: 3, marginBottom: -3, color: colors.text },
-  lead: { fontWeight: '600' },
+  more: { position: 'absolute', left: 341.3, top: 232 + 12.33 },
   time: { fontSize: 12.25, lineHeight: 16, marginLeft: 1, color: colors.textSubtle },
 });
 

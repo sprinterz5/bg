@@ -38,10 +38,12 @@ const FIELD_H = 41;
 // White strip under the fixed field so scrolling content doesn't cut right at its edge; offsets below are reduced by it.
 const HEADER_BOTTOM = 8;
 const HEADER_H = FIELD_TOP + FIELD_H + HEADER_BOTTOM;
-// Topics block under the header: chips 28 tall, TOPICS_GAP under the field (15 in the frame) and above the first post.
-const TOPICS_GAP = 11;
-const TOPICS_H = TOPICS_GAP - HEADER_BOTTOM + 28 + TOPICS_GAP;
-const FEED_TOP = HEADER_H + TOPICS_H;
+// Frame 1081 Explore: no field, one row of topic tabs (30 tall at y 64) with a search button on the right;
+// the first post starts at y 104. The field only shows up after tapping search.
+const BAR_TOP = 17 + STATUS_OVERLAP;
+const FEED_TOP = 57 + STATUS_OVERLAP;
+// Tab widths from the frame (text centred); other topics get padding.
+const TOPIC_W: Record<string, number> = { 'For You': 78, Books: 64, Following: 90, News: 58 };
 const FIELD_BG = '#EFF3F4';
 const PLACEHOLDER = '#536471';
 const MUTED = '#737A84';
@@ -91,28 +93,27 @@ export default function Search() {
     marginLeft: interpolate(m.value, [0, 1, 2], [8, 15, 44]),
     marginRight: interpolate(m.value, [0, 1, 2], [10, 65, 65]),
   }));
-  // Explore (Instagram-style): search + topics leave with the posts when scrolling up; scrolling back down
-  // brings only the search field back (topics return at the top). Neither moves on pull-to-refresh.
-  const hidden = useSharedValue(0); // search field offset, 0..HEADER_H
+  // Explore (Instagram-style): the topic bar leaves with the posts when scrolling down and comes back as soon as
+  // you scroll up. It doesn't move on pull-to-refresh.
+  const hidden = useSharedValue(0); // bar offset, 0..FEED_TOP
   const lastY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
     const y = e.contentOffset.y + (Platform.OS === 'ios' ? FEED_TOP : 0);
-    const next = Math.min(Math.max(hidden.value + y - lastY.value, 0), HEADER_H);
-    hidden.value = Math.min(next, Math.max(y, 0)); // near the top it stays glued to the content
+    const next = Math.min(Math.max(hidden.value + y - lastY.value, 0), FEED_TOP);
+    const h = Math.min(next, Math.max(y, 0)); // near the top it stays glued to the content
+    if (h !== hidden.value) hidden.value = h;
     lastY.value = y;
   });
   useEffect(() => {
     if (mode !== 'explore') hidden.value = lastY.value = 0;
   }, [mode, hidden, lastY]);
-  const headerShift = useAnimatedStyle(() => ({
-    transform: [{ translateY: -hidden.value * (1 - Math.min(Math.max(m.value, 0), 1)) }],
-  }));
-  // Once the topics have scrolled away the returning field gets a 13px white strip under it (8 at the top,
-  // where the topics sit 15 below the field).
-  const stripStyle = useAnimatedStyle(() => ({ opacity: interpolate(lastY.value, [TOPICS_GAP + 20, TOPICS_GAP + 30], [0, 1], Extrapolation.CLAMP) }));
-  const topicsShift = useAnimatedStyle(() => ({
-    transform: [{ translateY: -Math.min(Math.max(lastY.value, 0), FEED_TOP) }],
-  }));
+  const barShift = useAnimatedStyle(() => ({ transform: [{ translateY: -hidden.value }] }));
+  // The field header only exists while searching.
+  const headerStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [0, 1], Extrapolation.CLAMP) }));
+  const openSearch = useCallback(() => {
+    setMode('typing');
+    inputRef.current?.focus();
+  }, []);
   const exitStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [0, 1], Extrapolation.CLAMP) }));
   const backStyle = useAnimatedStyle(() => ({
     opacity: interpolate(m.value, [1, 2], [0, 1], Extrapolation.CLAMP),
@@ -200,8 +201,7 @@ export default function Search() {
   return (
     <View style={[styles.root, { paddingTop: Math.max(insets.top - STATUS_OVERLAP, 0) }]}>
       <View style={styles.clip}>
-      <Animated.View collapsable={false} style={[styles.header, headerShift]}>
-        <Animated.View collapsable={false} pointerEvents="none" style={[styles.headerStrip, stripStyle]} />
+      <Animated.View collapsable={false} pointerEvents={mode === 'explore' ? 'none' : 'auto'} style={[styles.header, headerStyle]}>
         <Animated.View collapsable={false} style={[styles.back, backStyle]} pointerEvents={mode === 'results' ? 'auto' : 'none'}>
           <PressableScale onPress={backToTyping} hitSlop={14} scaleTo={0.85} accessibilityLabel="Back">
             <Icon name="searchBack" width={10} height={20} />
@@ -278,8 +278,11 @@ export default function Search() {
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
             />
-            <Animated.View collapsable={false} style={[styles.topicsOverlay, topicsShift]}>
+            <Animated.View collapsable={false} style={[styles.bar, barShift]}>
               <Topics selected={topic} onSelect={setTopic} />
+              <PressableScale haptic onPress={openSearch} hitSlop={12} accessibilityRole="button" accessibilityLabel="Search" style={styles.barSearch}>
+                <Icon name="exploreSearch" width={24} />
+              </PressableScale>
             </Animated.View>
           </Animated.View>
         ) : null}
@@ -327,14 +330,9 @@ export default function Search() {
 }
 
 function Topics({ selected, onSelect }: { selected: string; onSelect: (t: string) => void }) {
-  const [first, ...rest] = EXPLORE_TOPICS;
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topics} style={styles.topicsScroll}>
-      <Chip label={first} active={selected === first} onPress={() => onSelect(first)} />
-      <PressableScale scaleTo={0.92} accessibilityLabel="Add topics" style={[styles.chip, styles.plusChip]}>
-        <Icon name="chipPlus" width={14} />
-      </PressableScale>
-      {rest.map((t) => (
+      {EXPLORE_TOPICS.map((t) => (
         <Chip key={t} label={t} active={selected === t} onPress={() => onSelect(t)} />
       ))}
     </ScrollView>
@@ -349,7 +347,7 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
-      style={[styles.chip, active && styles.chipActive]}>
+      style={[styles.chip, TOPIC_W[label] ? { width: TOPIC_W[label], paddingHorizontal: 0 } : null, active && styles.chipActive]}>
       <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
     </PressableScale>
   );
@@ -416,7 +414,6 @@ function ProfileRow({ profile }: { profile: Author }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  headerStrip: { position: 'absolute', left: 0, right: 0, top: HEADER_H, height: 13 - HEADER_BOTTOM, backgroundColor: colors.bg },
   header: { height: FIELD_TOP + FIELD_H + HEADER_BOTTOM, paddingTop: FIELD_TOP, zIndex: 1, backgroundColor: colors.bg },
   back: { position: 'absolute', left: 15, top: FIELD_TOP + 11 },
   field: {
@@ -437,25 +434,24 @@ const styles = StyleSheet.create({
   clip: { flex: 1, overflow: 'hidden' },
   exploreLayer: { position: 'absolute', top: -HEADER_H, left: 0, right: 0, bottom: 0 },
   feedContent: { paddingTop: FEED_TOP },
-  topicsOverlay: { position: 'absolute', top: HEADER_H, left: 0, right: 0, height: TOPICS_H, backgroundColor: colors.bg },
+  // White behind the bar so posts scrolling back under it don't show through; it ends 10 above the first post.
+  bar: { position: 'absolute', top: 0, left: 0, right: 0, height: FEED_TOP - 10, backgroundColor: colors.bg },
+  barSearch: { position: 'absolute', left: 349, top: BAR_TOP + 1 },
 
-  // THIS.svg: chips 28 tall at y 107 (15 under the field), 9 apart from x 11; cards start 15 below.
-  // Chips 15 under the search field, first post 15 below them.
-  topicsScroll: { marginTop: TOPICS_GAP - HEADER_BOTTOM, marginBottom: TOPICS_GAP, flexGrow: 0 },
-  topics: { paddingHorizontal: 8, gap: 9 },
+  // Frame 1081: tabs 30 tall with radius 7, 10 apart from x 8; active #455DFF with white text, the rest #F2F2F2.
+  topicsScroll: { marginTop: BAR_TOP, flexGrow: 0, marginRight: 390 - 340 },
+  topics: { paddingHorizontal: 8, gap: 10 },
   chip: {
-    height: 28,
-    paddingHorizontal: 14.5, // text 15.5 from the outer edge
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#EEF0F2',
+    height: 30,
+    paddingHorizontal: 15,
+    borderRadius: 7,
+    backgroundColor: '#F2F2F2',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipActive: { backgroundColor: FIELD_BG, borderColor: FIELD_BG },
-  plusChip: { width: 42, paddingHorizontal: 0 },
-  chipText: { fontSize: 13, lineHeight: 16, letterSpacing: -0.13, fontWeight: '600', color: colors.text },
-  chipTextActive: { fontWeight: '700' },
+  chipActive: { backgroundColor: '#455DFF' },
+  chipText: { fontSize: 13.5, lineHeight: 17, fontWeight: '600', color: colors.text },
+  chipTextActive: { color: '#FFFFFF' },
 
   segmented: { height: 28, marginTop: 15 - HEADER_BOTTOM, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },
   segment: { height: 28, borderRadius: 6, backgroundColor: FIELD_BG },
