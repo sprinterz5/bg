@@ -1,4 +1,4 @@
-# Bookgram — mobile
+# Smarts — mobile
 
 React Native app on Expo SDK 57 (RN 0.86, React 19, expo-router with typed routes, React Compiler, Reanimated 4). iOS + Android. Auth, profiles, media uploads and chat go to the backend; feed, search and stories still use mock data.
 
@@ -25,6 +25,8 @@ Figma file `Pmz1oSWfWGmewyNAWMmn8e` ("AutoLayouts finals"), section `3193:1049`.
 - Icons are exported from Figma into `assets/icons` (viewBoxes cropped with `scripts/crop-svg.cjs`). Never hand-draw icons; recoloring an exported SVG for a state is fine.
 - Fallback when frames can't be exported: `docs/design/figma-section-3193-1049.png` is a 1:1 screenshot of the section; `magick docs/design/figma-section-3193-1049.png -crop 390x844+$((X-100))+0 +repage frame.png` crops one frame (`X` = frame x from the map below) to measure from pixels.
 - Fonts: Figma uses SF Pro (iOS system font). Android uses **Inter** instead (SF Pro's license is Apple-only) — see `src/components/text.tsx`. Logo: Caveat; post/article titles: Sen ExtraBold; article body: Iowan Old Style on iOS, serif on Android.
+
+Newest exports live in `assets/icons/_inbox/` (git-ignored, 70–85 MB each, layer names kept as ids): `Frame 1081.svg` is the current whole-app canvas (33 frames: onboarding, Home, stories, Explore with topic tabs, search, reader, create, profiles), `Frame 1049.svg` the previous one. To measure, strip the embedded images and read `getBBox()` of the layers in headless Chrome; cut icons with `scripts/svg-extract.cjs`.
 
 ### Frame map (left → right on the canvas; `x` is section-relative)
 
@@ -74,3 +76,4 @@ src/
 - **Tab bar & motion** — active/inactive tab icons with crossfade, new like animation (filled heart grows out of the outline, counter rolls), navigation lock against double taps and back presses mid-transition.
 - **Android polish** — EAS development build (edge-to-edge status bar, full media access), Inter in place of SF Pro, cover-picker Next button kept above the navigation bar, `bookgram` brand avatar from Figma.
 - **Story page turn** — swipe or tap turns stories with a page curl (Skia shader over snapshots of the stacked previous/current/next pages); the viewer uses the core `Image` so Android snapshots can draw it. Needs a dev build with Skia.
+- **Frame 1081 update** — Explore: topic tabs (For You / Books / Following / News) with a search button instead of the always-visible field, lighter title chip, ⋮ on cards, quick-return bar; story viewer: black status area, filled message pill, inline "...more" caption. Follower counts update on Follow.
