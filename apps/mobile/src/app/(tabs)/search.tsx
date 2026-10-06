@@ -43,6 +43,8 @@ const HEADER_H = FIELD_TOP + FIELD_H + HEADER_BOTTOM;
 const BAR_TOP = 17 + STATUS_OVERLAP;
 const FEED_TOP = 57 + STATUS_OVERLAP;
 // Tab widths from the frame (text centred); other topics get padding.
+const CHIP_BG = '#F2F2F2';
+const CHIP_ACTIVE = '#455DFF';
 const TOPIC_W: Record<string, number> = { 'For You': 78, Books: 64, Following: 90, News: 58 };
 const FIELD_BG = '#EFF3F4';
 const PLACEHOLDER = '#536471';
@@ -346,15 +348,23 @@ function Topics({ selected, onSelect }: { selected: string; onSelect: (t: string
 }
 
 function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  // The fill and the text colour cross-fade when the topic changes.
+  const on = useSharedValue(active ? 1 : 0);
+  useEffect(() => {
+    on.value = withTiming(active ? 1 : 0, { duration: 180, easing: Easing.out(Easing.cubic) });
+  }, [active, on]);
+  const fill = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [CHIP_BG, CHIP_ACTIVE]) }));
+  const text = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.text, '#FFFFFF']) }));
   return (
     <PressableScale
       haptic={!active}
-      scaleTo={0.94}
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
-      style={[styles.chip, TOPIC_W[label] ? { width: TOPIC_W[label], paddingHorizontal: 0 } : null, active && styles.chipActive]}>
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+      style={TOPIC_W[label] ? { width: TOPIC_W[label] } : null}>
+      <Animated.View collapsable={false} style={[styles.chip, TOPIC_W[label] ? { paddingHorizontal: 0 } : null, fill]}>
+        <AnimatedText style={[styles.chipText, text]}>{label}</AnimatedText>
+      </Animated.View>
     </PressableScale>
   );
 }
@@ -451,13 +461,10 @@ const styles = StyleSheet.create({
     height: 30,
     paddingHorizontal: 15,
     borderRadius: 7,
-    backgroundColor: '#F2F2F2',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipActive: { backgroundColor: '#455DFF' },
   chipText: { fontSize: 13.5, lineHeight: 17, fontWeight: '600', color: colors.text },
-  chipTextActive: { color: '#FFFFFF' },
 
   segmented: { height: 28, marginTop: 15 - HEADER_BOTTOM, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },
   segment: { height: 28, borderRadius: 6, backgroundColor: FIELD_BG },
