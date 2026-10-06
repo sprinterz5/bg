@@ -29,6 +29,8 @@ const MAX_H = 540;
 const TURN_EASING = Easing.bezier(0.45, 0.05, 0.25, 1);
 const RELEASE_EASING = Easing.out(Easing.cubic);
 const TURN_MS = 620;
+// Characters taken off the second caption line to make room for "...more".
+const MORE_CHARS = 8;
 
 export default function StoryViewer() {
   const insets = useSafeAreaInsets();
@@ -284,6 +286,7 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
   const { width, height } = useWindowDimensions();
   const ref = useRef<View>(null);
   const [expanded, setExpanded] = useState(false);
+  const [cut, setCut] = useState<string | null>(null);
   const [photoReady, setPhotoReady] = useState(false);
   const [avatarReady, setAvatarReady] = useState(!story.author.avatar);
   // Snapshot anyway if a picture never reports onLoad (seen on Android for pages under the top one).
@@ -320,7 +323,7 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
       cancelAnimationFrame(raf);
       clearTimeout(retry);
     };
-  }, [ready, expanded, story.id, onSnapshot]);
+  }, [ready, expanded, cut, story.id, onSnapshot]);
 
   const hideStyle = useAnimatedStyle(() => ({ opacity: hidden.value === story.id && progress.value > 0.03 ? 0 : 1 }));
 
@@ -355,8 +358,28 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
           </View>
         </View>
         <Pressable onPress={() => setExpanded((v) => !v)}>
-          <Text style={styles.caption} numberOfLines={expanded ? undefined : 2}>
+          {/* Collapsed: two lines ending in "...more" (Frame 1049). The full text is laid out invisibly to find
+              where the second line ends. */}
+          <Text
+            style={[styles.caption, styles.measure]}
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            onTextLayout={(e) => {
+              const lines = e.nativeEvent.lines;
+              const next = lines.length > 2 ? (lines[0].text + lines[1].text).slice(0, -MORE_CHARS).trimEnd() : null;
+              setCut((c) => (c === next ? c : next));
+            }}>
             {story.caption}
+          </Text>
+          <Text style={styles.caption} numberOfLines={expanded ? undefined : 2}>
+            {expanded || cut === null ? (
+              story.caption
+            ) : (
+              <>
+                {cut}...<Text style={styles.more}>more</Text>
+              </>
+            )}
           </Text>
         </Pressable>
       </View>
@@ -377,6 +400,8 @@ const styles = StyleSheet.create({
   name: { fontSize: 14, lineHeight: 17, fontWeight: '600', color: '#FFFFFF' },
   time: { marginTop: -1.7, marginLeft: 1.3, fontSize: 12, lineHeight: 14, color: MUTED },
   caption: { marginTop: 18.9, marginBottom: 14.1, fontSize: 12.65, lineHeight: 15.65, color: '#FFFFFF' },
+  measure: { position: 'absolute', left: 0, right: 0, opacity: 0 },
+  more: { color: MUTED },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: BAR },
   // Frame 1081: 286x41 #181C1F pill (no stroke) at x 14, 12 under the bar top; text at x 36.2
   pill: {
