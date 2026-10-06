@@ -109,6 +109,9 @@ export default function Home() {
         keyExtractor={(p) => p.id}
         renderItem={renderItem}
         onScroll={onScroll}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={7}
         scrollEventThrottle={16}
         ListHeaderComponent={
           <>

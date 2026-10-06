@@ -21,7 +21,7 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { AnimatedText, Text, TextInput } from '@/components/text';
 import { searchUsers } from '@/lib/users';
-import { EXPLORE_FEED, EXPLORE_TOPICS, SEARCH_ARTICLES, SEARCH_PROFILES, SEARCH_SUGGESTIONS, type Author } from '@/mock/data';
+import { EXPLORE_FEED, EXPLORE_TOPICS, SEARCH_ARTICLES, SEARCH_PROFILES, SEARCH_SUGGESTIONS, type Author, type ExplorePost } from '@/mock/data';
 import { colors, motion } from '@/theme';
 import { push } from '@/lib/nav';
 
@@ -257,8 +257,12 @@ export default function Search() {
               ref={feedRef}
               data={EXPLORE_FEED}
               keyExtractor={(p) => p.id}
-              renderItem={({ item }) => <ExploreCard post={item} />}
+              renderItem={renderCard}
               onScroll={onScroll}
+              // Cards are ~320pt tall: a few per batch is plenty and keeps the JS thread free while scrolling.
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={7}
               scrollEventThrottle={16}
               // The header covers the list's top: on iOS an inset keeps the refresh spinner under it, Android uses padding + progressViewOffset.
               contentInset={Platform.OS === 'ios' ? { top: FEED_TOP } : undefined}
@@ -317,7 +321,7 @@ export default function Search() {
             <FlatList
               data={results}
               keyExtractor={(p) => p.id}
-              renderItem={({ item }) => <ExploreCard post={item} />}
+              renderItem={renderCard}
               contentContainerStyle={styles.resultsList}
               showsVerticalScrollIndicator={false}
             />
@@ -328,6 +332,8 @@ export default function Search() {
     </View>
   );
 }
+
+const renderCard = ({ item }: { item: ExplorePost }) => <ExploreCard post={item} />;
 
 function Topics({ selected, onSelect }: { selected: string; onSelect: (t: string) => void }) {
   return (
