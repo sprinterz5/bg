@@ -9,7 +9,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { Text } from '@/components/text';
 import { getProfile, type Profile } from '@/mock/data';
-import { loadProfile, setFollow } from '@/lib/users';
+import { formatCount, loadProfile, setFollow } from '@/lib/users';
 import { colors } from '@/theme';
 import { back, push } from '@/lib/nav';
 import { openDirect } from '@/lib/chat';
@@ -23,6 +23,8 @@ export default function UserProfile() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isMe, setIsMe] = useState(false);
   const [following, setFollowing] = useState(false);
+  // Raw follower count from the backend, so Follow / Unfollow updates the number right away.
+  const [followers, setFollowers] = useState<number | null>(null);
   const [tab, setTab] = useState<'posts' | 'liked'>('posts');
 
   useEffect(() => {
@@ -35,6 +37,7 @@ export default function UserProfile() {
         setUserId(r.api.id);
         setIsMe(r.api.isMe);
         setFollowing(r.api.isFollowing);
+        setFollowers(r.api._count.followers);
       })
       .catch(() => alive && setProfile(getProfile(username ?? '')));
     return () => {
@@ -51,14 +54,19 @@ export default function UserProfile() {
 
   const toggleFollow = () => {
     const next = !following;
+    const bump = (d: number) => setFollowers((n) => (n === null ? null : Math.max(0, n + d)));
     setFollowing(next);
+    bump(next ? 1 : -1);
     if (!userId) return;
-    setFollow(userId, next).catch(() => setFollowing(!next));
+    setFollow(userId, next).catch(() => {
+      setFollowing(!next);
+      bump(next ? -1 : 1);
+    });
   };
 
   const header = (
     <View>
-      <ProfileSummary {...profile} />
+      <ProfileSummary {...profile} followers={followers === null ? profile.followers : formatCount(followers)} />
       <ProfileButtons marginTop={profile.bio.length > 0 ? 17 : 28}>
         {isMe ? null : (
           <>
