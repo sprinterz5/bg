@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { type Href } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
+import Animated, { FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text, TextInput } from '@/components/text';
@@ -10,6 +11,7 @@ import { colors } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { ProfileButton } from './profile';
+import { ConnectionRowSkeleton } from './skeleton';
 import { back, push } from '@/lib/nav';
 import { fetchConnections, setFollow } from '@/lib/users';
 
@@ -39,6 +41,7 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [list, setList] = useState<Connection[]>(source ? [] : CONNECTIONS);
+  const [loading, setLoading] = useState(!!source);
   const [following, setFollowing] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(CONNECTIONS.map((c) => [c.username, initialFollowing ? initialFollowing(c) : c.following])),
   );
@@ -63,7 +66,8 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
         setFollowing(Object.fromEntries(items.map((c) => [c.username, c.following])));
       })
       // Mock-only author (feed is still mock) → keep the mock list.
-      .catch(() => alive && setList(CONNECTIONS));
+      .catch(() => alive && setList(CONNECTIONS))
+      .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
@@ -115,7 +119,17 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
       <FlatList
         data={data}
         keyExtractor={(c) => c.id ?? c.username}
-        ListEmptyComponent={empty ? <>{empty}</> : null}
+        ListEmptyComponent={
+          loading ? (
+            <Animated.View collapsable={false} exiting={FadeOut.duration(150)}>
+              {Array.from({ length: 7 }, (_, i) => (
+                <ConnectionRowSkeleton key={i} button={withButtons !== false} />
+              ))}
+            </Animated.View>
+          ) : empty ? (
+            <>{empty}</>
+          ) : null
+        }
         renderItem={({ item }) => (
           <Row
             item={item}

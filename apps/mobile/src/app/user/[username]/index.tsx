@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
+import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
 import { Text } from '@/components/text';
 import { getProfile, type Profile } from '@/mock/data';
 import { formatCount, loadProfile, setFollow } from '@/lib/users';
@@ -26,12 +27,15 @@ export default function UserProfile() {
   // Raw follower count from the backend, so Follow / Unfollow updates the number right away.
   const [followers, setFollowers] = useState<number | null>(null);
   const [tab, setTab] = useState<'posts' | 'liked'>('posts');
+  // Placeholders until the backend answers (or the mock profile is used).
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let alive = true;
     loadProfile(username ?? '')
       .then((r) => {
         if (!alive) return;
+        setLoaded(true);
         if (!r) return setProfile(getProfile(username ?? ''));
         setProfile(r.profile);
         setUserId(r.api.id);
@@ -39,7 +43,11 @@ export default function UserProfile() {
         setFollowing(r.api.isFollowing);
         setFollowers(r.api._count.followers);
       })
-      .catch(() => alive && setProfile(getProfile(username ?? '')));
+      .catch(() => {
+        if (!alive) return;
+        setLoaded(true);
+        setProfile(getProfile(username ?? ''));
+      });
     return () => {
       alive = false;
     };
@@ -64,8 +72,8 @@ export default function UserProfile() {
     });
   };
 
-  const header = (
-    <View>
+  const header = loaded ? (
+    <Animated.View collapsable={false} entering={FadeIn.duration(220)}>
       <ProfileSummary {...profile} followers={followers === null ? profile.followers : formatCount(followers)} />
       <ProfileButtons marginTop={profile.bio.length > 0 ? 17 : 28}>
         {isMe ? null : (
@@ -76,7 +84,20 @@ export default function UserProfile() {
         )}
       </ProfileButtons>
       <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
-    </View>
+    </Animated.View>
+  ) : (
+    <Animated.View collapsable={false} exiting={FadeOut.duration(150)}>
+      <ProfileSummarySkeleton />
+      <ProfileButtons marginTop={28}>
+        <ProfileButtonsSkeleton />
+      </ProfileButtons>
+      <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
+      <View style={styles.skeletonPosts}>
+        <ProfilePostRowSkeleton />
+        <ProfilePostRowSkeleton />
+        <ProfilePostRowSkeleton />
+      </View>
+    </Animated.View>
   );
 
   return (
@@ -91,7 +112,7 @@ export default function UserProfile() {
       </View>
 
       <FlatList
-        data={tab === 'posts' ? profile.posts : []}
+        data={loaded && tab === 'posts' ? profile.posts : []}
         keyExtractor={(p) => p.id}
         ListHeaderComponent={header}
         ListHeaderComponentStyle={styles.listHeader}
@@ -109,6 +130,7 @@ export default function UserProfile() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
+  skeletonPosts: { marginTop: 18 },
   // back chevron 12x20 at x 24, username 21 bold at x 64, both centred on design y 75
   header: { height: PROFILE_HEADER_H, flexDirection: 'row', alignItems: 'center', paddingLeft: 24 },
   back: { width: 12, height: 20 },

@@ -1,11 +1,13 @@
 import { router, useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
+import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
 import { Text } from '@/components/text';
 import { loadProfile } from '@/lib/users';
 import type { Profile as ProfileData } from '@/mock/data';
@@ -18,6 +20,8 @@ export default function Profile() {
   const { user, signOut } = useSession();
   const [tab, setTab] = useState<'posts' | 'liked'>('posts');
   const [data, setData] = useState<ProfileData | null>(null);
+  // Placeholders only for the first load; later visits refetch behind the shown profile.
+  const [loaded, setLoaded] = useState(false);
   // Tapping the Profile tab again scrolls back to the top.
   const scrollRef = useRef<ScrollView>(null);
   useScrollToTop(scrollRef);
@@ -30,7 +34,8 @@ export default function Profile() {
       let alive = true;
       loadProfile(username)
         .then((r) => alive && r && setData(r.profile))
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => alive && setLoaded(true));
       return () => {
         alive = false;
       };
@@ -62,6 +67,20 @@ export default function Profile() {
       </View>
 
       <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+        {!loaded && !data ? (
+          <Animated.View collapsable={false} exiting={FadeOut.duration(150)}>
+            <ProfileSummarySkeleton />
+            <ProfileButtons marginTop={28}>
+              <ProfileButtonsSkeleton height={30} />
+            </ProfileButtons>
+            <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
+            <View style={styles.posts}>
+              <ProfilePostRowSkeleton />
+              <ProfilePostRowSkeleton />
+            </View>
+          </Animated.View>
+        ) : (
+        <Animated.View collapsable={false} entering={FadeIn.duration(220)}>
         <ProfileSummary
           username={user.username}
           name={data?.name ?? user.name}
@@ -89,6 +108,8 @@ export default function Profile() {
             <EmptyCard icon="profileEmptyWrite" text={'Write your first article\non your favourite topic'} action="Write it" onPress={() => router.navigate('/create')} />
           </ScrollView>
         ) : null}
+        </Animated.View>
+        )}
       </ScrollView>
     </View>
   );
