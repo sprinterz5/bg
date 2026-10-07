@@ -1,5 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { ARTICLES, FEED, type Article, type Author, type Post } from '@/mock/data';
 
@@ -23,14 +22,10 @@ type FeedContextValue = {
 };
 
 type SeenContextValue = {
-  /** Stories opened in the viewer (grey ring on Home); kept across app restarts. */
+  /** Stories opened in the viewer this session (grey ring on Home). */
   seenStories: ReadonlySet<string>;
   markStoriesSeen: (ids: string[]) => void;
 };
-
-// Watched story ids survive a restart (newest last, capped; a story lives a day, so old ids just age out).
-const SEEN_KEY = 'seenStories';
-const SEEN_MAX = 300;
 
 const emptyDraft: ArticleDraft = { coverUri: null, body: '', label: '' };
 
@@ -44,22 +39,8 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<ArticleDraft>(emptyDraft);
   const [publishing, setPublishing] = useState<Publishing | null>(null);
   const [seenStories, setSeenStories] = useState<ReadonlySet<string>>(() => new Set());
-  useEffect(() => {
-    SecureStore.getItemAsync(SEEN_KEY)
-      .then((raw) => {
-        const stored = raw ? (JSON.parse(raw) as string[]) : [];
-        if (stored.length > 0) setSeenStories((s) => new Set([...stored, ...s]));
-      })
-      .catch(() => {});
-  }, []);
   const markStoriesSeen = useCallback(
-    (ids: string[]) =>
-      setSeenStories((s) => {
-        if (ids.every((id) => s.has(id))) return s;
-        const next = new Set([...s, ...ids]);
-        SecureStore.setItemAsync(SEEN_KEY, JSON.stringify([...next].slice(-SEEN_MAX))).catch(() => {});
-        return next;
-      }),
+    (ids: string[]) => setSeenStories((s) => (ids.every((id) => s.has(id)) ? s : new Set([...s, ...ids]))),
     [],
   );
   const seen = useMemo(() => ({ seenStories, markStoriesSeen }), [seenStories, markStoriesSeen]);
