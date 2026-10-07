@@ -21,7 +21,8 @@ import { push } from '@/lib/nav';
 export default function Home() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const { posts, publishing } = useFeed();
+  const { posts, publishing, seenStories } = useFeed();
+  const stories = useMemo(() => HOME_STORIES.map((s) => (seenStories.has(s.id) ? { ...s, seen: true } : s)), [seenStories]);
   // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
   // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
   // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
@@ -116,7 +117,7 @@ export default function Home() {
         ListHeaderComponent={
           <>
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)}>
-              <HomeStories stories={HOME_STORIES} />
+              <HomeStories stories={stories} />
             </Animated.View>
             {publishing ? <PostingRow coverUri={publishing.coverUri} /> : null}
           </>

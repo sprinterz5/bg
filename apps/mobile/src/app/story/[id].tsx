@@ -15,6 +15,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { Text, TextInput } from '@/components/text';
 import { back } from '@/lib/nav';
 import { HOME_STORIES, type Story } from '@/mock/data';
+import { useFeed } from '@/state/feed';
 
 // Frame 1049 story viewer (design status bar 47, home indicator 34). Photo centred on design y 385,
 // up to 540 tall; author row 93 and caption 46 above the bottom bar; bar 51 + indicator, #0D1015.
@@ -41,6 +42,10 @@ export default function StoryViewer() {
   const prev: Story | undefined = HOME_STORIES[index - 1];
   const next: Story | undefined = HOME_STORIES[index + 1];
   const barH = 51 + Math.max(insets.bottom, 12);
+
+  // Every story shown here counts as watched: its ring on Home turns grey.
+  const { markStorySeen } = useFeed();
+  useEffect(() => markStorySeen(story.id), [story.id, markStorySeen]);
 
   const [snaps, setSnaps] = useState<Record<string, Snapshot>>({});
   const onSnapshot = useCallback((storyId: string, image: Snapshot) => {

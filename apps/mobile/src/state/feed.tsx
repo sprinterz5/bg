@@ -19,6 +19,9 @@ type FeedContextValue = {
   updateDraft: (patch: Partial<ArticleDraft>) => void;
   publishing: Publishing | null;
   publish: (author: Author) => void;
+  /** Stories opened in the viewer this session (grey ring on Home). */
+  seenStories: ReadonlySet<string>;
+  markStorySeen: (id: string) => void;
 };
 
 const emptyDraft: ArticleDraft = { coverUri: null, body: '', label: '' };
@@ -30,6 +33,8 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const [articles, setArticles] = useState<Record<string, Article>>(ARTICLES);
   const [draft, setDraft] = useState<ArticleDraft>(emptyDraft);
   const [publishing, setPublishing] = useState<Publishing | null>(null);
+  const [seenStories, setSeenStories] = useState<ReadonlySet<string>>(() => new Set());
+  const markStorySeen = useCallback((id: string) => setSeenStories((s) => (s.has(id) ? s : new Set(s).add(id))), []);
   const draftRef = useRef(draft);
   draftRef.current = draft;
 
@@ -63,8 +68,8 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ posts, articles, draft, updateDraft, publishing, publish }),
-    [posts, articles, draft, updateDraft, publishing, publish],
+    () => ({ posts, articles, draft, updateDraft, publishing, publish, seenStories, markStorySeen }),
+    [posts, articles, draft, updateDraft, publishing, publish, seenStories, markStorySeen],
   );
 
   return <FeedContext.Provider value={value}>{children}</FeedContext.Provider>;
