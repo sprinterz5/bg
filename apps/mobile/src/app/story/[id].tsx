@@ -32,6 +32,9 @@ const RELEASE_EASING = Easing.out(Easing.cubic);
 const TURN_MS = 620;
 // Characters taken off the second caption line to make room for "...more".
 const MORE_CHARS = 8;
+const CAPTION_LH = 15.65;
+const CAPTION_SLACK = 3;
+const CAPTION_MS = 320;
 
 export default function StoryViewer() {
   const insets = useSafeAreaInsets();
@@ -292,6 +295,29 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
   const ref = useRef<View>(null);
   const [expanded, setExpanded] = useState(false);
   const [cut, setCut] = useState<string | null>(null);
+  // "...more": the caption box grows line by line and, anchored at the bottom, lifts the author and the text up.
+  const [lines, setLines] = useState(0);
+  const [showFull, setShowFull] = useState(false);
+  const [settled, setSettled] = useState(0); // re-snapshot once the caption has finished moving
+  const open = useSharedValue(0);
+  const onCaptionSettled = useCallback((isOpen: boolean) => {
+    if (!isOpen) setShowFull(false);
+    setSettled((n) => n + 1);
+  }, []);
+  const toggleCaption = () => {
+    if (cut === null) return; // fits in two lines
+    const next = !expanded;
+    setExpanded(next);
+    if (next) setShowFull(true);
+    open.value = withTiming(next ? 1 : 0, { duration: CAPTION_MS, easing: Easing.out(Easing.cubic) }, (fin) => {
+      if (fin) runOnJS(onCaptionSettled)(next);
+    });
+  };
+  const captionStyle = useAnimatedStyle(() => {
+    if (!lines) return {};
+    const shut = Math.min(lines, 2);
+    return { height: CAPTION_LH * (shut + (lines - shut) * open.value) + CAPTION_SLACK };
+  });
   const [photoReady, setPhotoReady] = useState(false);
   const [avatarReady, setAvatarReady] = useState(!story.author.avatar);
   // Snapshot anyway if a picture never reports onLoad (seen on Android for pages under the top one).
@@ -328,7 +354,7 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
       cancelAnimationFrame(raf);
       clearTimeout(retry);
     };
-  }, [ready, expanded, cut, story.id, onSnapshot]);
+  }, [ready, settled, cut, story.id, onSnapshot]);
 
   const hideStyle = useAnimatedStyle(() => ({ opacity: hidden.value === story.id && progress.value > 0.03 ? 0 : 1 }));
 
@@ -362,7 +388,7 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
             <Text style={styles.time}>{story.timeAgo}</Text>
           </View>
         </View>
-        <Pressable onPress={() => setExpanded((v) => !v)}>
+        <Pressable onPress={toggleCaption}>
           {/* Collapsed: two lines ending in "...more" (Frame 1049). The full text is laid out invisibly to find
               where the second line ends. */}
           <Text
@@ -371,21 +397,24 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
             onTextLayout={(e) => {
-              const lines = e.nativeEvent.lines;
-              const next = lines.length > 2 ? (lines[0].text + lines[1].text).slice(0, -MORE_CHARS).trimEnd() : null;
+              const l = e.nativeEvent.lines;
+              const next = l.length > 2 ? (l[0].text + l[1].text).slice(0, -MORE_CHARS).trimEnd() : null;
               setCut((c) => (c === next ? c : next));
+              setLines(l.length);
             }}>
             {story.caption}
           </Text>
-          <Text style={styles.caption} numberOfLines={expanded ? undefined : 2}>
-            {expanded || cut === null ? (
-              story.caption
-            ) : (
-              <>
-                {cut}...<Text style={styles.more}>more</Text>
-              </>
-            )}
-          </Text>
+          <Animated.View collapsable={false} style={[styles.captionBox, captionStyle]}>
+            <Text style={styles.captionText} numberOfLines={showFull ? undefined : 2}>
+              {showFull || cut === null ? (
+                story.caption
+              ) : (
+                <>
+                  {cut}...<Text style={styles.more}>more</Text>
+                </>
+              )}
+            </Text>
+          </Animated.View>
         </Pressable>
       </View>
     </Animated.View>
@@ -406,6 +435,9 @@ const styles = StyleSheet.create({
   time: { marginTop: -1.7, marginLeft: 1.3, fontSize: 12, lineHeight: 14, color: MUTED },
   caption: { marginTop: 18.9, marginBottom: 14.1, fontSize: 12.65, lineHeight: 15.65, color: '#FFFFFF' },
   measure: { position: 'absolute', left: 0, right: 0, opacity: 0 },
+  // Same box as `caption`; the slack below the last line keeps descenders from being clipped while it animates.
+  captionBox: { marginTop: 18.9, marginBottom: 14.1 - CAPTION_SLACK, overflow: 'hidden' },
+  captionText: { fontSize: 12.65, lineHeight: CAPTION_LH, color: '#FFFFFF' },
   more: { color: MUTED },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: BAR },
   // Frame 1081: 286x41 #181C1F pill (no stroke) at x 14, 12 under the bar top; text at x 36.2
