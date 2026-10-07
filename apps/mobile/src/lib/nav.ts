@@ -34,3 +34,10 @@ export function replace(href: Href) {
   if (locked()) return;
   router.replace(href);
 }
+
+/** Like `back`, but waits out the push lock instead of dropping the call (for screens that animate themselves out). */
+export function backWhenReady() {
+  const wait = lockedUntil - Date.now();
+  if (wait > 0) setTimeout(() => router.back(), wait + 10);
+  else router.back();
+}

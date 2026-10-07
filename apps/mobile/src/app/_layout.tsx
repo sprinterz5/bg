@@ -64,7 +64,11 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ animation: 'fade', gestureEnabled: false }} />
             <Stack.Screen name="article/[id]" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
             <Stack.Screen name="story/new" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="story/[id]" options={{ animation: 'fade', contentStyle: { backgroundColor: '#000000' } }} />
+            {/* The viewer animates itself (grows out of the story on Home); Home stays visible around it. */}
+            <Stack.Screen
+              name="story/[id]"
+              options={{ presentation: 'transparentModal', animation: 'none', gestureEnabled: false, contentStyle: { backgroundColor: 'transparent' } }}
+            />
             <Stack.Screen name="notifications" />
             <Stack.Screen name="new-article" />
           </Stack>

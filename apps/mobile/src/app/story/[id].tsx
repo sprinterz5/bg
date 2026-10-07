@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Animated, { Easing, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
@@ -13,7 +13,8 @@ import { Icon } from '@/components/icon';
 import { CURL_SUPPORTED, PageCurlCanvas, disposeSnapshot, snapshotView, type Snapshot } from '@/components/page-curl';
 import { PressableScale } from '@/components/pressable-scale';
 import { Text, TextInput } from '@/components/text';
-import { back } from '@/lib/nav';
+import { backWhenReady } from '@/lib/nav';
+import { storyOrigin } from '@/lib/story-origin';
 import { HOME_STORIES, type Story } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 
@@ -35,6 +36,11 @@ const MORE_CHARS = 8;
 const CAPTION_LH = 15.65;
 const CAPTION_SLACK = 3;
 const CAPTION_MS = 320;
+// Open / close (not in the design): the viewer grows out of the story's photo on Home and shrinks back into it.
+const OPEN_MS = 420;
+const CLOSE_MS = 340;
+const OPEN_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
+const CLOSE_EASING = Easing.bezier(0.4, 0, 0.2, 1);
 
 export default function StoryViewer() {
   const insets = useSafeAreaInsets();
@@ -45,6 +51,85 @@ export default function StoryViewer() {
   const prev: Story | undefined = HOME_STORIES[index - 1];
   const next: Story | undefined = HOME_STORIES[index + 1];
   const barH = 51 + Math.max(insets.bottom, 12);
+
+  // Open / close. `t`: 0 = the window is the story photo on Home (origin), 1 = full screen. The window clips the
+  // viewer; inside it the viewer is scaled so its photo fills the circle, centred, at t 0. Swiping down drags the
+  // window and shrinks it; letting go far enough closes into the current story's photo on Home (or fades out when
+  // Home didn't report where that is).
+  const [origin0] = useState(() => storyOrigin(id ?? ''));
+  const t = useSharedValue(origin0 ? 0 : 1);
+  const fade = useSharedValue(origin0 ? 1 : 0);
+  const dragY = useSharedValue(0);
+  const ox = useSharedValue(origin0?.x ?? 0);
+  const oy = useSharedValue(origin0?.y ?? 0);
+  const os = useSharedValue(origin0?.size ?? width);
+  useEffect(() => {
+    if (origin0) t.value = withTiming(1, { duration: OPEN_MS, easing: OPEN_EASING });
+    else fade.value = withTiming(1, { duration: 200 });
+  }, [origin0, t, fade]);
+
+  const closing = useRef(false);
+  const close = useCallback(() => {
+    if (closing.current) return;
+    closing.current = true;
+    Keyboard.dismiss();
+    const o = storyOrigin(story.id);
+    if (o) {
+      runOnUI((x: number, y: number, size: number) => {
+        'worklet';
+        ox.value = x;
+        oy.value = y;
+        os.value = size;
+        dragY.value = withTiming(0, { duration: CLOSE_MS, easing: CLOSE_EASING });
+        t.value = withTiming(0, { duration: CLOSE_MS, easing: CLOSE_EASING }, (fin) => {
+          if (fin) runOnJS(backWhenReady)();
+        });
+      })(o.x, o.y, o.size);
+    } else {
+      fade.value = withTiming(0, { duration: 200 }, (fin) => {
+        if (fin) runOnJS(backWhenReady)();
+      });
+    }
+  }, [story.id, ox, oy, os, dragY, t, fade]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      close();
+      return true;
+    });
+    return () => sub.remove();
+  }, [close]);
+
+  const photoCY = insets.top + (385 - 47);
+  const frameStyle = useAnimatedStyle(() => {
+    const k = t.value;
+    const d = os.value;
+    const drag = Math.max(0, dragY.value);
+    return {
+      left: ox.value * (1 - k),
+      top: oy.value * (1 - k),
+      width: d + (width - d) * k,
+      height: d + (height - d) * k,
+      borderRadius: (d / 2) * (1 - k) + Math.min(drag * 0.15, 22),
+      opacity: fade.value,
+      transform: [{ translateY: drag * 0.9 }, { scale: 1 - Math.min(drag / height, 1) * 0.35 }],
+    };
+  });
+  // Keeps the viewer's photo centre (width / 2, photoCY) on the window's centre at t 0 and in place at t 1.
+  const innerStyle = useAnimatedStyle(() => {
+    const k = t.value;
+    const d = os.value;
+    const sc = d / width + (1 - d / width) * k;
+    const w = d + (width - d) * k;
+    const ty = d / 2 + (photoCY - d / 2) * k;
+    return {
+      transform: [
+        { translateX: w / 2 - width / 2 },
+        { translateY: ty - height / 2 - sc * (photoCY - height / 2) },
+        { scale: sc },
+      ],
+    };
+  });
 
   // Every story shown here counts as watched: its ring on Home turns grey.
   const { markStorySeen } = useFeed();
@@ -163,7 +248,7 @@ export default function StoryViewer() {
 
   // Tap on the right / left half; past the last (or before the first) story closes the viewer.
   const turn = (step: 1 | -1) => {
-    if (!(step === 1 ? hasNext : hasPrev)) return back();
+    if (!(step === 1 ? hasNext : hasPrev)) return close();
     if (mode.value !== 0) return;
     if (step === 1 ? canForward : canBack) runOnUI(startTurn)(step, step === 1 ? currentId : prevId, step === 1 ? nextId : currentId, 0.08);
     else commit(step);
@@ -238,9 +323,24 @@ export default function StoryViewer() {
       }
       mode.value = 0;
       if (Math.abs(e.translationX) < width * 0.25 && Math.abs(v) < 600) return;
-      if (m === 2) runOnJS(back)();
+      if (m === 2) runOnJS(close)();
       else if (m === 3 || m === -3) runOnJS(commit)(m / 3);
     });
+
+  const dismiss = Gesture.Pan()
+    .activeOffsetY(14)
+    .failOffsetX([-14, 14])
+    .onUpdate((e) => {
+      if (mode.value !== 0) return;
+      dragY.value = Math.max(0, e.translationY);
+    })
+    .onEnd((e) => {
+      if (mode.value !== 0) return;
+      if (dragY.value > 110 || e.velocityY > 800) runOnJS(close)();
+      else dragY.value = withTiming(0, { duration: 240, easing: Easing.out(Easing.cubic) });
+    });
+  // Sideways turns the page, down closes; whichever moves first wins.
+  const gestures = Gesture.Race(pan, dismiss);
 
   const pages = [prev, next, story].filter((s): s is Story => !!s);
   const layers = pages.filter((s) => !!snaps[s.id]).map((s) => ({ id: s.id, image: snaps[s.id] }));
@@ -248,7 +348,9 @@ export default function StoryViewer() {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <GestureDetector gesture={pan}>
+      <Animated.View collapsable={false} style={[styles.frame, frameStyle]}>
+      <Animated.View collapsable={false} style={[{ width, height }, innerStyle]}>
+      <GestureDetector gesture={gestures}>
         {/* Not flattened on Android, or the pan has no view to attach to. */}
         <View collapsable={false} style={StyleSheet.absoluteFill}>
           {pages.map((s) => (
@@ -260,7 +362,7 @@ export default function StoryViewer() {
         </View>
       </GestureDetector>
 
-      <PressableScale onPress={() => back()} hitSlop={14} accessibilityLabel="Close" style={[styles.back, { top: insets.top + 13 }]}>
+      <PressableScale onPress={close} hitSlop={14} accessibilityLabel="Close" style={[styles.back, { top: insets.top + 13 }]}>
         <Icon name="storyBack" width={15.7} height={27.06} />
       </PressableScale>
 
@@ -272,6 +374,8 @@ export default function StoryViewer() {
           <Icon name="storyHeart" width={27} height={24} />
         </PressableScale>
       </KeyboardStickyView>
+      </Animated.View>
+      </Animated.View>
     </View>
   );
 }
@@ -422,7 +526,9 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000000' },
+  // Transparent: Home shows around the window while it opens, closes or is dragged.
+  root: { flex: 1 },
+  frame: { position: 'absolute', overflow: 'hidden', backgroundColor: '#000000' },
   page: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000' },
   half: { position: 'absolute', top: 0 },
   back: { position: 'absolute', left: 15.775 },

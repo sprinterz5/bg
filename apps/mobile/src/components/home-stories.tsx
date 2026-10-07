@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
@@ -11,6 +11,7 @@ import { PressableScale } from './pressable-scale';
 import { RingSweep } from './ring-sweep';
 import { Text } from '@/components/text';
 import { push } from '@/lib/nav';
+import { setStoryOrigin } from '@/lib/story-origin';
 
 // Frame 1049 home: rings 97.5 (3.25 gradient stroke) every 108 from x 3.75, photo 85 inside a 3px white
 // stroke; the username baseline 15.85 under the ring. Watched stories get the grey ring.
@@ -43,6 +44,31 @@ export function HomeStories({ stories }: { stories: Story[] }) {
       if (fresh.length) setSweeping((v) => new Set([...v, ...fresh]));
     }, [stories, grey, sweeping]),
   );
+  // Opening a story: remember where every visible story photo is (the viewer grows out of the tapped one and
+  // shrinks back into whichever story it is closed on), then open it once the tapped one is measured.
+  const rings = useRef(new Map<string, View>());
+  const registerRing = useCallback((id: string, view: View | null) => {
+    if (view) rings.current.set(id, view);
+    else rings.current.delete(id);
+  }, []);
+  const openStory = useCallback((id: string) => {
+    let opened = false;
+    const go = () => {
+      if (opened) return;
+      opened = true;
+      push(`/story/${id}` as Href);
+    };
+    rings.current.forEach((view, key) =>
+      view.measureInWindow((x, y, w) => {
+        const inset = (w - PHOTO) / 2;
+        setStoryOrigin(key, { x: x + inset, y: y + inset, size: PHOTO });
+        if (key === id) go();
+      }),
+    );
+    // Never stay stuck if measuring fails.
+    setTimeout(go, 120);
+  }, []);
+
   const sweepDone = useCallback((id: string) => {
     setGrey((v) => new Set(v).add(id));
     setSweeping((v) => {
@@ -62,7 +88,7 @@ export function HomeStories({ stories }: { stories: Story[] }) {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}>
       {stories.map((s, i) => (
-        <Item key={s.id} story={s} index={i} count={stories.length} x={x} max={max} grey={grey.has(s.id)} sweep={sweeping.has(s.id)} onSweepDone={sweepDone} />
+        <Item key={s.id} story={s} index={i} count={stories.length} x={x} max={max} grey={grey.has(s.id)} sweep={sweeping.has(s.id)} onSweepDone={sweepDone} onOpen={openStory} registerRing={registerRing} />
       ))}
     </Animated.ScrollView>
   );
@@ -77,9 +103,11 @@ type ItemProps = {
   grey: boolean;
   sweep: boolean;
   onSweepDone: (id: string) => void;
+  onOpen: (id: string) => void;
+  registerRing: (id: string, view: View | null) => void;
 };
 
-function Item({ story: s, index, count, x, max, grey, sweep, onSweepDone }: ItemProps) {
+function Item({ story: s, index, count, x, max, grey, sweep, onSweepDone, onOpen, registerRing }: ItemProps) {
   const done = useCallback(() => onSweepDone(s.id), [onSweepDone, s.id]);
   const style = useAnimatedStyle(() => {
     const o = x.value < 0 ? x.value : x.value > max.value ? x.value - max.value : 0;
@@ -94,11 +122,11 @@ function Item({ story: s, index, count, x, max, grey, sweep, onSweepDone }: Item
   return (
     <Animated.View collapsable={false} style={style}>
       <PressableScale
-        onPress={() => push(`/story/${s.id}` as Href)}
+        onPress={() => onOpen(s.id)}
         accessibilityRole="button"
         accessibilityLabel={`${s.author.username} story`}
         style={styles.item}>
-        <View style={styles.ring}>
+        <View ref={(v) => registerRing(s.id, v)} collapsable={false} style={styles.ring}>
           <Image source={s.image} style={styles.photo} contentFit="cover" transition={150} />
           <Icon name={grey ? 'storyRingSeen' : 'storyRing'} width={RING} style={StyleSheet.absoluteFill} />
           {/* Starts a moment after Home is back (the viewer is still fading out). */}
