@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import { Image as ExpoImage } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -443,7 +444,8 @@ export default function StoryViewer() {
       </Animated.View>
       </Animated.View>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.ring, ringStyle]}>
-        <Image source={story.image} resizeMode="cover" fadeDuration={0} style={StyleSheet.absoluteFill} />
+        {/* expo-image like the ring itself (same crop); the core Image drew the photo unscaled from its corner here. */}
+        <ExpoImage source={story.image} contentFit="cover" style={styles.ringPhoto} />
       </Animated.View>
     </View>
   );
@@ -605,6 +607,7 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   frame: { position: 'absolute', left: 0, top: 0, overflow: 'hidden', backgroundColor: '#000000' },
   ring: { position: 'absolute', left: 0, top: 0, width: RING_BASE, height: RING_BASE, borderRadius: RING_BASE / 2, overflow: 'hidden' },
+  ringPhoto: { width: RING_BASE, height: RING_BASE },
   page: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000' },
   half: { position: 'absolute', top: 0 },
   back: { position: 'absolute', left: 15.775 },
