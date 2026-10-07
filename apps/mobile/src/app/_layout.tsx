@@ -62,7 +62,11 @@ export default function RootLayout() {
             }}>
             <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
             <Stack.Screen name="(tabs)" options={{ animation: 'fade', gestureEnabled: false }} />
-            <Stack.Screen name="article/[id]" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
+            {/* The reader animates itself (its cover grows out of the tapped picture); the list stays visible under it. */}
+            <Stack.Screen
+              name="article/[id]"
+              options={{ presentation: 'transparentModal', animation: 'none', gestureEnabled: false, contentStyle: { backgroundColor: 'transparent' } }}
+            />
             <Stack.Screen name="story/new" options={{ presentation: 'modal' }} />
             {/* The viewer animates itself (grows out of the story on Home); Home stays visible around it. */}
             <Stack.Screen

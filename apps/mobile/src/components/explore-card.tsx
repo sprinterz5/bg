@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { Icon } from './icon';
@@ -9,7 +9,7 @@ import { Text } from '@/components/text';
 import type { ExplorePost } from '@/mock/data';
 import { colors, fonts } from '@/theme';
 import { PressableScale } from './pressable-scale';
-import { push } from '@/lib/nav';
+import { openArticle } from '@/lib/article-origin';
 
 // Figma 3163:1520 / 3170:2017: image 220 tall, title chip 8px from its bottom-left,
 // caption 13/16 at x 15 with bold lead words, time 12/16 #788690, 24px to the next card.
@@ -18,11 +18,13 @@ import { push } from '@/lib/nav';
 export const ARTICLE_TITLE_MAX = 80;
 
 export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePost }) {
-  const open = () => push({ pathname: '/article/[id]', params: { id: post.articleId } });
+  // The reader grows its cover out of this photo.
+  const media = useRef<View>(null);
+  const open = () => openArticle(post.articleId, media.current, post.image);
 
   return (
     <PressableScale scaleTo={0.985} onPress={open} accessibilityRole="button" accessibilityLabel={post.title} style={styles.card}>
-      <View style={styles.media}>
+      <View ref={media} collapsable={false} style={styles.media}>
         <Image source={post.image} style={styles.image} contentFit="cover" transition={200} />
         <View style={styles.titleChip}>
           {/* Frame 1081: background blur 4 under a 47.5% white fill. iOS only — on Android every card in a scrolling

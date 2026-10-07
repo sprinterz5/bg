@@ -1,9 +1,9 @@
 import { BlurTargetView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { BackHandler, Platform, StyleSheet, View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -11,6 +11,7 @@ import Animated, {
   interpolate,
   interpolateColor,
   runOnJS,
+  runOnUI,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -34,7 +35,8 @@ import type { Article } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { AnimatedText, Text } from '@/components/text';
-import { back } from '@/lib/nav';
+import { articleOrigin, type ArticleOrigin } from '@/lib/article-origin';
+import { backWhenReady } from '@/lib/nav';
 
 // Values from Figma frames 3110:157 (page 1) and 3110:311 (page 2); design status bar = 47.
 const LINE_HEIGHT = 23;
@@ -49,6 +51,12 @@ const TEXT_GAP_1 = 27;
 const TEXT_GAP_2 = 35;
 const PAGE_BOTTOM_PAD = 10;
 const PARALLAX = 24;
+// Open / close (not in the design): the cover grows out of the tapped picture (feed, Explore, profile) and the rest
+// of the reader comes in after it; closing shrinks the cover back into that picture.
+const OPEN_MS = 440;
+const CLOSE_MS = 360;
+const OPEN_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
+const CLOSE_EASING = Easing.bezier(0.4, 0, 0.2, 1);
 
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -63,7 +71,6 @@ function Reader({ article }: { article: Article }) {
   const insets = useSafeAreaInsets();
   const targetRef = useRef<View>(null);
   const scrollX = useSharedValue(0);
-  const blurOn = useAndroidSafeBlur();
 
   const [lines, setLines] = useState<string[] | null>(null);
   const [titleH, setTitleH] = useState<number | null>(null);
@@ -143,8 +150,46 @@ function Reader({ article }: { article: Article }) {
     setFollowing((v) => !v);
   };
 
+  // `t`: 0 = closed (only the picture in the list), 1 = reader open. While `flying` is 1 a copy of the cover moves
+  // between the picture and the cover slot and the real cover is hidden; without an origin everything just fades.
+  const [origin] = useState(() => articleOrigin(article.id));
+  const t = useSharedValue(0);
+  const flying = useSharedValue(origin ? 1 : 0);
+  const [opened, setOpened] = useState(false);
+  useEffect(() => {
+    t.value = withTiming(1, { duration: origin ? OPEN_MS : 220, easing: OPEN_EASING }, (fin) => {
+      if (!fin) return;
+      flying.value = 0;
+      runOnJS(setOpened)(true);
+    });
+  }, [origin, t, flying]);
+  const closing = useRef(false);
+  const close = useCallback(() => {
+    if (closing.current) return;
+    closing.current = true;
+    const fly = !!articleOrigin(article.id);
+    runOnUI(() => {
+      'worklet';
+      if (fly) flying.value = 1;
+      t.value = withTiming(0, { duration: fly ? CLOSE_MS : 200, easing: CLOSE_EASING }, (fin) => {
+        if (fin) runOnJS(backWhenReady)();
+      });
+    })();
+  }, [article.id, flying, t]);
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      close();
+      return true;
+    });
+    return () => sub.remove();
+  }, [close]);
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: t.value }));
+  const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.value, [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
+  const coverVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.value : t.value }));
+
   return (
     <View style={styles.root}>
+      <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
       <View pointerEvents="none" style={styles.measure}>
         <Text style={[styles.title, { width: CARD_W_2 - 5 }]} onLayout={(e) => setTitleH(e.nativeEvent.layout.height)}>
           {article.title}
@@ -155,11 +200,13 @@ function Reader({ article }: { article: Article }) {
       </View>
 
       <BlurTargetView ref={targetRef} style={StyleSheet.absoluteFill}>
-        <Animated.View collapsable={false} style={[styles.cover, { height: IMG_H }, imageStyle]}>
+        <Animated.View collapsable={false} style={[styles.cover, { height: IMG_H }, imageStyle, coverVisible]}>
           <Image source={article.cover} style={styles.fill} contentFit="cover" />
         </Animated.View>
-        <Animated.View collapsable={false} style={[styles.sheet, { height: H }, sheetStyle]} />
+        <Animated.View collapsable={false} style={[styles.sheet, { height: H }, sheetStyle, chromeStyle]} />
       </BlurTargetView>
+
+      {origin ? <FlyingCover origin={origin} source={article.cover} t={t} flying={flying} width={W} coverH={IMG_H} /> : null}
 
       {pages ? (
         <GestureDetector gesture={doubleTap}>
@@ -173,7 +220,7 @@ function Reader({ article }: { article: Article }) {
           showsHorizontalScrollIndicator={false}
           onScroll={onScroll}
           scrollEventThrottle={16}
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, chromeStyle]}
           renderItem={({ item, index }) => (
             <ReaderPage
               index={index}
@@ -189,8 +236,8 @@ function Reader({ article }: { article: Article }) {
         </GestureDetector>
       ) : null}
 
-      <Animated.View collapsable={false} style={[styles.card, cardStyle]}>
-        <Glass blurTarget={targetRef} blur={blurOn} style={styles.glassFill}>
+      <Animated.View collapsable={false} style={[styles.card, cardStyle, chromeStyle]}>
+        <Glass blurTarget={targetRef} blur={Platform.OS !== 'android' || opened} style={styles.glassFill}>
           <View style={[styles.cardRow, { width: CARD_W_2 - 14 }]}>
             <View style={styles.author}>
               <AuthorAvatar author={article.author} size={32} />
@@ -208,8 +255,8 @@ function Reader({ article }: { article: Article }) {
         </Glass>
       </Animated.View>
 
-      <Animated.View collapsable={false} style={[styles.close, { top: top + 1 }, closeStyle]}>
-        <PressableScale onPress={() => back()} hitSlop={10} scaleTo={0.9} accessibilityLabel="Close">
+      <Animated.View collapsable={false} style={[styles.close, { top: top + 1 }, closeStyle, chromeStyle]}>
+        <PressableScale onPress={close} hitSlop={10} scaleTo={0.9} accessibilityLabel="Close">
           <Icon name="readerClose" width={33} />
         </PressableScale>
       </Animated.View>
@@ -218,7 +265,7 @@ function Reader({ article }: { article: Article }) {
         <BigHeart key={h.id} id={h.id} x={h.x} y={h.y} tilt={h.tilt} onDone={dropHeart} />
       ))}
 
-      <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <Animated.View collapsable={false} style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }, chromeStyle]}>
         <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments)} />
         <LikeButton
           liked={liked}
@@ -234,8 +281,64 @@ function Reader({ article }: { article: Article }) {
         <PressableScale onPress={() => setSaved((v) => !v)} hitSlop={10} accessibilityLabel="Bookmark">
           <Icon name="readerBookmark" width={16.5} height={18.5} tintColor={saved ? colors.primary : undefined} />
         </PressableScale>
-      </View>
+      </Animated.View>
     </View>
+  );
+}
+
+/**
+ * The cover in flight: a window moving from the tapped picture to the cover slot, with the picture inside drawn at a
+ * fixed size and only scaled (an image whose size changes re-decodes and flickers), always filling the window like
+ * contentFit "cover".
+ */
+function FlyingCover({
+  origin,
+  source,
+  t,
+  flying,
+  width,
+  coverH,
+}: {
+  origin: ArticleOrigin;
+  source: ImageSourcePropType;
+  t: SharedValue<number>;
+  flying: SharedValue<number>;
+  width: number;
+  coverH: number;
+}) {
+  const aspect = origin.aspect ?? origin.w / origin.h;
+  // Height of the picture when it covers a w x h box.
+  const coverHeight = (w: number, h: number) => {
+    'worklet';
+    return Math.max(h, w / aspect);
+  };
+  const IH = Math.max(coverHeight(origin.w, origin.h), coverHeight(width, coverH));
+  const IW = IH * aspect;
+  const frame = useAnimatedStyle(() => {
+    const k = t.value;
+    return {
+      opacity: flying.value,
+      left: origin.x * (1 - k),
+      top: origin.y * (1 - k),
+      width: origin.w + (width - origin.w) * k,
+      height: origin.h + (coverH - origin.h) * k,
+      borderRadius: origin.radius * (1 - k),
+    };
+  });
+  const picture = useAnimatedStyle(() => {
+    const k = t.value;
+    const w = origin.w + (width - origin.w) * k;
+    const h = origin.h + (coverH - origin.h) * k;
+    return {
+      transform: [{ translateX: w / 2 - IW / 2 }, { translateY: h / 2 - IH / 2 }, { scale: coverHeight(w, h) / IH }],
+    };
+  });
+  return (
+    <Animated.View collapsable={false} pointerEvents="none" style={[styles.flying, frame]}>
+      <Animated.View collapsable={false} style={[{ width: IW, height: IH }, picture]}>
+        <Image source={source} style={styles.fill} contentFit="cover" />
+      </Animated.View>
+    </Animated.View>
   );
 }
 
@@ -283,24 +386,6 @@ function BigHeart({ id, x, y, tilt, onDone }: { id: number; x: number; y: number
       <Icon name="readerLikeFilled" width={HEART_W} height={HEART_H} />
     </Animated.View>
   );
-}
-
-/** On Android the blur view is attached only after the open transition; the white tint underneath keeps the card looking the same meanwhile. */
-function useAndroidSafeBlur() {
-  const navigation = useNavigation();
-  const [on, setOn] = useState(Platform.OS !== 'android');
-
-  useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    const offEnd = navigation.addListener('transitionEnd' as never, (e: { data?: { closing?: boolean } }) => {
-      if (!e.data?.closing) setOn(true);
-    });
-    return () => {
-      offEnd();
-    };
-  }, [navigation]);
-
-  return on;
 }
 
 type PageProps = {
@@ -355,7 +440,10 @@ function BarItem({ icon, w, h, label, onPress }: { icon: IconName; w: number; h:
 
 const styles = StyleSheet.create({
   bigHeart: { position: 'absolute', width: HEART_W, height: HEART_H },
-  root: { flex: 1, backgroundColor: colors.bg },
+  // Transparent: the list stays visible while the reader opens and closes over it.
+  root: { flex: 1 },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg },
+  flying: { position: 'absolute', overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   measure: { position: 'absolute', left: 0, top: 0, opacity: 0 },
   cover: { position: 'absolute', left: 0, right: 0, top: 0, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   fill: { width: '100%', height: '100%' },

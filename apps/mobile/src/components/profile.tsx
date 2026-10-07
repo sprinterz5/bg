@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -9,6 +9,7 @@ import { colors, motion } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { RollingLabel } from './rolling-label';
+import { openArticle } from '@/lib/article-origin';
 import { push } from '@/lib/nav';
 
 // Figma 3167:1542 (other user) and 3169:1832 (own, empty). Header centre at design y 75.
@@ -153,10 +154,14 @@ export function ProfileTabs({
 
 /** Figma list row: 142x89 thumb (r 12), title 14/15.5 (4 lines max), meta 12 gray, ⋮ (2.6 dots, 5 apart) on the right. */
 export function ProfilePostRow({ post }: { post: ProfilePost }) {
-  const open = post.articleId ? () => push({ pathname: '/article/[id]', params: { id: post.articleId! } }) : undefined;
+  // The reader grows its cover out of the thumbnail.
+  const thumb = useRef<View>(null);
+  const open = post.articleId ? () => openArticle(post.articleId!, thumb.current, post.image, 12) : undefined;
   return (
     <PressableScale disabled={!open} onPress={open} scaleTo={0.985} style={styles.post} accessibilityRole="button" accessibilityLabel={post.title}>
-      <Image source={post.image} style={styles.thumb} contentFit="cover" transition={150} />
+      <View ref={thumb} collapsable={false}>
+        <Image source={post.image} style={styles.thumb} contentFit="cover" transition={150} />
+      </View>
       <View style={styles.postText}>
         <Text style={styles.postTitle} numberOfLines={4}>
           {post.title}

@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import { memo, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { Post } from '@/mock/data';
@@ -9,7 +9,7 @@ import { AuthorAvatar } from './author-row';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { Text } from '@/components/text';
-import { push } from '@/lib/nav';
+import { openArticle as openArticleFrom } from '@/lib/article-origin';
 
 function formatCount(n: number) {
   return n >= 10000 ? `${(n / 1000).toFixed(n >= 100000 ? 0 : 1)}k` : String(n);
@@ -19,7 +19,9 @@ function formatCount(n: number) {
 // actions 11 under the photo, caption line 35.8 under it, time 3.2 under the caption, next post ~30 below.
 export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
   const [saved, setSaved] = useState(false);
-  const openArticle = () => push({ pathname: '/article/[id]', params: { id: post.articleId } });
+  // The reader grows its cover out of this photo.
+  const media = useRef<View>(null);
+  const openArticle = () => openArticleFrom(post.articleId, media.current, post.image);
   const toggleSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSaved((v) => !v);
@@ -45,7 +47,9 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
       </View>
 
       <PressableScale onPress={openArticle} accessibilityRole="button" accessibilityLabel={post.title} style={styles.media}>
-        <Image source={post.image} style={styles.image} contentFit="cover" transition={200} />
+        <View ref={media} collapsable={false} style={StyleSheet.absoluteFill}>
+          <Image source={post.image} style={styles.image} contentFit="cover" transition={200} />
+        </View>
         <View style={styles.chip}>
           <Text style={styles.title} numberOfLines={2}>
             {post.title}
