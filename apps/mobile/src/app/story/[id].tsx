@@ -24,6 +24,12 @@ const BAR = '#0D1015';
 const MUTED = '#8E8E93';
 const MAX_H = 540;
 
+/** The viewer's photo box: full width, up to MAX_H tall, centred on design y 385 (cover-cropped when taller). */
+function photoHeight(story: Story, width: number) {
+  const src = Image.resolveAssetSource(story.image as number);
+  return Math.min(MAX_H, src ? (width * src.height) / src.width : MAX_H);
+}
+
 // Page turn between stories (not in the design): swipe or tap the right/left half. The previous, current and
 // next pages are mounted on top of each other (current on top) and snapshotted. During a turn the curl canvas
 // paints the whole frame over the live pages: the current snapshot turning away over the next one, or the
@@ -63,6 +69,8 @@ export default function StoryViewer() {
   const ox = useSharedValue(origin0?.x ?? 0);
   const oy = useSharedValue(origin0?.y ?? 0);
   const os = useSharedValue(origin0?.size ?? width);
+  // Height of the photo box of the story the window opens from / closes into (see photoHeight).
+  const ph = useSharedValue(photoHeight(HOME_STORIES[index], width));
   // Only the opened page is mounted while the window grows; the pages next to it, the curl canvas and the
   // snapshots (a full software redraw of the page on Android) come once it's done, so nothing competes with it.
   const [settled, setSettled] = useState(false);
@@ -105,16 +113,17 @@ export default function StoryViewer() {
     storiesClosing(seen);
     const o = storyOrigin(story.id);
     if (o) {
-      runOnUI((x: number, y: number, size: number) => {
+      runOnUI((x: number, y: number, size: number, h: number) => {
         'worklet';
         ox.value = x;
         oy.value = y;
         os.value = size;
+        ph.value = h;
         dragY.value = withTiming(0, { duration: CLOSE_MS, easing: CLOSE_EASING });
         t.value = withTiming(0, { duration: CLOSE_MS, easing: CLOSE_EASING }, (fin) => {
           if (fin) runOnJS(backWhenReady)();
         });
-      })(o.x, o.y, o.size);
+      })(o.x, o.y, o.size, photoHeight(story, width));
     } else {
       fade.value = withTiming(0, { duration: 200 }, (fin) => {
         if (fin) runOnJS(backWhenReady)();
@@ -158,7 +167,9 @@ export default function StoryViewer() {
   const innerStyle = useAnimatedStyle(() => {
     const k = t.value;
     const d = os.value;
-    const sc = d / width + (1 - d / width) * k;
+    // At t 0 the photo covers the circle like the ring's own picture (cropped, not letterboxed).
+    const sc0 = d / Math.min(width, ph.value);
+    const sc = sc0 + (1 - sc0) * k;
     const w = d + (width - d) * k;
     const h = d + (height - d) * k;
     const sx = w / width;
@@ -470,8 +481,7 @@ function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnap
     return () => clearTimeout(t);
   }, []);
 
-  const src = Image.resolveAssetSource(story.image as number);
-  const photoH = Math.min(MAX_H, src ? (width * src.height) / src.width : MAX_H);
+  const photoH = photoHeight(story, width);
   const photoTop = insets.top + (385 - 47) - photoH / 2;
 
   // Snapshot for the page turn once the pictures are on screen, and again after the caption opens or closes.

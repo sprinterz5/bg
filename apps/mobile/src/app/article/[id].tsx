@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, Platform, StyleSheet, View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
+import { BackHandler, StyleSheet, View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -194,7 +194,8 @@ function Reader({ article }: { article: Article }) {
     });
     return () => sub.remove();
   }, [close]);
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: t.value }));
+  // White early in the flight, so the picture left behind in the list doesn't show through while the copy flies.
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.value, [0, 0.3], [0, 1], Extrapolation.CLAMP) }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.value, [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
   const coverVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.value : t.value }));
 
@@ -251,7 +252,9 @@ function Reader({ article }: { article: Article }) {
       ) : null}
 
       <Animated.View collapsable={false} style={[styles.card, cardStyle, chromeStyle]}>
-        <Glass blurTarget={targetRef} blur={Platform.OS !== 'android' || opened} style={styles.glassFill}>
+        {/* Blur from the first frame: there is no native transition to wait for any more, and turning it on when the
+            cover landed made the card and the cover blink on Android. */}
+        <Glass blurTarget={targetRef} style={styles.glassFill}>
           <View style={[styles.cardRow, { width: CARD_W_2 - 14 }]}>
             <View style={styles.author}>
               <AuthorAvatar author={article.author} size={32} />
