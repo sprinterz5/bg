@@ -1,35 +1,51 @@
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Easing, runOnJS, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-// A watched story's ring turning grey: a grey stroke runs once round the gradient ring from the top, clockwise.
-// Same circle as story-ring(-seen).svg (r 47.125 in a 97.5 box), a hair wider so no colour shows at the edges.
-export function RingSweep({ size, color, delay, onDone }: { size: number; color: string; delay: number; onDone: () => void }) {
-  const end = useSharedValue(0);
+import { Icon } from './icon';
+
+// A watched story's ring turning grey: the grey ring is revealed once round from the top, clockwise, over the
+// gradient one. Plain views (no canvas: a freshly created Skia surface on Android can show a frame of stale GPU
+// memory). Classic two-halves reveal: each half of the grey ring turns into its own half-clip, the right one first.
+export function RingSweep({ size, delay, onDone }: { size: number; delay: number; onDone: () => void }) {
+  const p = useSharedValue(0);
   useEffect(() => {
-    end.value = withDelay(
+    p.value = withDelay(
       delay,
       withTiming(1, { duration: 450, easing: Easing.out(Easing.cubic) }, (fin) => {
         if (fin) runOnJS(onDone)();
       }),
     );
-  }, [delay, end, onDone]);
+  }, [delay, p, onDone]);
 
-  const path = useMemo(() => {
-    const k = size / 97.5;
-    const r = 47.125 * k;
-    const c = size / 2;
-    const p = Skia.Path.Make();
-    p.addArc({ x: c - r, y: c - r, width: r * 2, height: r * 2 }, -90, 359.9);
-    return p;
-  }, [size]);
+  const half = size / 2;
+  // Left half of the grey ring turning into the right clip: 0° hidden → 180° fills it (top → bottom).
+  const right = useAnimatedStyle(() => ({ transform: [{ rotate: `${Math.min(1, p.value * 2) * 180}deg` }] }));
+  // Then the right half turning into the left clip (bottom → top).
+  const left = useAnimatedStyle(() => ({ transform: [{ rotate: `${Math.max(0, p.value * 2 - 1) * 180}deg` }] }));
 
   return (
-    <View pointerEvents="none" collapsable={false} style={StyleSheet.absoluteFill}>
-      <Canvas style={StyleSheet.absoluteFill}>
-        <Path path={path} style="stroke" strokeWidth={(3.25 * size) / 97.5 + 0.5} strokeCap="round" color={color} start={0} end={end} />
-      </Canvas>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={[styles.clip, { left: half, width: half, height: size }]}>
+        <Animated.View collapsable={false} style={[{ position: 'absolute', left: -half, width: size, height: size }, right]}>
+          <View style={[styles.clip, { left: 0, width: half, height: size }]}>
+            <Icon name="storyRingSeen" width={size} />
+          </View>
+        </Animated.View>
+      </View>
+      <View style={[styles.clip, { left: 0, width: half, height: size }]}>
+        <Animated.View collapsable={false} style={[{ position: 'absolute', left: 0, width: size, height: size }, left]}>
+          <View style={[styles.clip, { left: half, width: half, height: size }]}>
+            <View style={{ position: 'absolute', left: -half }}>
+              <Icon name="storyRingSeen" width={size} />
+            </View>
+          </View>
+        </Animated.View>
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  clip: { position: 'absolute', top: 0, overflow: 'hidden' },
+});

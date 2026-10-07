@@ -24,7 +24,6 @@ const PHOTO = 85;
 // native bounce; Android uses the system stretch.
 const GIVE = 0.05;
 const STRETCH = 0.000175; // scaleX gained per point of overscroll
-const SEEN_GREY = '#DBE0E6'; // story-ring-seen.svg
 // The viewer takes ~340ms to shrink back: the grey starts as it lands, rings after the first follow a beat apart.
 const SWEEP_ON_CLOSE = 180;
 const SWEEP_STAGGER = 50;
@@ -150,7 +149,7 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
         <View ref={(v) => registerRing(s.id, v)} collapsable={false} style={styles.ring}>
           <Image source={s.image} style={styles.photo} contentFit="cover" transition={150} />
           <Icon name={grey ? 'storyRingSeen' : 'storyRing'} width={RING} style={StyleSheet.absoluteFill} />
-          {sweepDelay !== null ? <RingSweep size={RING} color={SEEN_GREY} delay={sweepDelay} onDone={done} /> : null}
+          {sweepDelay !== null ? <RingSweep size={RING} delay={sweepDelay} onDone={done} /> : null}
         </View>
         <Text style={styles.name} numberOfLines={1}>
           {s.author.username}

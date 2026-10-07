@@ -1,5 +1,5 @@
 import { Canvas, Fill, Group, Image, ImageShader, Shader, Skia, makeImageFromView, type SkImage } from '@shopify/react-native-skia';
-import { useMemo, type RefObject } from 'react';
+import { useEffect, useMemo, useState, type RefObject } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useDerivedValue, type DerivedValue, type SharedValue } from 'react-native-reanimated';
 
@@ -112,9 +112,16 @@ export function PageCurlCanvas({ layers, active, under, progress, angle, width, 
     return { res: [width, height], origin: [start + (end - start) * t, height / 2], dir: [c, s], radius, shadow: 1 - t };
   });
 
+  // A freshly created Skia surface on Android can show a frame of stale GPU memory: keep it invisible at first.
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShown(true), 120);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!effect) return null;
   return (
-    <View collapsable={false} pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View collapsable={false} pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: shown ? 1 : 0 }]}>
       <Canvas style={StyleSheet.absoluteFill}>
         {layers.map((l) => (
           <UnderLayer key={l.id} id={l.id} image={l.image} under={under} width={width} height={height} />
