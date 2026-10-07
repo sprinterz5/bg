@@ -606,3 +606,238 @@ export const CONNECTIONS: Connection[] = [
   { username: 'michoel10', subtitle: 'robertus', avatar: require('@/assets/mock/f-michoel.png'), following: true },
   { username: 'michael_dimarrt', subtitle: 'robertus', avatar: require('@/assets/mock/f-dimarrt.png'), following: true },
 ];
+
+// ---------------------------------------------------------------------------------------------------------------
+// Every post opens its own article: same cover, title and author as the card it was opened from (the reader's
+// cover grows out of that picture). Posts that tell the same story share the body text.
+
+const OLEG: Author = SEARCH_PROFILES[1];
+
+const BODIES: Record<string, string[]> = {
+  kindergarten: [
+    'Kim Broomer’s classroom has no rows of desks. There are wobble stools, standing tables, a rug and a corner with beanbags, and every child chooses where to learn for the next twenty minutes.',
+    'Kim noticed years ago that her most restless students were not misbehaving, they were thinking with their bodies. Once moving was allowed, the arguments about sitting still simply stopped.',
+    'The rules are short and written by the kids themselves: move without bumping, keep your hands for your own work, and come back to the rug when the chime rings.',
+    'Parents were sceptical at first. Then reading scores went up, and the calmest hour of the day became the one right after the movement break.',
+  ],
+  foldables: [
+    'We used three foldable phones as our only phones for a month: calls, maps, photos, long reads on the train and far too many spreadsheets.',
+    'The crease is no longer the story. After a week none of us noticed it, and the hinges survived thousands of folds without a single complaint.',
+    'What surprised us most was reading. A book-sized screen that fits in a pocket changes how much you read on the go, and the outer screens are finally good enough for quick replies.',
+    'What still needs work: weight, battery life on heavy days and the price. If you read a lot, a foldable is worth it this year. If you mostly scroll, it is not there yet.',
+  ],
+  nurse: [
+    'Agnes works at a clinic that sits at the top of a cliff, and the only way to the village below is a wooden ladder bolted into the rock.',
+    'Twice a week she climbs down with a backpack of vaccines, bandages and blood-pressure cuffs. The climb takes forty minutes down and an hour back up.',
+    'She knows every family by name. Children wait for her at the bottom rung, and the elders keep a chair ready in the shade for her first check-up of the day.',
+    'Agnes does not like the word heroic. For her it is the job: the people are down there, so that is where the nurse has to be.',
+  ],
+  habits: [
+    'Big resolutions rarely survive February. Tiny habits do, because they are too small to skip even on a bad day.',
+    'Two minutes of reading before bed. One glass of water before coffee. Writing down a single thing you finished today. None of this looks impressive in January.',
+    'The trick is to attach a new habit to something you already do. After I pour coffee, I stretch. After I close the laptop, I write tomorrow’s first task on paper.',
+    'By December the small things add up: a dozen books, a calmer morning and a clear record of a year you actually lived on purpose.',
+  ],
+  spiderman: [
+    'The new Spider-Man film broke the opening weekend record in thirty countries, and the studio still seems surprised by how big it got.',
+    'The reason is simple: it is a story about a teenager who keeps choosing the hard, kind option even when nobody would ever find out.',
+    'The action is great, but people come back for the quiet scenes, the ones on rooftops and in a small kitchen in Queens.',
+    'It is also the first superhero film in years that is genuinely funny without winking at the audience. That turns out to be rare enough to fill every cinema.',
+  ],
+  afterIphone: [
+    'Asked what comes after the iPhone, Tim Cook did not name a device. He talked about the moment technology fades into the background and simply helps.',
+    'His answer kept returning to health. A watch that notices an irregular heartbeat before you do is, in his words, the most important thing the company has shipped.',
+    'He was careful about glasses and AI, but clear about the rule: nothing ships until it is useful every day, not only impressive in a demo.',
+    'The phone is not going anywhere soon. But the next decade, he hinted, is about the products you forget you are wearing.',
+  ],
+  sayingNo: [
+    'When Steve Jobs returned to Apple, the company sold dozens of products. Within a year he cut the line-up to four: two desktops and two laptops, for consumers and professionals.',
+    'People remember the products he launched. Fewer remember the hundreds of good ideas he refused, and that refusal was the actual strategy.',
+    'He used to say that focus means saying no to the good ideas, not only the bad ones. The bad ones are easy to reject.',
+    'Saying no is uncomfortable because it disappoints someone every time. It is also the only way to make one thing truly great.',
+  ],
+  lakes: [
+    'Travel lists keep sending everyone to the same three lakes. Twenty minutes further down the gravel road there is usually a fourth one with nobody on it.',
+    'The quiet lakes have no cafés and no parking signs, just a path through the pines and water so clear you can see the stones two metres down.',
+    'Go early. Mist sits on the surface until about eight, and the only sound is a loon somewhere across the bay.',
+    'Bring everything back with you, leave the rocks where they are, and maybe do not post the exact location. Part of the magic is that it stays hard to find.',
+  ],
+  tokyo: [
+    'I landed in Tokyo at nine in the evening with no hotel booked and no plan, just a phone at forty percent and a vague idea of finding ramen.',
+    'The ramen was in a basement with eight seats and a vending machine for tickets. Nobody spoke English and nobody needed to.',
+    'Then a tiny jazz bar on the fourth floor of a narrow building, a karaoke room for two, and a convenience store egg sandwich that is still the best thing I ate that year.',
+    'At five in the morning I watched the fish market wake up and finally checked into a capsule hotel. Tokyo is the best city in the world to get a little lost in.',
+  ],
+  coffee: [
+    'Baristas will tell you the beans matter less than you think, and the water matters more. Most bad coffee at home is a water problem.',
+    'Grind right before brewing. Ground coffee loses most of its aroma within half an hour, which is why the bag from the supermarket always tastes flat.',
+    'Use a scale, not a spoon. Sixty grams of coffee per litre of water is a good place to start, and from there you adjust to taste.',
+    'And clean your machine. Old oils turn bitter, and a surprising amount of “strong” coffee is really just a dirty filter.',
+  ],
+  rocket: [
+    'The next launch is not about going further. It is about landing the whole rocket and flying it again a few days later.',
+    'Reusable rockets have already cut the price of reaching orbit many times over. Full reuse could cut it again by an order of magnitude.',
+    'Cheap launches change what is worth building: bigger telescopes, space stations that are not funded by a single country, maybe even factories in orbit.',
+    'If the test works, the most important number in the space industry stops being the payload and becomes the turnaround time.',
+  ],
+  library: [
+    'Old libraries are quiet in a way that modern buildings rarely are. The silence feels deliberate, as if the room itself is paying attention.',
+    'Part of it is the light: tall windows, green lamps and dust floating in the afternoon sun over long oak tables.',
+    'Part of it is the shelves. Thousands of books you will never read still remind you how much there is to know, and that is strangely comforting.',
+    'Most of these libraries are free to visit. Go on a weekday morning, find a corner seat and read something you would never have picked online.',
+  ],
+  marathon: [
+    'Twelve months ago Anna could not run to the end of her street. Last Sunday she crossed the finish line of her first marathon.',
+    'She started with a walk-run plan: one minute of running, two minutes of walking, three times a week. Nothing more ambitious than that.',
+    'The hardest part was not the long runs, it was the boring Tuesdays when nobody was watching and the weather was bad.',
+    'Her advice is short: buy good shoes, slow down more than feels right, and never miss two runs in a row.',
+  ],
+  rainforest: [
+    'Rainforests do not just receive rain, they make it. Every tree pulls water from the soil and breathes it out through its leaves.',
+    'That moisture rises, cools and falls again a few hundred kilometres further inland. The Amazon moves more water through the air than the Amazon river carries to the sea.',
+    'Scientists call these invisible streams flying rivers. Farms thousands of kilometres away depend on them without knowing it.',
+    'Cut enough trees and the cycle breaks: the forest dries out, and the rain that farmers counted on simply stops coming.',
+  ],
+  ev: [
+    'Electric cars used to be a bet on the future. In most cities they are now simply the cheaper car to own over five years.',
+    'Range anxiety fades after the first month. Most days you start with a full battery, because the car charges at home overnight like a phone.',
+    'Long road trips still need a little planning, and fast chargers are not everywhere yet. A twenty-minute stop every few hours becomes part of the rhythm.',
+    'If you can charge at home or at work, it is probably time. If you park on the street, wait one more year and watch the charger map in your area.',
+  ],
+  chef: [
+    'Chef Marco’s kitchen starts at seven in the morning, five hours before the first guest arrives. By then every station has been cleaned twice.',
+    'The quietest moment is prep. Forty kilos of vegetables are cut by hand, and the only sounds are knives and a radio nobody listens to.',
+    'Service is the opposite: tickets, shouting, plates leaving every thirty seconds. Marco tastes almost every sauce before it goes out.',
+    'At midnight, after the last table, the whole team eats together standing up. Marco says that meal is the only one he actually remembers.',
+  ],
+  surf: [
+    'Nazaré is a small fishing town in Portugal that becomes the centre of the surfing world every winter.',
+    'An underwater canyon funnels Atlantic swells straight at the beach, building waves taller than a ten-storey building.',
+    'The surfers are towed in by jet skis because paddling is impossible at that speed. A wipeout can hold you under for a full minute.',
+    'From the lighthouse cliff you can watch it all for free. Bring a jacket, and arrive early: the best waves come with the morning tide.',
+  ],
+  books: [
+    'Bill Gates publishes a list of books every year, and he reads far more than he recommends. These twelve are the ones he keeps returning to.',
+    'Most of them are not about business. There is history, a lot of science, two novels and a surprisingly practical book about sleep.',
+    'His rule is to finish every book he starts and to write notes in the margins, so he can argue with the author while reading.',
+    'If you only pick one, take the book about how energy actually works. He says it changed how he thinks about every other problem on the list.',
+  ],
+  datcha: [
+    'For ten years “La Datcha” has been my favourite work: a small fleet of yachts and villas that I rent out by the week.',
+    'It started as a way to pay for my own boat. Then friends of friends asked to rent it, and a side project slowly became a real business.',
+    'Luxury is not about gold taps. It is about a crew that remembers how you like your coffee and a captain who knows the quiet bays.',
+    'The best part of the job is seeing guests arrive tired and leave a week later as completely different people.',
+  ],
+  newyork: [
+    'Two years in New York taught me more about business than any course I took. The city simply does not wait for anyone.',
+    'Lesson one: speed beats perfection. A good offer today wins against a perfect one next month.',
+    'Lesson two: everyone is selling something, so the people who listen stand out. I closed more deals by asking questions than by pitching.',
+    'Lesson three: rent is the real teacher. When every square metre costs a fortune, you learn very quickly which parts of your business actually earn money.',
+  ],
+};
+
+// Stable pseudo-random counters per post, so the reader shows the same numbers every time.
+function seeded(id: string, max: number, min = 0) {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return min + (h % (max - min));
+}
+
+function articleFrom(id: string, author: Author, cover: ImageSourcePropType, title: string, body: string[], likes?: number, comments?: number, shares?: number) {
+  ARTICLES[id] = {
+    id,
+    author,
+    cover,
+    title,
+    body,
+    likes: likes ?? seeded(id, 4000, 40),
+    comments: comments ?? seeded(id + 'c', 400, 3),
+    shares: shares ?? seeded(id + 's', 300, 2),
+  };
+}
+
+// Body source per post: a key into BODIES, or an existing hand-written article.
+const BODY_OF: Record<string, string> = {
+  'p-kindergarten': 'kindergarten',
+  'p-foldables': 'foldables',
+  p1: 'journal',
+  p2: 'timcook',
+  'e-kindergarten': 'kindergarten',
+  'e-nurse': 'nurse',
+  e1: 'tinkov',
+  e2: 'iphoneDuo',
+  e3: 'stevePresentations',
+  'e-habits': 'habits',
+  'e-spiderman': 'spiderman',
+  'e-timcook': 'afterIphone',
+  'e-jobs': 'sayingNo',
+  'e-foldables': 'foldables',
+  'u-lake': 'lakes',
+  'u-tokyo': 'tokyo',
+  'u-coffee': 'coffee',
+  'u-rocket': 'rocket',
+  'u-library': 'library',
+  'u-marathon': 'marathon',
+  'u-waterfall': 'rainforest',
+  'u-ev': 'ev',
+  'u-chef': 'chef',
+  'u-surf': 'surf',
+  r2: 'steveIve',
+  t1: 'tinkov',
+  t2: 'books',
+  t3: 'datcha',
+  t4: 'newyork',
+};
+
+// Explore cards have no author line; their articles still need one.
+const EXPLORE_AUTHOR: Record<string, Author> = {
+  'e-kindergarten': miniBill,
+  'e-nurse': billijean,
+  e1: mx,
+  e2: gadgets,
+  e3: stevejobs01,
+  'e-habits': sam,
+  'e-spiderman': nori,
+  'e-timcook': nori,
+  'e-jobs': stevejobs01,
+  'e-foldables': gadgets,
+  'u-lake': dinara,
+  'u-tokyo': billijean,
+  'u-coffee': miniBill,
+  'u-rocket': mx,
+  'u-library': sam,
+  'u-marathon': dinara,
+  'u-waterfall': billijean,
+  'u-ev': gadgets,
+  'u-chef': miniBill,
+  'u-surf': nori,
+  r2: stevejobs01,
+};
+
+function bodyFor(postId: string) {
+  const key = BODY_OF[postId];
+  return BODIES[key] ?? ARTICLES[key]?.body ?? [];
+}
+
+const parseCount = (s?: string) => {
+  if (!s) return undefined;
+  const n = parseFloat(s.replace(',', '.'));
+  return Math.round(/m/i.test(s) ? n * 1e6 : /k/i.test(s) ? n * 1e3 : n);
+};
+
+for (const p of FEED) {
+  const id = `a-${p.id}`;
+  articleFrom(id, p.author, p.image, p.title, bodyFor(p.id), p.likes, p.comments, p.shares);
+  p.articleId = id;
+}
+for (const p of [...EXPLORE_FEED, ...SEARCH_ARTICLES]) {
+  const id = `a-${p.id}`;
+  if (!ARTICLES[id]) articleFrom(id, EXPLORE_AUTHOR[p.id] ?? bookgram, p.image, p.title, bodyFor(p.id));
+  p.articleId = id;
+}
+for (const p of tinkovProfile.posts) {
+  if (!p.image) continue;
+  const id = `a-${p.id}`;
+  articleFrom(id, OLEG, p.image, p.title, bodyFor(p.id), parseCount(p.likes));
+  p.articleId = id;
+}
