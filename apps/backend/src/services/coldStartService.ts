@@ -28,11 +28,17 @@ export async function getColdStartFeed(
   interests: string[],
   limit: number
 ) {
-  const blocked = await app.prisma.userBlock.findMany({
-    where: { OR: [{ blockerId: userId }, { blockedId: userId }] },
-    select: { blockerId: true, blockedId: true }
-  });
-  const hiddenAuthorIds = blocked.map((block) => (block.blockerId === userId ? block.blockedId : block.blockerId));
+  const [blocked, muted] = await Promise.all([
+    app.prisma.userBlock.findMany({
+      where: { OR: [{ blockerId: userId }, { blockedId: userId }] },
+      select: { blockerId: true, blockedId: true }
+    }),
+    app.prisma.userMute.findMany({ where: { muterId: userId }, select: { mutedId: true } })
+  ]);
+  const hiddenAuthorIds = [
+    ...blocked.map((block) => (block.blockerId === userId ? block.blockedId : block.blockerId)),
+    ...muted.map((row) => row.mutedId)
+  ];
 
   const [articles, reviews] = await Promise.all([
     app.prisma.article.findMany({

@@ -1,7 +1,7 @@
 import type { ContentScoreTargetType, FeedEventTargetType, FeedEventType } from "@prisma/client";
 import type { FastifyInstance } from "fastify";
 
-type ScoreDelta = {
+export type ScoreDelta = {
   impressions?: number;
   opens?: number;
   completions?: number;
@@ -128,8 +128,8 @@ export async function incrementContentScore(
   });
 }
 
-export async function recordFeedEventScoreImpact(
-  app: FastifyInstance,
+/** Counter changes a feed event brings to the post's ContentScore. */
+export function feedEventScoreDelta(
   event: {
     eventType: FeedEventType;
     targetType: FeedEventTargetType;
@@ -173,5 +173,5 @@ export async function recordFeedEventScoreImpact(
       break;
   }
 
-  return incrementContentScore(app, event.targetType, event.targetId, delta);
+  return delta;
 }

@@ -1,7 +1,7 @@
 import { FeedEventTargetType, FeedEventType } from "@prisma/client";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { recordFeedEventScoreImpact } from "../services/contentScoreService.js";
+import { recordFeedEventScoreImpact } from "../services/scoreBufferService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 
 // Only passive telemetry events are allowed to influence content scores from

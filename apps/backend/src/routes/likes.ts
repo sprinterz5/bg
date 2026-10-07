@@ -1,7 +1,7 @@
 import { LikeTargetType } from "@prisma/client";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { incrementContentScore } from "../services/contentScoreService.js";
+import { bufferScoreDelta } from "../services/scoreBufferService.js";
 import { incrementContentCounter } from "../services/counterService.js";
 
 const likeSchema = z.object({
@@ -24,7 +24,7 @@ export const likeRoutes: FastifyPluginAsync = async (app) => {
 
     if (existing) {
       await app.prisma.like.delete({ where: { id: existing.id } });
-      await incrementContentScore(app, body.targetType, body.targetId, { likes: -1 });
+      await bufferScoreDelta(app, body.targetType, body.targetId, { likes: -1 });
       await incrementContentCounter(app, body.targetType, body.targetId, { likes: -1 });
       return { liked: false };
     }
@@ -36,7 +36,7 @@ export const likeRoutes: FastifyPluginAsync = async (app) => {
         targetId: body.targetId
       }
     });
-    await incrementContentScore(app, body.targetType, body.targetId, { likes: 1 });
+    await bufferScoreDelta(app, body.targetType, body.targetId, { likes: 1 });
     await incrementContentCounter(app, body.targetType, body.targetId, { likes: 1 });
 
     return { liked: true };

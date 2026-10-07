@@ -59,19 +59,12 @@ export async function recomputeSimilarBooks(
     return null;
   }
 
-  const [baseShelfUsers, baseReviewUsers] = await Promise.all([
-    app.prisma.shelfItem.findMany({
-      where: { bookId },
-      select: { userId: true }
-    }),
-    app.prisma.review.findMany({
-      where: { bookId, status: "PUBLISHED", moderationStatus: "APPROVED", deletedAt: null },
-      select: { authorId: true }
-    })
-  ]);
-  const engagedUserIds = [
-    ...new Set([...baseShelfUsers.map((row) => row.userId), ...baseReviewUsers.map((row) => row.authorId)])
-  ];
+  // Readers of this book (shelf or published review), matched inside the query: a popular book used to load
+  // all of them into memory and send the list back as IN (...).
+  const publishedReview = { status: "PUBLISHED" as const, moderationStatus: "APPROVED" as const, deletedAt: null };
+  const engaged = {
+    OR: [{ shelfItems: { some: { bookId } } }, { authoredReviews: { some: { bookId, ...publishedReview } } }]
+  };
 
   const [metadataCandidates, coShelfRows, coReviewRows] = await Promise.all([
     app.prisma.book.findMany({
@@ -86,33 +79,27 @@ export async function recomputeSimilarBooks(
     take: 300,
     orderBy: { updatedAt: "desc" }
     }),
-    engagedUserIds.length === 0
-      ? Promise.resolve([])
-      : app.prisma.shelfItem.groupBy({
-          by: ["bookId"],
-          where: {
-            userId: { in: engagedUserIds },
-            bookId: { not: bookId }
-          },
-          _count: { _all: true },
-          orderBy: { _count: { bookId: "desc" } },
-          take: 200
-        }),
-    engagedUserIds.length === 0
-      ? Promise.resolve([])
-      : app.prisma.review.groupBy({
-          by: ["bookId"],
-          where: {
-            authorId: { in: engagedUserIds },
-            bookId: { not: bookId },
-            status: "PUBLISHED",
-            moderationStatus: "APPROVED",
-            deletedAt: null
-          },
-          _count: { _all: true },
-          orderBy: { _count: { bookId: "desc" } },
-          take: 200
-        })
+    app.prisma.shelfItem.groupBy({
+      by: ["bookId"],
+      where: {
+        user: engaged,
+        bookId: { not: bookId }
+      },
+      _count: { _all: true },
+      orderBy: { _count: { bookId: "desc" } },
+      take: 200
+    }),
+    app.prisma.review.groupBy({
+      by: ["bookId"],
+      where: {
+        author: engaged,
+        bookId: { not: bookId },
+        ...publishedReview
+      },
+      _count: { _all: true },
+      orderBy: { _count: { bookId: "desc" } },
+      take: 200
+    })
   ]);
 
   const coBookIds = new Set([...coShelfRows.map((row) => row.bookId), ...coReviewRows.map((row) => row.bookId)]);

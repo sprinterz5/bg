@@ -20,6 +20,8 @@ docker compose -f docker-compose.prod.yml build
 
 ## Run
 
+`POSTGRES_PASSWORD` must be set (in the shell or a `.env` next to the compose file); there is no default.
+
 ```powershell
 docker compose -f docker-compose.prod.yml up -d
 ```

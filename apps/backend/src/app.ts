@@ -15,6 +15,7 @@ import { redisPlugin } from "./plugins/redis.js";
 import { requestTimingPlugin } from "./plugins/requestTiming.js";
 import { swaggerPlugin } from "./plugins/swagger.js";
 import { startBackgroundJobs } from "./jobs/runner.js";
+import { startScoreFlusher } from "./services/scoreBufferService.js";
 import { setupRealtime } from "./realtime/socket.js";
 import { articleRoutes } from "./routes/articles.js";
 import { adminRoutes } from "./routes/admin.js";
@@ -182,6 +183,7 @@ export async function buildApp() {
   await app.register(exploreRoutes);
   await app.register(moderationRoutes);
   startBackgroundJobs(app);
+  startScoreFlusher(app);
 
   return app;
 }

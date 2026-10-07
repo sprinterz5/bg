@@ -58,6 +58,7 @@ const envSchema = z.object({
   JOB_CLEANUP_INTERVAL_MINUTES: z.coerce.number().int().positive().default(360),
   JOB_IDEMPOTENCY_RETENTION_HOURS: z.coerce.number().int().positive().default(24),
   JOB_RUN_RETENTION_DAYS: z.coerce.number().int().positive().default(14),
+  FEED_EVENT_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   PUBLIC_MEDIA_URL: z.string().url().default("http://localhost:4000/media"),
   CORS_ORIGIN: z.string().default("*")
 });

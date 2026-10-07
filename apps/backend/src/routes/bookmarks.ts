@@ -1,7 +1,7 @@
 import { BookmarkTargetType } from "@prisma/client";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { incrementContentScore } from "../services/contentScoreService.js";
+import { bufferScoreDelta } from "../services/scoreBufferService.js";
 import { incrementContentCounter } from "../services/counterService.js";
 import { createNotification } from "../services/notificationService.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
@@ -78,7 +78,7 @@ export const bookmarkRoutes: FastifyPluginAsync = async (app) => {
 
     if (existing) {
       await app.prisma.bookmark.delete({ where: { id: existing.id } });
-      await incrementContentScore(app, body.targetType, body.targetId, { saves: -1 });
+      await bufferScoreDelta(app, body.targetType, body.targetId, { saves: -1 });
       await incrementContentCounter(app, body.targetType, body.targetId, { bookmarks: -1 });
       return { bookmarked: false };
     }
@@ -91,7 +91,7 @@ export const bookmarkRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    await incrementContentScore(app, body.targetType, body.targetId, { saves: 1 });
+    await bufferScoreDelta(app, body.targetType, body.targetId, { saves: 1 });
     await incrementContentCounter(app, body.targetType, body.targetId, { bookmarks: 1 });
 
     if (body.targetType === "ARTICLE" || body.targetType === "REVIEW") {

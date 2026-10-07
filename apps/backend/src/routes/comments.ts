@@ -2,7 +2,7 @@ import { CommentTargetType, UserRole } from "@prisma/client";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { createNotification } from "../services/notificationService.js";
-import { incrementContentScore } from "../services/contentScoreService.js";
+import { bufferScoreDelta } from "../services/scoreBufferService.js";
 import { incrementContentCounter } from "../services/counterService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { withIdempotency } from "../services/idempotencyService.js";
@@ -101,7 +101,7 @@ export const commentRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    await incrementContentScore(app, body.targetType, body.targetId, { comments: 1 });
+    await bufferScoreDelta(app, body.targetType, body.targetId, { comments: 1 });
     await incrementContentCounter(app, body.targetType, body.targetId, { comments: 1 });
 
     if (target.authorId !== request.user.sub) {
@@ -174,7 +174,7 @@ export const commentRoutes: FastifyPluginAsync = async (app) => {
       where: { id },
       data: { deletedAt: new Date() }
     });
-    await incrementContentScore(app, comment.targetType, comment.targetId, { comments: -1 });
+    await bufferScoreDelta(app, comment.targetType, comment.targetId, { comments: -1 });
     await incrementContentCounter(app, comment.targetType, comment.targetId, { comments: -1 });
 
     return { ok: true };

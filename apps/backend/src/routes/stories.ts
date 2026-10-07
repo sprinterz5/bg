@@ -90,54 +90,65 @@ export const storyRoutes: FastifyPluginAsync = async (app) => {
         expiresAt: { gt: new Date() }
       },
       orderBy: { createdAt: "desc" },
-      include: { book: true, views: true }
+      include: {
+        book: true,
+        // Latest viewers only; the total is in _count.views.
+        views: { orderBy: { viewedAt: "desc" }, take: 50 },
+        _count: { select: { views: true } }
+      }
     });
   });
 
   app.get("/stories/friends", { preHandler: [app.authenticate] }, async (request) => {
-    const [follows, followers, blockedIds, mutedRows, myShelves] = await Promise.all([
-      app.prisma.follow.findMany({
-      where: { followerId: request.user.sub },
-      select: { followingId: true }
-      }),
-      app.prisma.follow.findMany({
-        where: { followingId: request.user.sub },
-        select: { followerId: true }
-      }),
-      getBlockedIds(app, request.user.sub),
+    const me = request.user.sub;
+    const [blockedIds, mutedRows] = await Promise.all([
+      getBlockedIds(app, me),
       app.prisma.userMute.findMany({
-        where: { muterId: request.user.sub },
+        where: { muterId: me },
         select: { mutedId: true }
-      }),
-      app.prisma.shelfItem.findMany({
-        where: { userId: request.user.sub },
-        select: { bookId: true }
       })
     ]);
+    const hiddenIds = [...blockedIds, ...mutedRows.map((row) => row.mutedId)];
 
-    const mutedIds = new Set(mutedRows.map((row) => row.mutedId));
-    const followingIds = follows
-      .map((follow) => follow.followingId)
-      .filter((id) => !blockedIds.has(id) && !mutedIds.has(id));
-    const mutualIds = new Set(followers.map((follow) => follow.followerId));
-    const myBookIds = new Set(myShelves.map((item) => item.bookId));
-
+    // Followed authors are matched inside the query instead of loading the whole follow list into IN (...).
     const stories = await app.prisma.story.findMany({
       where: {
-        userId: { in: followingIds },
+        user: { followers: { some: { followerId: me } } },
+        ...(hiddenIds.length > 0 ? { userId: { notIn: hiddenIds } } : {}),
         status: "ACTIVE",
         expiresAt: { gt: new Date() }
       },
       orderBy: { createdAt: "desc" },
+      take: 300,
       include: {
         user: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
         book: true,
         views: {
-          where: { viewerId: request.user.sub },
+          where: { viewerId: me },
           select: { id: true, viewedAt: true }
         }
       }
     });
+
+    // Mutual follows and shared books only among the authors / books that actually have stories.
+    const authorIds = [...new Set(stories.map((story) => story.userId))];
+    const bookIds = [...new Set(stories.flatMap((story) => (story.bookId ? [story.bookId] : [])))];
+    const [mutualRows, shelfRows] = await Promise.all([
+      authorIds.length === 0
+        ? Promise.resolve([])
+        : app.prisma.follow.findMany({
+            where: { followingId: me, followerId: { in: authorIds } },
+            select: { followerId: true }
+          }),
+      bookIds.length === 0
+        ? Promise.resolve([])
+        : app.prisma.shelfItem.findMany({
+            where: { userId: me, bookId: { in: bookIds } },
+            select: { bookId: true }
+          })
+    ]);
+    const mutualIds = new Set(mutualRows.map((row) => row.followerId));
+    const myBookIds = new Set(shelfRows.map((row) => row.bookId));
 
     return stories.map((story) => {
       const viewed = story.views.length > 0;

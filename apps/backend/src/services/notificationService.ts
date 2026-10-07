@@ -35,11 +35,14 @@ export async function createNotification(
   });
 
   app.io.to(`user:${input.userId}`).emit("notification:new", notification);
-  const tokens = await app.prisma.deviceToken.findMany({
-    where: { userId: input.userId },
-    select: { token: true, platform: true }
-  });
-  await sendPushForNotification(app, notification, tokens);
+  // Push goes out after the response: a like or follow shouldn't wait for the push provider.
+  void app.prisma.deviceToken
+    .findMany({
+      where: { userId: input.userId },
+      select: { token: true, platform: true }
+    })
+    .then((tokens) => sendPushForNotification(app, notification, tokens))
+    .catch((error) => app.log.warn({ error, notificationId: notification.id }, "Push send failed"));
 
   return notification;
 }

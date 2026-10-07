@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { createNotification } from "../services/notificationService.js";
-import { recordFeedEventScoreImpact } from "../services/contentScoreService.js";
+import { recordFeedEventScoreImpact } from "../services/scoreBufferService.js";
 import { incrementContentCounter } from "../services/counterService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { withIdempotency } from "../services/idempotencyService.js";
