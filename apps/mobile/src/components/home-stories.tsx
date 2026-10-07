@@ -88,13 +88,19 @@ export function HomeStories({ stories }: { stories: Story[] }) {
     setTimeout(go, 120);
   }, []);
 
+  // The ring underneath turns grey first; the finished sweep stays on top a moment longer, since on Android the
+  // swapped SVG draws a frame or two later and the gradient flashed through when both changed at once.
   const sweepDone = useCallback((id: string) => {
     setGrey((v) => new Set(v).add(id));
-    setSweeping((v) => {
-      const n = new Map(v);
-      n.delete(id);
-      return n;
-    });
+    setTimeout(
+      () =>
+        setSweeping((v) => {
+          const n = new Map(v);
+          n.delete(id);
+          return n;
+        }),
+      400,
+    );
   }, []);
 
   return (
