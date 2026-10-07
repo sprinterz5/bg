@@ -12,7 +12,6 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -60,6 +59,8 @@ const SEG_GAP = 4;
 const EASE = { duration: motion.base, easing: Easing.out(Easing.cubic) };
 const FADE_IN = FadeIn.duration(220);
 const FADE_OUT = FadeOut.duration(140);
+// Search open/close: quick start, long soft landing, no overshoot.
+const SEARCH_EASING = Easing.bezier(0.2, 0, 0, 1);
 // Explore stays a little longer on the way out so its topics are seen dropping away.
 const EXPLORE_OUT = FadeOut.duration(280);
 
@@ -102,7 +103,7 @@ export default function Search() {
   const o = useSharedValue(0);
   const searching = mode !== 'explore';
   useEffect(() => {
-    o.value = searching ? withSpring(1, { damping: 19, stiffness: 190 }) : withSpring(0, { damping: 26, stiffness: 230 });
+    o.value = withTiming(searching ? 1 : 0, { duration: searching ? 360 : 300, easing: SEARCH_EASING });
   }, [searching, o]);
   // Field: collapsed around the magnifier (icon centre x 361, y 46) → 15..325 (typing, "Exit" on the right) → 44..325
   // (results, back chevron on the left).
