@@ -41,7 +41,15 @@ export function getStoredRefreshToken() {
   return SecureStore.getItemAsync(REFRESH_KEY);
 }
 
-type ApiInit = { method?: string; body?: unknown; form?: FormData; auth?: boolean };
+type ApiInit = {
+  method?: string;
+  body?: unknown;
+  form?: FormData;
+  auth?: boolean;
+  /** Write the backend dedupes by Idempotency-Key: retried once with the same key when no response came back. */
+  idempotent?: boolean;
+  idempotencyKey?: string;
+};
 
 // Without a timeout a request on a dead connection hangs forever. Uploads get more time.
 const TIMEOUT_MS = 20_000;
@@ -52,6 +60,7 @@ async function send<T>(path: string, init: ApiInit): Promise<T> {
   // Multipart: fetch sets the Content-Type with the boundary itself.
   if (init.body !== undefined) headers['Content-Type'] = 'application/json';
   if (init.auth && accessToken) headers.Authorization = `Bearer ${accessToken}`;
+  if (init.idempotencyKey) headers['Idempotency-Key'] = init.idempotencyKey;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), init.form ? UPLOAD_TIMEOUT_MS : TIMEOUT_MS);
@@ -110,9 +119,14 @@ async function doRefresh() {
 
 /** JSON request; authed requests retry once after refreshing an expired access token. */
 export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
+  if (init.idempotent && !init.idempotencyKey) {
+    init = { ...init, idempotencyKey: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}` };
+  }
   try {
     return await send<T>(path, init);
   } catch (e) {
+    // Timeout / dropped connection: the server may have done the write, the same key makes the retry safe.
+    if (init.idempotent && (!(e instanceof ApiError) || e.status === 0)) return api<T>(path, { ...init, idempotent: false });
     if (!(init.auth && e instanceof ApiError && e.status === 401)) throw e;
     if (!(await refreshSession())) throw e;
     return send<T>(path, init);

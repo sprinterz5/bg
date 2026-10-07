@@ -34,7 +34,7 @@ export const fetchMessages = (conversationId: string, cursor?: string) =>
   });
 
 export const sendMessage = (conversationId: string, body: string) =>
-  api<ChatMessage>(`/conversations/${conversationId}/messages`, { body: { type: 'TEXT', body }, auth: true });
+  api<ChatMessage>(`/conversations/${conversationId}/messages`, { body: { type: 'TEXT', body }, auth: true, idempotent: true });
 
 export const markRead = (conversationId: string) =>
   api(`/conversations/${conversationId}/read`, { method: 'POST', auth: true }).catch(() => {});

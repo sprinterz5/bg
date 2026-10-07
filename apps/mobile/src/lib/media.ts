@@ -24,5 +24,5 @@ export async function uploadImage(uri: string, kind: MediaKind): Promise<MediaAs
   const form = new FormData();
   form.append('kind', kind); // fields must come before the file for the multipart parser
   form.append('file', { uri: jpeg.uri, name: 'image.jpg', type: 'image/jpeg' } as unknown as Blob);
-  return api<MediaAsset>('/media', { form, auth: true });
+  return api<MediaAsset>('/media', { form, auth: true, idempotent: true });
 }

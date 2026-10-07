@@ -577,19 +577,20 @@ const tinkovProfile: Profile = {
   ],
 };
 
-/** Profile by username; unknown users get an empty profile built from their search entry. */
+/** Profile by username; other mock authors get a profile built from the mock articles they wrote. */
 export function getProfile(username: string): Profile {
   if (username === tinkovProfile.username) return tinkovProfile;
-  const author = SEARCH_PROFILES.find((a) => a.username === username);
+  const author = SEARCH_PROFILES.find((a) => a.username === username) ?? Object.values(ARTICLES).find((a) => a.author.username === username)?.author;
+  const posts = authorPosts(username);
   return {
     username,
-    name: author?.subtitle ?? username,
+    name: displayName(username),
     avatar: author?.avatar ?? null,
-    articles: 0,
-    followers: '0',
-    following: 0,
+    articles: posts.length,
+    followers: posts.length > 0 ? formatMockCount(seeded(username, 90_000, 300)) : '0',
+    following: posts.length > 0 ? seeded(username + 'f', 400, 12) : 0,
     bio: [],
-    posts: [],
+    posts,
   };
 }
 
@@ -825,19 +826,53 @@ const parseCount = (s?: string) => {
   return Math.round(/m/i.test(s) ? n * 1e6 : /k/i.test(s) ? n * 1e3 : n);
 };
 
+// "1 day ago" of each derived article, for the author's profile list.
+const TIME_AGO: Record<string, string> = {};
+
 for (const p of FEED) {
   const id = `a-${p.id}`;
   articleFrom(id, p.author, p.image, p.title, bodyFor(p.id), p.likes, p.comments, p.shares);
   p.articleId = id;
+  TIME_AGO[id] = p.timeAgo;
 }
 for (const p of [...EXPLORE_FEED, ...SEARCH_ARTICLES]) {
   const id = `a-${p.id}`;
   if (!ARTICLES[id]) articleFrom(id, EXPLORE_AUTHOR[p.id] ?? bookgram, p.image, p.title, bodyFor(p.id));
   p.articleId = id;
+  TIME_AGO[id] ??= p.timeAgo;
 }
 for (const p of tinkovProfile.posts) {
   if (!p.image) continue;
   const id = `a-${p.id}`;
   articleFrom(id, OLEG, p.image, p.title, bodyFor(p.id), parseCount(p.likes));
   p.articleId = id;
+}
+
+/** "sam_altman" → "Sam Altman". */
+function displayName(username: string) {
+  return username
+    .split(/[._]/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function formatMockCount(n: number) {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1).replace('.0', '')}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1).replace('.0', '')}K`;
+  return String(n);
+}
+
+/** Mock articles by this author, one row per title (the same story can sit in several mock lists). */
+function authorPosts(username: string): ProfilePost[] {
+  const titles = new Set<string>();
+  return Object.values(ARTICLES)
+    .filter((a) => a.author.username === username && TIME_AGO[a.id])
+    .filter((a) => {
+      const key = a.title.toLowerCase();
+      if (titles.has(key)) return false;
+      titles.add(key);
+      return true;
+    })
+    .map((a) => ({ id: a.id, image: a.cover, title: a.title, likes: formatMockCount(a.likes), timeAgo: TIME_AGO[a.id] ?? '', articleId: a.id }));
 }
