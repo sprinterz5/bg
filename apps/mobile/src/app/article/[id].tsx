@@ -157,13 +157,23 @@ function Reader({ article }: { article: Article }) {
   const t = useSharedValue(0);
   const flying = useSharedValue(origin ? 1 : 0);
   const [opened, setOpened] = useState(false);
+  // The copy of the cover is a new image view: start flying once it is on screen (it sits exactly over the
+  // picture in the list until then), or after a short wait if it never says so.
+  const [coverReady, setCoverReady] = useState(!origin);
   useEffect(() => {
+    if (coverReady) return;
+    const timer = setTimeout(() => setCoverReady(true), 250);
+    return () => clearTimeout(timer);
+  }, [coverReady]);
+  useEffect(() => {
+    if (!coverReady) return;
     t.value = withTiming(1, { duration: origin ? OPEN_MS : 220, easing: OPEN_EASING }, (fin) => {
       if (!fin) return;
       flying.value = 0;
       runOnJS(setOpened)(true);
     });
-  }, [origin, t, flying]);
+  }, [coverReady, origin, t, flying]);
+  const onCoverShown = useCallback(() => setCoverReady(true), []);
   const closing = useRef(false);
   const close = useCallback(() => {
     if (closing.current) return;
@@ -207,7 +217,7 @@ function Reader({ article }: { article: Article }) {
         <Animated.View collapsable={false} style={[styles.sheet, { height: H }, sheetStyle, chromeStyle]} />
       </BlurTargetView>
 
-      {origin ? <FlyingCover origin={origin} source={article.cover} t={t} flying={flying} width={W} coverH={IMG_H} /> : null}
+      {origin ? <FlyingCover origin={origin} source={article.cover} t={t} flying={flying} width={W} coverH={IMG_H} onShown={onCoverShown} /> : null}
 
       {/* Mounted once the cover has landed: building the pages during the flight cost frames. */}
       {pages && opened ? (
@@ -303,6 +313,7 @@ function FlyingCover({
   flying,
   width,
   coverH,
+  onShown,
 }: {
   origin: ArticleOrigin;
   source: ImageSourcePropType;
@@ -310,6 +321,7 @@ function FlyingCover({
   flying: SharedValue<number>;
   width: number;
   coverH: number;
+  onShown: () => void;
 }) {
   const aspect = origin.aspect ?? origin.w / origin.h;
   // Height of the picture when it covers a w x h box.
@@ -346,7 +358,7 @@ function FlyingCover({
   return (
     <Animated.View collapsable={false} pointerEvents="none" style={[styles.flying, { width, height: coverH }, frame]}>
       <Animated.View collapsable={false} style={[{ position: 'absolute', left: width / 2 - IW / 2, top: coverH / 2 - IH / 2, width: IW, height: IH }, picture]}>
-        <Image source={source} style={styles.fill} contentFit="cover" />
+        <Image source={source} style={styles.fill} contentFit="cover" onDisplay={onShown} />
       </Animated.View>
     </Animated.View>
   );
@@ -453,7 +465,8 @@ const styles = StyleSheet.create({
   // Transparent: the list stays visible while the reader opens and closes over it.
   root: { flex: 1 },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg },
-  flying: { position: 'absolute', left: 0, top: 0, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
+  // No fill: until the copy is drawn, the same picture in the list shows through.
+  flying: { position: 'absolute', left: 0, top: 0, overflow: 'hidden' },
   measure: { position: 'absolute', left: 0, top: 0, opacity: 0 },
   cover: { position: 'absolute', left: 0, right: 0, top: 0, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   fill: { width: '100%', height: '100%' },

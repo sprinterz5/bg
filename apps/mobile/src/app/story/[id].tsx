@@ -58,7 +58,7 @@ export default function StoryViewer() {
   // Home didn't report where that is).
   const [origin0] = useState(() => storyOrigin(id ?? ''));
   const t = useSharedValue(origin0 ? 0 : 1);
-  const fade = useSharedValue(origin0 ? 1 : 0);
+  const fade = useSharedValue(0);
   const dragY = useSharedValue(0);
   const ox = useSharedValue(origin0?.x ?? 0);
   const oy = useSharedValue(origin0?.y ?? 0);
@@ -66,14 +66,25 @@ export default function StoryViewer() {
   // Only the opened page is mounted while the window grows; the pages next to it, the curl canvas and the
   // snapshots (a full software redraw of the page on Android) come once it's done, so nothing competes with it.
   const [settled, setSettled] = useState(false);
+  // The window stays invisible (the photo on Home shows through) until the opened story's photo is loaded, so it
+  // never grows as an empty black circle; a short wait is the fallback.
+  const [photoShown, setPhotoShown] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setPhotoShown(true), 250);
+    return () => clearTimeout(timer);
+  }, []);
+  const onTopPhoto = useCallback(() => setPhotoShown(true), []);
   useEffect(() => {
     const done = (fin?: boolean) => {
       'worklet';
       if (fin) runOnJS(setSettled)(true);
     };
-    if (origin0) t.value = withTiming(1, { duration: OPEN_MS, easing: OPEN_EASING }, done);
-    else fade.value = withTiming(1, { duration: 200 }, done);
-  }, [origin0, t, fade]);
+    if (!photoShown) return;
+    if (origin0) {
+      fade.value = 1;
+      t.value = withTiming(1, { duration: OPEN_MS, easing: OPEN_EASING }, done);
+    } else fade.value = withTiming(1, { duration: 200 }, done);
+  }, [photoShown, origin0, t, fade]);
 
   // Every story shown here counts as watched (grey ring on Home). Recorded when the viewer closes, not while it
   // opens: marking re-renders the stories row under it.
@@ -378,7 +389,7 @@ export default function StoryViewer() {
         {/* Not flattened on Android, or the pan has no view to attach to. */}
         <View collapsable={false} style={StyleSheet.absoluteFill}>
           {pages.map((s) => (
-            <StoryPage key={s.id} story={s} top={s.id === story.id} snapshot={settled} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+            <StoryPage key={s.id} story={s} top={s.id === story.id} onPhoto={s.id === story.id ? onTopPhoto : undefined} snapshot={settled} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
           ))}
           {/* Inside the gesture view: on Android the gesture handler hit-tests views itself and stops at the
               first leaf view under the finger (the canvas), so a canvas above it would swallow the swipe. */}
@@ -413,13 +424,15 @@ type PageProps = {
   barH: number;
   onTap: (step: 1 | -1) => void;
   onSnapshot: (storyId: string, image: Snapshot) => void;
+  /** Called once the photo has loaded. */
+  onPhoto?: () => void;
   /** Snapshots allowed (the viewer has finished opening). */
   snapshot: boolean;
 };
 
 // Pictures use the core Image: the snapshot draws the view tree in software on Android, and expo-image's
 // hardware bitmaps can't be drawn there.
-function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnapshot }: PageProps) {
+function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnapshot, onPhoto }: PageProps) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const ref = useRef<View>(null);
@@ -499,7 +512,10 @@ function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnap
       <Image
         source={story.image}
         fadeDuration={0}
-        onLoad={() => setPhotoReady(true)}
+        onLoad={() => {
+          setPhotoReady(true);
+          onPhoto?.();
+        }}
         resizeMode="cover"
         style={{ position: 'absolute', top: photoTop, width, height: photoH }}
       />
