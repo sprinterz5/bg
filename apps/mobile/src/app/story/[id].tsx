@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, { Easing, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, Extrapolation, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthorAvatar } from '@/components/author-row';
@@ -47,6 +47,9 @@ const OPEN_MS = 420;
 const CLOSE_MS = 340;
 const OPEN_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
 const CLOSE_EASING = Easing.bezier(0.4, 0, 0.2, 1);
+// Below this t the window hands over to a true circle (see ringStyle); RING_BASE is that circle's unscaled size.
+const RING_HANDOFF = 0.22;
+const RING_BASE = 100;
 
 export default function StoryViewer() {
   const insets = useSafeAreaInsets();
@@ -153,7 +156,8 @@ export default function StoryViewer() {
     const drag = Math.max(0, dragY.value);
     const ds = 1 - Math.min(drag / height, 1) * 0.35;
     return {
-      opacity: fade.value,
+      // Near the ring the round copy below takes over (a scaled window can't keep its corners round).
+      opacity: fade.value * interpolate(k, [0, RING_HANDOFF], [0, 1], Extrapolation.CLAMP),
       borderRadius: ((d / 2) * (1 - k) + Math.min(drag * 0.15, 22)) / (((sx + sy) / 2) * ds),
       transform: [
         { translateX: ox.value * (1 - k) + w / 2 - width / 2 },
@@ -161,6 +165,22 @@ export default function StoryViewer() {
         { scaleX: sx * ds },
         { scaleY: sy * ds },
       ],
+    };
+  });
+  // Round copy of the ring's picture over the window's last stretch: scaled uniformly, so it is a true circle the
+  // whole way, cross-fading with the (rounded-rect) window as it lands on the ring or leaves it.
+  const ringStyle = useAnimatedStyle(() => {
+    const k = t.value;
+    const d = os.value;
+    const w = d + (width - d) * k;
+    const h = d + (height - d) * k;
+    const drag = Math.max(0, dragY.value);
+    const ds = 1 - Math.min(drag / height, 1) * 0.35;
+    const cx = ox.value * (1 - k) + w / 2;
+    const cy = oy.value * (1 - k) + h / 2 + drag * 0.9;
+    return {
+      opacity: fade.value * interpolate(k, [0, RING_HANDOFF], [1, 0], Extrapolation.CLAMP),
+      transform: [{ translateX: cx - RING_BASE / 2 }, { translateY: cy - RING_BASE / 2 }, { scale: (Math.min(w, h) * ds) / RING_BASE }],
     };
   });
   // Keeps the viewer's photo centre (width / 2, photoCY) on the window's centre at t 0 and in place at t 1.
@@ -422,6 +442,9 @@ export default function StoryViewer() {
       </KeyboardStickyView>
       </Animated.View>
       </Animated.View>
+      <Animated.View collapsable={false} pointerEvents="none" style={[styles.ring, ringStyle]}>
+        <Image source={story.image} resizeMode="cover" fadeDuration={0} style={StyleSheet.absoluteFill} />
+      </Animated.View>
     </View>
   );
 }
@@ -581,6 +604,7 @@ const styles = StyleSheet.create({
   // Transparent: Home shows around the window while it opens, closes or is dragged.
   root: { flex: 1 },
   frame: { position: 'absolute', left: 0, top: 0, overflow: 'hidden', backgroundColor: '#000000' },
+  ring: { position: 'absolute', left: 0, top: 0, width: RING_BASE, height: RING_BASE, borderRadius: RING_BASE / 2, overflow: 'hidden' },
   page: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000' },
   half: { position: 'absolute', top: 0 },
   back: { position: 'absolute', left: 15.775 },
