@@ -3,11 +3,12 @@ import { useEffect, type ReactNode } from 'react';
 import { StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { AnimatedText, Text } from '@/components/text';
+import { Text } from '@/components/text';
 import type { ProfilePost } from '@/mock/data';
 import { colors, motion } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
+import { RollingLabel } from './rolling-label';
 import { push } from '@/lib/nav';
 
 // Figma 3167:1542 (other user) and 3169:1832 (own, empty). Header centre at design y 75.
@@ -107,7 +108,7 @@ export function ProfileButton({
   return (
     <PressableScale onPress={onPress} scaleTo={0.97} haptic style={fill ? styles.buttonWrap : undefined} accessibilityRole="button" accessibilityLabel={label}>
       <Animated.View collapsable={false} style={[styles.button, { height }, bg]}>
-        <AnimatedText style={[styles.buttonText, fg]}>{label}</AnimatedText>
+        <RollingLabel text={label} style={[styles.buttonText, fg]} />
       </Animated.View>
     </PressableScale>
   );
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
 
   buttons: { flexDirection: 'row', paddingHorizontal: 11, gap: 10 },
   buttonWrap: { flex: 1 },
-  button: { borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
+  button: { borderRadius: 7, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   buttonText: { fontSize: 13, lineHeight: 16, fontWeight: '600' },
 
   tabs: { height: 26.375, borderBottomWidth: 0.5, borderBottomColor: '#EFF3F4' },

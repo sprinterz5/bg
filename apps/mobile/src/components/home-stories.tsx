@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
-import type { Href } from 'expo-router';
+import { useFocusEffect, type Href } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
@@ -7,6 +8,7 @@ import type { Story } from '@/mock/data';
 import { colors } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
+import { RingSweep } from './ring-sweep';
 import { Text } from '@/components/text';
 import { push } from '@/lib/nav';
 
@@ -20,6 +22,7 @@ const PHOTO = 85;
 // native bounce; Android uses the system stretch.
 const GIVE = 0.05;
 const STRETCH = 0.000175; // scaleX gained per point of overscroll
+const SEEN_GREY = '#DBE0E6'; // story-ring-seen.svg
 
 export function HomeStories({ stories }: { stories: Story[] }) {
   const x = useSharedValue(0);
@@ -29,6 +32,25 @@ export function HomeStories({ stories }: { stories: Story[] }) {
     x.value = e.contentOffset.x;
     max.value = Math.max(0, contentW.value - e.layoutMeasurement.width);
   });
+
+  // Stories watched while Home was covered turn grey in front of the user once Home is back: the ring stays in
+  // colour until then, and the grey runs round it.
+  const [grey, setGrey] = useState<ReadonlySet<string>>(() => new Set(stories.filter((s) => s.seen).map((s) => s.id)));
+  const [sweeping, setSweeping] = useState<ReadonlySet<string>>(() => new Set());
+  useFocusEffect(
+    useCallback(() => {
+      const fresh = stories.filter((s) => s.seen && !grey.has(s.id) && !sweeping.has(s.id)).map((s) => s.id);
+      if (fresh.length) setSweeping((v) => new Set([...v, ...fresh]));
+    }, [stories, grey, sweeping]),
+  );
+  const sweepDone = useCallback((id: string) => {
+    setGrey((v) => new Set(v).add(id));
+    setSweeping((v) => {
+      const n = new Set(v);
+      n.delete(id);
+      return n;
+    });
+  }, []);
 
   return (
     <Animated.ScrollView
@@ -40,13 +62,25 @@ export function HomeStories({ stories }: { stories: Story[] }) {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}>
       {stories.map((s, i) => (
-        <Item key={s.id} story={s} index={i} count={stories.length} x={x} max={max} />
+        <Item key={s.id} story={s} index={i} count={stories.length} x={x} max={max} grey={grey.has(s.id)} sweep={sweeping.has(s.id)} onSweepDone={sweepDone} />
       ))}
     </Animated.ScrollView>
   );
 }
 
-function Item({ story: s, index, count, x, max }: { story: Story; index: number; count: number; x: SharedValue<number>; max: SharedValue<number> }) {
+type ItemProps = {
+  story: Story;
+  index: number;
+  count: number;
+  x: SharedValue<number>;
+  max: SharedValue<number>;
+  grey: boolean;
+  sweep: boolean;
+  onSweepDone: (id: string) => void;
+};
+
+function Item({ story: s, index, count, x, max, grey, sweep, onSweepDone }: ItemProps) {
+  const done = useCallback(() => onSweepDone(s.id), [onSweepDone, s.id]);
   const style = useAnimatedStyle(() => {
     const o = x.value < 0 ? x.value : x.value > max.value ? x.value - max.value : 0;
     if (o === 0) return { transform: [{ translateX: 0 }, { scaleX: 1 }] };
@@ -66,7 +100,9 @@ function Item({ story: s, index, count, x, max }: { story: Story; index: number;
         style={styles.item}>
         <View style={styles.ring}>
           <Image source={s.image} style={styles.photo} contentFit="cover" transition={150} />
-          <Icon name={s.seen ? 'storyRingSeen' : 'storyRing'} width={RING} style={StyleSheet.absoluteFill} />
+          <Icon name={grey ? 'storyRingSeen' : 'storyRing'} width={RING} style={StyleSheet.absoluteFill} />
+          {/* Starts a moment after Home is back (the viewer is still fading out). */}
+          {sweep ? <RingSweep size={RING} color={SEEN_GREY} delay={250 + index * 60} onDone={done} /> : null}
         </View>
         <Text style={styles.name} numberOfLines={1}>
           {s.author.username}

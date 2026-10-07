@@ -3,7 +3,7 @@ import { useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -90,9 +90,12 @@ export default function Home() {
     introUntil.current ??= now + INTRO_MS;
     const first = !seen.current.has(item.id);
     seen.current.add(item.id);
-    const animate = first && (now < introUntil.current || index < 3);
+    const intro = now < introUntil.current;
+    // Opening the screen: posts rise in one after another. Later, new posts at the top (a refresh, a published
+    // article) come down from above.
+    const entering = !first ? undefined : intro ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : index < 3 ? FadeInUp.delay(index * 60).duration(380) : undefined;
     return (
-      <Animated.View collapsable={false} entering={animate ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : undefined}>
+      <Animated.View collapsable={false} entering={entering}>
         <FeedPost post={item} />
       </Animated.View>
     );

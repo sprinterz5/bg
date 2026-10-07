@@ -2,15 +2,22 @@ import { BlurTargetView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
   Extrapolation,
   interpolate,
   interpolateColor,
+  runOnJS,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,6 +28,7 @@ import { Icon, type IconName } from '@/components/icon';
 import { LikeButton } from '@/components/like-button';
 import { PlaceholderScreen } from '@/components/placeholder-screen';
 import { PressableScale } from '@/components/pressable-scale';
+import { RollingLabel } from '@/components/rolling-label';
 import { paginateLines } from '@/lib/paginate';
 import type { Article } from '@/mock/data';
 import { useFeed } from '@/state/feed';
@@ -113,6 +121,23 @@ function Reader({ article }: { article: Article }) {
     transform: [{ translateY: interpolate(scrollX.value, [0, W], [0, -9.5], Extrapolation.CLAMP) }],
   }));
 
+  // Double tap on the text likes the article (never unlikes) and pops a big heart where the finger was.
+  const [hearts, setHearts] = useState<{ id: number; x: number; y: number; tilt: number }[]>([]);
+  const heartId = useRef(0);
+  const onDoubleTap = useCallback((x: number, y: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setLiked(true);
+    const id = ++heartId.current;
+    setHearts((h) => [...h, { id, x, y, tilt: Math.random() * 24 - 12 }]);
+  }, []);
+  const dropHeart = useCallback((id: number) => setHearts((h) => h.filter((v) => v.id !== id)), []);
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDelay(260)
+    .onEnd((e, ok) => {
+      if (ok) runOnJS(onDoubleTap)(e.absoluteX, e.absoluteY);
+    });
+
   const toggleFollow = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setFollowing((v) => !v);
@@ -137,6 +162,7 @@ function Reader({ article }: { article: Article }) {
       </BlurTargetView>
 
       {pages ? (
+        <GestureDetector gesture={doubleTap}>
         <Animated.FlatList
           data={pages}
           keyExtractor={(_, i) => String(i)}
@@ -160,6 +186,7 @@ function Reader({ article }: { article: Article }) {
             />
           )}
         />
+        </GestureDetector>
       ) : null}
 
       <Animated.View collapsable={false} style={[styles.card, cardStyle]}>
@@ -174,9 +201,7 @@ function Reader({ article }: { article: Article }) {
             </View>
             <View style={styles.cardRight}>
               {pages && pages.length > 1 ? <PageDots count={pages.length} width={W} scrollX={scrollX} /> : null}
-              <PressableScale onPress={toggleFollow} scaleTo={0.94} style={[styles.follow, following && styles.following]} accessibilityRole="button">
-                <Text style={[styles.followText, following && styles.followingText]}>{following ? 'Following' : 'Follow'}</Text>
-              </PressableScale>
+              <FollowPill following={following} onPress={toggleFollow} />
             </View>
           </View>
           <AnimatedText style={[styles.title, styles.cardTitle, { width: CARD_W_2 - 5 }, titleStyle]}>{article.title}</AnimatedText>
@@ -188,6 +213,10 @@ function Reader({ article }: { article: Article }) {
           <Icon name="readerClose" width={33} />
         </PressableScale>
       </Animated.View>
+
+      {hearts.map((h) => (
+        <BigHeart key={h.id} id={h.id} x={h.x} y={h.y} tilt={h.tilt} onDone={dropHeart} />
+      ))}
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments)} />
@@ -207,6 +236,52 @@ function Reader({ article }: { article: Article }) {
         </PressableScale>
       </View>
     </View>
+  );
+}
+
+/** Follow ↔ Following: the fill and text colour cross-fade, the word rolls. */
+function FollowPill({ following, onPress }: { following: boolean; onPress: () => void }) {
+  const on = useSharedValue(following ? 1 : 0);
+  useEffect(() => {
+    on.value = withTiming(following ? 1 : 0, { duration: 220, easing: Easing.out(Easing.cubic) });
+  }, [following, on]);
+  const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [colors.primary, 'rgba(15,20,25,0.08)']) }));
+  const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], ['#FFFFFF', colors.text]) }));
+  return (
+    <PressableScale onPress={onPress} scaleTo={0.94} accessibilityRole="button" accessibilityLabel={following ? 'Following' : 'Follow'}>
+      <Animated.View collapsable={false} style={[styles.follow, bg]}>
+        <RollingLabel text={following ? 'Following' : 'Follow'} style={[styles.followText, fg]} />
+      </Animated.View>
+    </PressableScale>
+  );
+}
+
+const HEART_W = 92;
+const HEART_H = (HEART_W * 19.75) / 23.5;
+
+/** Pops in with a little overshoot, holds, then floats up and fades; removes itself when done. */
+function BigHeart({ id, x, y, tilt, onDone }: { id: number; x: number; y: number; tilt: number; onDone: (id: number) => void }) {
+  const scale = useSharedValue(0);
+  const lift = useSharedValue(0);
+  const fade = useSharedValue(1);
+  useEffect(() => {
+    scale.value = withSequence(withSpring(1.12, { damping: 9, stiffness: 320, mass: 0.7 }), withSpring(1, { damping: 14, stiffness: 260 }));
+    lift.value = withDelay(420, withTiming(-46, { duration: 380, easing: Easing.in(Easing.cubic) }));
+    fade.value = withDelay(
+      440,
+      withTiming(0, { duration: 340, easing: Easing.in(Easing.quad) }, (fin) => {
+        if (fin) runOnJS(onDone)(id);
+      }),
+    );
+  }, [id, onDone, scale, lift, fade]);
+  const style = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [{ translateY: lift.value }, { rotate: `${tilt}deg` }, { scale: scale.value }],
+  }));
+  return (
+    <Animated.View collapsable={false} pointerEvents="none" style={[styles.bigHeart, { left: x - HEART_W / 2, top: y - HEART_H / 2 }, style]}>
+      <Icon name="readerLikeFilled" width={HEART_W} height={HEART_H} />
+    </Animated.View>
   );
 }
 
@@ -279,6 +354,7 @@ function BarItem({ icon, w, h, label, onPress }: { icon: IconName; w: number; h:
 }
 
 const styles = StyleSheet.create({
+  bigHeart: { position: 'absolute', width: HEART_W, height: HEART_H },
   root: { flex: 1, backgroundColor: colors.bg },
   measure: { position: 'absolute', left: 0, top: 0, opacity: 0 },
   cover: { position: 'absolute', left: 0, right: 0, top: 0, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
@@ -306,10 +382,8 @@ const styles = StyleSheet.create({
   cardRight: { flexDirection: 'row', alignItems: 'center', gap: 15, paddingTop: 1 },
   dots: { flexDirection: 'row', gap: 3 },
   dot: { width: 5.8, height: 5.8, borderRadius: 3 },
-  follow: { width: 82, height: 24, borderRadius: 100, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  following: { backgroundColor: 'rgba(15,20,25,0.08)' },
-  followText: { fontSize: 13, fontWeight: '700', color: '#FFFFFF' },
-  followingText: { color: colors.text },
+  follow: { width: 82, height: 24, borderRadius: 100, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  followText: { fontSize: 13, fontWeight: '700' },
   close: { position: 'absolute', left: 11 },
   bar: {
     position: 'absolute',
