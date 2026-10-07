@@ -14,9 +14,9 @@ import { CURL_SUPPORTED, PageCurlCanvas, disposeSnapshot, snapshotView, type Sna
 import { PressableScale } from '@/components/pressable-scale';
 import { Text, TextInput } from '@/components/text';
 import { backWhenReady } from '@/lib/nav';
-import { storyOrigin } from '@/lib/story-origin';
+import { storiesClosing, storyOrigin } from '@/lib/story-origin';
 import { HOME_STORIES, type Story } from '@/mock/data';
-import { useFeed } from '@/state/feed';
+import { useSeenStories } from '@/state/feed';
 
 // Frame 1049 story viewer (design status bar 47, home indicator 34). Photo centred on design y 385,
 // up to 540 tall; author row 93 and caption 46 above the bottom bar; bar 51 + indicator, #0D1015.
@@ -63,16 +63,35 @@ export default function StoryViewer() {
   const ox = useSharedValue(origin0?.x ?? 0);
   const oy = useSharedValue(origin0?.y ?? 0);
   const os = useSharedValue(origin0?.size ?? width);
+  // Only the opened page is mounted while the window grows; the pages next to it, the curl canvas and the
+  // snapshots (a full software redraw of the page on Android) come once it's done, so nothing competes with it.
+  const [settled, setSettled] = useState(false);
   useEffect(() => {
-    if (origin0) t.value = withTiming(1, { duration: OPEN_MS, easing: OPEN_EASING });
-    else fade.value = withTiming(1, { duration: 200 });
+    const done = (fin?: boolean) => {
+      'worklet';
+      if (fin) runOnJS(setSettled)(true);
+    };
+    if (origin0) t.value = withTiming(1, { duration: OPEN_MS, easing: OPEN_EASING }, done);
+    else fade.value = withTiming(1, { duration: 200 }, done);
   }, [origin0, t, fade]);
+
+  // Every story shown here counts as watched (grey ring on Home). Recorded when the viewer closes, not while it
+  // opens: marking re-renders the stories row under it.
+  const { markStoriesSeen } = useSeenStories();
+  const watched = useRef(new Set<string>());
+  useEffect(() => {
+    watched.current.add(story.id);
+  }, [story.id]);
+  useEffect(() => () => markStoriesSeen([...watched.current]), [markStoriesSeen]);
 
   const closing = useRef(false);
   const close = useCallback(() => {
     if (closing.current) return;
     closing.current = true;
     Keyboard.dismiss();
+    const seen = [...watched.current];
+    markStoriesSeen(seen);
+    storiesClosing(seen);
     const o = storyOrigin(story.id);
     if (o) {
       runOnUI((x: number, y: number, size: number) => {
@@ -90,7 +109,7 @@ export default function StoryViewer() {
         if (fin) runOnJS(backWhenReady)();
       });
     }
-  }, [story.id, ox, oy, os, dragY, t, fade]);
+  }, [story.id, ox, oy, os, dragY, t, fade, markStoriesSeen]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -130,10 +149,6 @@ export default function StoryViewer() {
       ],
     };
   });
-
-  // Every story shown here counts as watched: its ring on Home turns grey.
-  const { markStorySeen } = useFeed();
-  useEffect(() => markStorySeen(story.id), [story.id, markStorySeen]);
 
   const [snaps, setSnaps] = useState<Record<string, Snapshot>>({});
   const onSnapshot = useCallback((storyId: string, image: Snapshot) => {
@@ -342,7 +357,7 @@ export default function StoryViewer() {
   // Sideways turns the page, down closes; whichever moves first wins.
   const gestures = Gesture.Race(pan, dismiss);
 
-  const pages = [prev, next, story].filter((s): s is Story => !!s);
+  const pages = (settled ? [prev, next, story] : [story]).filter((s): s is Story => !!s);
   const layers = pages.filter((s) => !!snaps[s.id]).map((s) => ({ id: s.id, image: snaps[s.id] }));
 
   return (
@@ -354,11 +369,11 @@ export default function StoryViewer() {
         {/* Not flattened on Android, or the pan has no view to attach to. */}
         <View collapsable={false} style={StyleSheet.absoluteFill}>
           {pages.map((s) => (
-            <StoryPage key={s.id} story={s} top={s.id === story.id} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+            <StoryPage key={s.id} story={s} top={s.id === story.id} snapshot={settled} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
           ))}
           {/* Inside the gesture view: on Android the gesture handler hit-tests views itself and stops at the
               first leaf view under the finger (the canvas), so a canvas above it would swallow the swipe. */}
-          <PageCurlCanvas layers={layers} active={active} under={under} progress={progress} angle={angle} width={width} height={height} />
+          {settled ? <PageCurlCanvas layers={layers} active={active} under={under} progress={progress} angle={angle} width={width} height={height} /> : null}
         </View>
       </GestureDetector>
 
@@ -389,11 +404,13 @@ type PageProps = {
   barH: number;
   onTap: (step: 1 | -1) => void;
   onSnapshot: (storyId: string, image: Snapshot) => void;
+  /** Snapshots allowed (the viewer has finished opening). */
+  snapshot: boolean;
 };
 
 // Pictures use the core Image: the snapshot draws the view tree in software on Android, and expo-image's
 // hardware bitmaps can't be drawn there.
-function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: PageProps) {
+function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnapshot }: PageProps) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const ref = useRef<View>(null);
@@ -438,7 +455,7 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
   // Snapshot for the page turn once the pictures are on screen, and again after the caption opens or closes.
   const ready = (photoReady && avatarReady) || timedOut;
   useEffect(() => {
-    if (!CURL_SUPPORTED || !ready) return;
+    if (!CURL_SUPPORTED || !ready || !snapshot) return;
     let cancelled = false;
     let retry: ReturnType<typeof setTimeout> | undefined;
     const take = (attempt: number) =>
@@ -458,7 +475,7 @@ function StoryPage({ story, top, hidden, progress, barH, onTap, onSnapshot }: Pa
       cancelAnimationFrame(raf);
       clearTimeout(retry);
     };
-  }, [ready, settled, cut, story.id, onSnapshot]);
+  }, [ready, snapshot, settled, cut, story.id, onSnapshot]);
 
   const hideStyle = useAnimatedStyle(() => ({ opacity: hidden.value === story.id && progress.value > 0.03 ? 0 : 1 }));
 

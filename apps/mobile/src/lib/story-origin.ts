@@ -11,3 +11,19 @@ export function setStoryOrigin(id: string, origin: StoryOrigin) {
 export function storyOrigin(id: string): StoryOrigin | null {
   return origins.get(id) ?? null;
 }
+
+// The viewer tells the stories row it is closing (with the stories watched in it), so their rings can turn grey
+// while it shrinks back instead of waiting for Home to be focused again.
+type ClosingListener = (watched: string[]) => void;
+let closingListener: ClosingListener | null = null;
+
+export function onStoriesClosing(listener: ClosingListener) {
+  closingListener = listener;
+  return () => {
+    if (closingListener === listener) closingListener = null;
+  };
+}
+
+export function storiesClosing(watched: string[]) {
+  closingListener?.(watched);
+}

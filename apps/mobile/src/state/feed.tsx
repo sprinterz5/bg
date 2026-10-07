@@ -19,14 +19,19 @@ type FeedContextValue = {
   updateDraft: (patch: Partial<ArticleDraft>) => void;
   publishing: Publishing | null;
   publish: (author: Author) => void;
+};
+
+type SeenContextValue = {
   /** Stories opened in the viewer this session (grey ring on Home). */
   seenStories: ReadonlySet<string>;
-  markStorySeen: (id: string) => void;
+  markStoriesSeen: (ids: string[]) => void;
 };
 
 const emptyDraft: ArticleDraft = { coverUri: null, body: '', label: '' };
 
 const FeedContext = createContext<FeedContextValue | null>(null);
+// Separate from the feed so marking stories watched re-renders only the stories row, not the whole Home list.
+const SeenContext = createContext<SeenContextValue | null>(null);
 
 export function FeedProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<Post[]>(FEED);
@@ -34,7 +39,11 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<ArticleDraft>(emptyDraft);
   const [publishing, setPublishing] = useState<Publishing | null>(null);
   const [seenStories, setSeenStories] = useState<ReadonlySet<string>>(() => new Set());
-  const markStorySeen = useCallback((id: string) => setSeenStories((s) => (s.has(id) ? s : new Set(s).add(id))), []);
+  const markStoriesSeen = useCallback(
+    (ids: string[]) => setSeenStories((s) => (ids.every((id) => s.has(id)) ? s : new Set([...s, ...ids]))),
+    [],
+  );
+  const seen = useMemo(() => ({ seenStories, markStoriesSeen }), [seenStories, markStoriesSeen]);
   const draftRef = useRef(draft);
   draftRef.current = draft;
 
@@ -68,15 +77,25 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ posts, articles, draft, updateDraft, publishing, publish, seenStories, markStorySeen }),
-    [posts, articles, draft, updateDraft, publishing, publish, seenStories, markStorySeen],
+    () => ({ posts, articles, draft, updateDraft, publishing, publish }),
+    [posts, articles, draft, updateDraft, publishing, publish],
   );
 
-  return <FeedContext.Provider value={value}>{children}</FeedContext.Provider>;
+  return (
+    <FeedContext.Provider value={value}>
+      <SeenContext.Provider value={seen}>{children}</SeenContext.Provider>
+    </FeedContext.Provider>
+  );
 }
 
 export function useFeed() {
   const ctx = useContext(FeedContext);
   if (!ctx) throw new Error('useFeed must be used inside FeedProvider');
+  return ctx;
+}
+
+export function useSeenStories() {
+  const ctx = useContext(SeenContext);
+  if (!ctx) throw new Error('useSeenStories must be used inside FeedProvider');
   return ctx;
 }

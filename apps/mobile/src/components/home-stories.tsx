@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
@@ -11,7 +11,8 @@ import { PressableScale } from './pressable-scale';
 import { RingSweep } from './ring-sweep';
 import { Text } from '@/components/text';
 import { push } from '@/lib/nav';
-import { setStoryOrigin } from '@/lib/story-origin';
+import { onStoriesClosing, setStoryOrigin } from '@/lib/story-origin';
+import { useSeenStories } from '@/state/feed';
 
 // Frame 1049 home: rings 97.5 (3.25 gradient stroke) every 108 from x 3.75, photo 85 inside a 3px white
 // stroke; the username baseline 15.85 under the ring. Watched stories get the grey ring.
@@ -24,6 +25,9 @@ const PHOTO = 85;
 const GIVE = 0.05;
 const STRETCH = 0.000175; // scaleX gained per point of overscroll
 const SEEN_GREY = '#DBE0E6'; // story-ring-seen.svg
+// The viewer takes ~340ms to shrink back: the grey starts as it lands, rings after the first follow a beat apart.
+const SWEEP_ON_CLOSE = 180;
+const SWEEP_STAGGER = 50;
 
 export function HomeStories({ stories }: { stories: Story[] }) {
   const x = useSharedValue(0);
@@ -34,15 +38,31 @@ export function HomeStories({ stories }: { stories: Story[] }) {
     max.value = Math.max(0, contentW.value - e.layoutMeasurement.width);
   });
 
-  // Stories watched while Home was covered turn grey in front of the user once Home is back: the ring stays in
-  // colour until then, and the grey runs round it.
+  // Watched stories turn grey in front of the user: the grey runs round the ring as the viewer shrinks back into
+  // Home (it reports closing with the stories watched); Home regaining focus is the fallback.
+  const { seenStories } = useSeenStories();
   const [grey, setGrey] = useState<ReadonlySet<string>>(() => new Set(stories.filter((s) => s.seen).map((s) => s.id)));
-  const [sweeping, setSweeping] = useState<ReadonlySet<string>>(() => new Set());
+  // Story id → delay before its grey starts.
+  const [sweeping, setSweeping] = useState<ReadonlyMap<string, number>>(() => new Map());
+  const startSweeps = useCallback(
+    (ids: string[], delay: number) =>
+      setSweeping((v) => {
+        const fresh = ids.filter((id) => !grey.has(id) && !v.has(id));
+        if (!fresh.length) return v;
+        const n = new Map(v);
+        fresh.forEach((id, i) => n.set(id, delay + i * SWEEP_STAGGER));
+        return n;
+      }),
+    [grey],
+  );
+  useEffect(() => onStoriesClosing((watched) => startSweeps(watched, SWEEP_ON_CLOSE)), [startSweeps]);
   useFocusEffect(
     useCallback(() => {
-      const fresh = stories.filter((s) => s.seen && !grey.has(s.id) && !sweeping.has(s.id)).map((s) => s.id);
-      if (fresh.length) setSweeping((v) => new Set([...v, ...fresh]));
-    }, [stories, grey, sweeping]),
+      startSweeps(
+        stories.filter((s) => s.seen || seenStories.has(s.id)).map((s) => s.id),
+        0,
+      );
+    }, [stories, seenStories, startSweeps]),
   );
   // Opening a story: remember where every visible story photo is (the viewer grows out of the tapped one and
   // shrinks back into whichever story it is closed on), then open it once the tapped one is measured.
@@ -72,7 +92,7 @@ export function HomeStories({ stories }: { stories: Story[] }) {
   const sweepDone = useCallback((id: string) => {
     setGrey((v) => new Set(v).add(id));
     setSweeping((v) => {
-      const n = new Set(v);
+      const n = new Map(v);
       n.delete(id);
       return n;
     });
@@ -88,7 +108,7 @@ export function HomeStories({ stories }: { stories: Story[] }) {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}>
       {stories.map((s, i) => (
-        <Item key={s.id} story={s} index={i} count={stories.length} x={x} max={max} grey={grey.has(s.id)} sweep={sweeping.has(s.id)} onSweepDone={sweepDone} onOpen={openStory} registerRing={registerRing} />
+        <Item key={s.id} story={s} index={i} count={stories.length} x={x} max={max} grey={grey.has(s.id)} sweepDelay={sweeping.get(s.id) ?? null} onSweepDone={sweepDone} onOpen={openStory} registerRing={registerRing} />
       ))}
     </Animated.ScrollView>
   );
@@ -101,13 +121,14 @@ type ItemProps = {
   x: SharedValue<number>;
   max: SharedValue<number>;
   grey: boolean;
-  sweep: boolean;
+  /** Set while the ring is turning grey. */
+  sweepDelay: number | null;
   onSweepDone: (id: string) => void;
   onOpen: (id: string) => void;
   registerRing: (id: string, view: View | null) => void;
 };
 
-function Item({ story: s, index, count, x, max, grey, sweep, onSweepDone, onOpen, registerRing }: ItemProps) {
+function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, onOpen, registerRing }: ItemProps) {
   const done = useCallback(() => onSweepDone(s.id), [onSweepDone, s.id]);
   const style = useAnimatedStyle(() => {
     const o = x.value < 0 ? x.value : x.value > max.value ? x.value - max.value : 0;
@@ -129,8 +150,7 @@ function Item({ story: s, index, count, x, max, grey, sweep, onSweepDone, onOpen
         <View ref={(v) => registerRing(s.id, v)} collapsable={false} style={styles.ring}>
           <Image source={s.image} style={styles.photo} contentFit="cover" transition={150} />
           <Icon name={grey ? 'storyRingSeen' : 'storyRing'} width={RING} style={StyleSheet.absoluteFill} />
-          {/* Starts a moment after Home is back (the viewer is still fading out). */}
-          {sweep ? <RingSweep size={RING} color={SEEN_GREY} delay={250 + index * 60} onDone={done} /> : null}
+          {sweepDelay !== null ? <RingSweep size={RING} color={SEEN_GREY} delay={sweepDelay} onDone={done} /> : null}
         </View>
         <Text style={styles.name} numberOfLines={1}>
           {s.author.username}

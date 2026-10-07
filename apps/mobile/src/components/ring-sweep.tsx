@@ -10,7 +10,7 @@ export function RingSweep({ size, color, delay, onDone }: { size: number; color:
   useEffect(() => {
     end.value = withDelay(
       delay,
-      withTiming(1, { duration: 700, easing: Easing.inOut(Easing.cubic) }, (fin) => {
+      withTiming(1, { duration: 450, easing: Easing.out(Easing.cubic) }, (fin) => {
         if (fin) runOnJS(onDone)();
       }),
     );
@@ -28,7 +28,7 @@ export function RingSweep({ size, color, delay, onDone }: { size: number; color:
   return (
     <View pointerEvents="none" collapsable={false} style={StyleSheet.absoluteFill}>
       <Canvas style={StyleSheet.absoluteFill}>
-        <Path path={path} style="stroke" strokeWidth={(3.25 * size) / 97.5 + 0.6} color={color} start={0} end={end} />
+        <Path path={path} style="stroke" strokeWidth={(3.25 * size) / 97.5 + 0.5} strokeCap="round" color={color} start={0} end={end} />
       </Canvas>
     </View>
   );
