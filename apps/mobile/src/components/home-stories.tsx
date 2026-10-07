@@ -8,7 +8,7 @@ import type { Story } from '@/mock/data';
 import { colors } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
-import { RingSweep } from './ring-sweep';
+import { RingSweep, SeenRing } from './ring-sweep';
 import { Text } from '@/components/text';
 import { push } from '@/lib/nav';
 import { onStoriesClosing, setStoryOrigin } from '@/lib/story-origin';
@@ -154,7 +154,7 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
         style={styles.item}>
         <View ref={(v) => registerRing(s.id, v)} collapsable={false} style={styles.ring}>
           <Image source={s.image} style={styles.photo} contentFit="cover" transition={150} />
-          <Icon name={grey ? 'storyRingSeen' : 'storyRing'} width={RING} style={StyleSheet.absoluteFill} />
+          {grey ? <SeenRing size={RING} /> : <Icon name="storyRing" width={RING} style={StyleSheet.absoluteFill} />}
           {sweepDelay !== null ? <RingSweep size={RING} delay={sweepDelay} onDone={done} /> : null}
         </View>
         <Text style={styles.name} numberOfLines={1}>

@@ -2,7 +2,16 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { Icon } from './icon';
+
+// Grey ring of a watched story, drawn as a bordered circle (same geometry as story-ring-seen.svg: 97.5 wide,
+// stroke 3.25 inside the edge). Not the SVG: as an image inside the half-clips below it rasterized at a different
+// size on Android, so the sweeping band didn't match the ring.
+const SEEN_STROKE = 3.25;
+const SEEN_COLOR = '#DBE0E6';
+
+export function SeenRing({ size }: { size: number }) {
+  return <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, borderRadius: size / 2, borderWidth: (SEEN_STROKE * size) / 97.5, borderColor: SEEN_COLOR }} />;
+}
 
 // A watched story's ring turning grey: the grey ring is revealed once round from the top, clockwise, over the
 // gradient one. Plain views (no canvas: a freshly created Skia surface on Android can show a frame of stale GPU
@@ -29,15 +38,15 @@ export function RingSweep({ size, delay, onDone }: { size: number; delay: number
       <View style={[styles.clip, { left: half, width: half, height: size }]}>
         <Animated.View collapsable={false} style={[{ position: 'absolute', left: -half, width: size, height: size }, right]}>
           <View style={[styles.clip, { left: 0, width: half, height: size }]}>
-            <Icon name="storyRingSeen" width={size} />
+            <SeenRing size={size} />
           </View>
         </Animated.View>
       </View>
       <View style={[styles.clip, { left: 0, width: half, height: size }]}>
         <Animated.View collapsable={false} style={[{ position: 'absolute', left: 0, width: size, height: size }, left]}>
           <View style={[styles.clip, { left: half, width: half, height: size }]}>
-            <View style={{ position: 'absolute', left: -half }}>
-              <Icon name="storyRingSeen" width={size} />
+            <View style={{ position: 'absolute', left: -half, width: size, height: size }}>
+              <SeenRing size={size} />
             </View>
           </View>
         </Animated.View>
