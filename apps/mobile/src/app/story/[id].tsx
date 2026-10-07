@@ -112,9 +112,9 @@ export default function StoryViewer() {
     if (closing.current) return;
     closing.current = true;
     Keyboard.dismiss();
-    const seen = [...watched.current];
-    markStoriesSeen(seen);
-    storiesClosing(seen);
+    // Only the closing event here (Home starts the grey sweep from it); the seen state is saved on unmount:
+    // updating it now re-rendered this whole screen right as the close animation started (a stutter).
+    storiesClosing([...watched.current]);
     const o = storyOrigin(story.id);
     if (o) {
       runOnUI((x: number, y: number, size: number, h: number) => {
@@ -133,7 +133,7 @@ export default function StoryViewer() {
         if (fin) runOnJS(backWhenReady)();
       });
     }
-  }, [story.id, ox, oy, os, dragY, t, fade, markStoriesSeen]);
+  }, [story.id, ox, oy, os, dragY, t, fade]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
