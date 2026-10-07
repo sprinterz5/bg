@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { Image as ExpoImage } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
@@ -204,6 +204,11 @@ export default function StoryViewer() {
 
   const [snaps, setSnaps] = useState<Record<string, Snapshot>>({});
   const onSnapshot = useCallback((storyId: string, image: Snapshot) => {
+    // Closing: no re-render of the pages and canvas mid-animation for a snapshot nobody will turn.
+    if (closing.current) {
+      disposeSnapshot(image);
+      return;
+    }
     setSnaps((s) => {
       const old = s[storyId];
       // Not right away: the canvas may still be drawing it this frame.
@@ -421,7 +426,7 @@ export default function StoryViewer() {
         {/* Not flattened on Android, or the pan has no view to attach to. */}
         <View collapsable={false} style={StyleSheet.absoluteFill}>
           {pages.map((s) => (
-            <StoryPage key={s.id} story={s} top={s.id === story.id} onPhoto={s.id === story.id ? onTopPhoto : undefined} snapshot={settled} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+            <StoryPage key={s.id} story={s} top={s.id === story.id} onPhoto={s.id === story.id ? onTopPhoto : undefined} snapshot={settled} closing={closing} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
           ))}
           {/* Inside the gesture view: on Android the gesture handler hit-tests views itself and stops at the
               first leaf view under the finger (the canvas), so a canvas above it would swallow the swipe. */}
@@ -464,11 +469,13 @@ type PageProps = {
   onPhoto?: () => void;
   /** Snapshots allowed (the viewer has finished opening). */
   snapshot: boolean;
+  /** Set once the viewer starts closing: no more snapshots (each one stalls the UI thread on Android). */
+  closing: RefObject<boolean>;
 };
 
 // Pictures use the core Image: the snapshot draws the view tree in software on Android, and expo-image's
 // hardware bitmaps can't be drawn there.
-function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnapshot, onPhoto }: PageProps) {
+function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTap, onSnapshot, onPhoto }: PageProps) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const ref = useRef<View>(null);
@@ -515,8 +522,9 @@ function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnap
     if (!CURL_SUPPORTED || !ready || !snapshot) return;
     let cancelled = false;
     let retry: ReturnType<typeof setTimeout> | undefined;
-    const take = (attempt: number) =>
-      snapshotView(ref).then((image) => {
+    const take = (attempt: number) => {
+      if (closing.current) return;
+      return snapshotView(ref).then((image) => {
         if (!image) {
           if (attempt === 0 && !cancelled) retry = setTimeout(() => take(1), 400);
           return;
@@ -524,6 +532,7 @@ function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnap
         if (cancelled) disposeSnapshot(image);
         else onSnapshot(story.id, image);
       });
+    };
     let raf = requestAnimationFrame(() => {
       raf = requestAnimationFrame(() => take(0));
     });
@@ -532,7 +541,7 @@ function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnap
       cancelAnimationFrame(raf);
       clearTimeout(retry);
     };
-  }, [ready, snapshot, settled, cut, story.id, onSnapshot]);
+  }, [ready, snapshot, closing, settled, cut, story.id, onSnapshot]);
 
   const hideStyle = useAnimatedStyle(() => ({ opacity: hidden.value === story.id && progress.value > 0.03 ? 0 : 1 }));
 
