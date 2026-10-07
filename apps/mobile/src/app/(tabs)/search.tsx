@@ -12,6 +12,7 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -47,6 +48,9 @@ const CHIP_BG = '#F2F2F2';
 const CHIP_ACTIVE = '#455DFF';
 const TOPIC_W: Record<string, number> = { 'For You': 78, Books: 64, Following: 90, News: 58 };
 const FIELD_BG = '#EFF3F4';
+// Field collapsed around the bar's magnifier (24 at x 349): the field icon (16.6, 10.6 in) lands on its centre x 361.
+const COLLAPSED_L = 361 - 10.6 - 16.6 / 2;
+const COLLAPSED_R = 361 + 10.6 + 16.6 / 2;
 const PLACEHOLDER = '#536471';
 const MUTED = '#737A84';
 const PRESSED = '#F7F9F9';
@@ -56,6 +60,8 @@ const SEG_GAP = 4;
 const EASE = { duration: motion.base, easing: Easing.out(Easing.cubic) };
 const FADE_IN = FadeIn.duration(220);
 const FADE_OUT = FadeOut.duration(140);
+// Explore stays a little longer on the way out so its topics are seen dropping away.
+const EXPLORE_OUT = FadeOut.duration(280);
 
 const MODE_VALUE: Record<Mode, number> = { explore: 0, typing: 1, results: 2 };
 
@@ -90,11 +96,34 @@ export default function Search() {
     m.value = withTiming(MODE_VALUE[mode], EASE);
   }, [mode, m]);
 
-  // Field: x 8..380 (explore, 372 wide, no saved/liked button) → 15..325 (typing, "Exit" on the right) → 44..325 (results, back chevron on the left).
-  const fieldStyle = useAnimatedStyle(() => ({
-    marginLeft: interpolate(m.value, [0, 1, 2], [8, 15, 44]),
-    marginRight: interpolate(m.value, [0, 1, 2], [10, 65, 65]),
+  // Opening search (not in the design): the field grows out of the bar's magnifier and the magnifier pulls it to
+  // the left, a pill around the icon stretching into the 15..325 field; the topics drop away, the feed fades.
+  // Closing runs it back into the magnifier. `o`: 0 = Explore, 1 = searching.
+  const o = useSharedValue(0);
+  const searching = mode !== 'explore';
+  useEffect(() => {
+    o.value = searching ? withSpring(1, { damping: 19, stiffness: 190 }) : withSpring(0, { damping: 26, stiffness: 230 });
+  }, [searching, o]);
+  // Field: collapsed around the magnifier (icon centre x 361, y 46) → 15..325 (typing, "Exit" on the right) → 44..325
+  // (results, back chevron on the left).
+  const fieldStyle = useAnimatedStyle(() => {
+    const left = interpolate(m.value, [1, 2], [15, 44], Extrapolation.CLAMP);
+    return {
+      marginLeft: COLLAPSED_L + (left - COLLAPSED_L) * o.value,
+      marginRight: W - COLLAPSED_R + (65 - (W - COLLAPSED_R)) * o.value,
+      borderRadius: interpolate(o.value, [0, 1], [FIELD_H / 2, 10], Extrapolation.CLAMP),
+      opacity: interpolate(o.value, [0, 0.08], [0, 1], Extrapolation.CLAMP),
+      transform: [{ translateY: (1 - o.value) * 2 }],
+    };
+  });
+  // The 16.6 field icon starts at the bar icon's size (24) and settles to its own.
+  const fieldIconStyle = useAnimatedStyle(() => ({ transform: [{ scale: interpolate(o.value, [0, 1], [24 / 16.6, 1], Extrapolation.CLAMP) }] }));
+  const headerBgStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, o.value)) }));
+  const topicsDrop = useAnimatedStyle(() => ({
+    opacity: interpolate(o.value, [0, 0.6], [1, 0], Extrapolation.CLAMP),
+    transform: [{ translateY: interpolate(o.value, [0, 1], [0, 18], Extrapolation.CLAMP) }],
   }));
+  const barSearchStyle = useAnimatedStyle(() => ({ opacity: interpolate(o.value, [0, 0.08], [1, 0], Extrapolation.CLAMP) }));
   // Explore (Instagram-style): the topic bar leaves with the posts when scrolling down and comes back as soon as
   // you scroll up. It doesn't move on pull-to-refresh.
   const hidden = useSharedValue(0); // bar offset, 0..FEED_TOP
@@ -110,13 +139,14 @@ export default function Search() {
     if (mode !== 'explore') hidden.value = lastY.value = 0;
   }, [mode, hidden, lastY]);
   const barShift = useAnimatedStyle(() => ({ transform: [{ translateY: -hidden.value }] }));
-  // The field header only exists while searching.
-  const headerStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [0, 1], Extrapolation.CLAMP) }));
   const openSearch = useCallback(() => {
     setMode('typing');
     inputRef.current?.focus();
   }, []);
-  const exitStyle = useAnimatedStyle(() => ({ opacity: interpolate(m.value, [0, 1], [0, 1], Extrapolation.CLAMP) }));
+  const exitStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(o.value, [0.45, 1], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateX: interpolate(o.value, [0.45, 1], [10, 0], Extrapolation.CLAMP) }],
+  }));
   const backStyle = useAnimatedStyle(() => ({
     opacity: interpolate(m.value, [1, 2], [0, 1], Extrapolation.CLAMP),
     transform: [{ translateX: interpolate(m.value, [1, 2], [-8, 0], Extrapolation.CLAMP) }],
@@ -203,7 +233,9 @@ export default function Search() {
   return (
     <View style={[styles.root, { paddingTop: Math.max(insets.top - STATUS_OVERLAP, 0) }]}>
       <View style={styles.clip}>
-      <Animated.View collapsable={false} pointerEvents={mode === 'explore' ? 'none' : 'auto'} style={[styles.header, headerStyle]}>
+      <Animated.View collapsable={false} pointerEvents={mode === 'explore' ? 'none' : 'box-none'} style={styles.header}>
+        {/* Transparent over Explore's topic bar, white while searching. */}
+        <Animated.View collapsable={false} pointerEvents="none" style={[styles.headerBg, headerBgStyle]} />
         <Animated.View collapsable={false} style={[styles.back, backStyle]} pointerEvents={mode === 'results' ? 'auto' : 'none'}>
           <PressableScale onPress={backToTyping} hitSlop={14} scaleTo={0.85} accessibilityLabel="Back">
             <Icon name="searchBack" width={10} height={20} />
@@ -211,7 +243,9 @@ export default function Search() {
         </Animated.View>
 
         <Animated.View collapsable={false} style={[styles.field, fieldStyle]}>
-          <Icon name="searchFieldThin" width={16.6} style={styles.fieldIcon} />
+          <Animated.View collapsable={false} style={[styles.fieldIcon, fieldIconStyle]}>
+            <Icon name="searchFieldThin" width={16.6} />
+          </Animated.View>
           <TextInput
             ref={inputRef}
             value={query}
@@ -253,7 +287,7 @@ export default function Search() {
 
       <View style={styles.body}>
         {mode === 'explore' ? (
-          <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={styles.exploreLayer}>
+          <Animated.View collapsable={false} entering={FADE_IN} exiting={EXPLORE_OUT} style={styles.exploreLayer}>
             {/* The list runs behind the header and the topics; both are overlays moved by the scroll. */}
             <Animated.FlatList
               ref={feedRef}
@@ -285,10 +319,14 @@ export default function Search() {
               showsVerticalScrollIndicator={false}
             />
             <Animated.View collapsable={false} style={[styles.bar, barShift]}>
-              <Topics selected={topic} onSelect={setTopic} />
-              <PressableScale haptic onPress={openSearch} hitSlop={12} accessibilityRole="button" accessibilityLabel="Search" style={styles.barSearch}>
-                <Icon name="exploreSearch" width={24} />
-              </PressableScale>
+              <Animated.View collapsable={false} style={topicsDrop}>
+                <Topics selected={topic} onSelect={setTopic} />
+              </Animated.View>
+              <Animated.View collapsable={false} style={[styles.barSearch, barSearchStyle]}>
+                <PressableScale haptic onPress={openSearch} hitSlop={12} accessibilityRole="button" accessibilityLabel="Search">
+                  <Icon name="exploreSearch" width={24} />
+                </PressableScale>
+              </Animated.View>
             </Animated.View>
           </Animated.View>
         ) : null}
@@ -430,7 +468,8 @@ function ProfileRow({ profile }: { profile: Author }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  header: { height: FIELD_TOP + FIELD_H + HEADER_BOTTOM, paddingTop: FIELD_TOP, zIndex: 1, backgroundColor: colors.bg },
+  header: { height: FIELD_TOP + FIELD_H + HEADER_BOTTOM, paddingTop: FIELD_TOP, zIndex: 1 },
+  headerBg: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg },
   back: { position: 'absolute', left: 15, top: FIELD_TOP + 11 },
   field: {
     height: FIELD_H,
