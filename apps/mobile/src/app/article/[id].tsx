@@ -7,6 +7,7 @@ import { BackHandler, Platform, StyleSheet, View, useWindowDimensions, type Imag
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
+  FadeIn,
   Extrapolation,
   interpolate,
   interpolateColor,
@@ -208,7 +209,9 @@ function Reader({ article }: { article: Article }) {
 
       {origin ? <FlyingCover origin={origin} source={article.cover} t={t} flying={flying} width={W} coverH={IMG_H} /> : null}
 
-      {pages ? (
+      {/* Mounted once the cover has landed: building the pages during the flight cost frames. */}
+      {pages && opened ? (
+        <Animated.View collapsable={false} entering={FadeIn.duration(220)} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
         <GestureDetector gesture={doubleTap}>
         <Animated.FlatList
           data={pages}
@@ -234,6 +237,7 @@ function Reader({ article }: { article: Article }) {
           )}
         />
         </GestureDetector>
+        </Animated.View>
       ) : null}
 
       <Animated.View collapsable={false} style={[styles.card, cardStyle, chromeStyle]}>
@@ -287,9 +291,10 @@ function Reader({ article }: { article: Article }) {
 }
 
 /**
- * The cover in flight: a window moving from the tapped picture to the cover slot, with the picture inside drawn at a
- * fixed size and only scaled (an image whose size changes re-decodes and flickers), always filling the window like
- * contentFit "cover".
+ * The cover in flight: a window moving from the tapped picture to the cover slot. Only transforms (plus radius and
+ * opacity) change per frame, so the window and the picture inside move in the same UI-thread update: the window is
+ * a fixed width x coverH box scaled to the current rect, and the picture (fixed size, so it never re-decodes) is
+ * counter-scaled to stay undistorted and to keep filling the window like contentFit "cover".
  */
 function FlyingCover({
   origin,
@@ -316,26 +321,31 @@ function FlyingCover({
   const IW = IH * aspect;
   const frame = useAnimatedStyle(() => {
     const k = t.value;
+    const w = origin.w + (width - origin.w) * k;
+    const h = origin.h + (coverH - origin.h) * k;
+    const sx = w / width;
+    const sy = h / coverH;
     return {
       opacity: flying.value,
-      left: origin.x * (1 - k),
-      top: origin.y * (1 - k),
-      width: origin.w + (width - origin.w) * k,
-      height: origin.h + (coverH - origin.h) * k,
-      borderRadius: origin.radius * (1 - k),
+      borderRadius: (origin.radius * (1 - k)) / ((sx + sy) / 2),
+      transform: [
+        { translateX: origin.x * (1 - k) + w / 2 - width / 2 },
+        { translateY: origin.y * (1 - k) + h / 2 - coverH / 2 },
+        { scaleX: sx },
+        { scaleY: sy },
+      ],
     };
   });
   const picture = useAnimatedStyle(() => {
     const k = t.value;
     const w = origin.w + (width - origin.w) * k;
     const h = origin.h + (coverH - origin.h) * k;
-    return {
-      transform: [{ translateX: w / 2 - IW / 2 }, { translateY: h / 2 - IH / 2 }, { scale: coverHeight(w, h) / IH }],
-    };
+    const s = coverHeight(w, h) / IH;
+    return { transform: [{ scaleX: (s * width) / w }, { scaleY: (s * coverH) / h }] };
   });
   return (
-    <Animated.View collapsable={false} pointerEvents="none" style={[styles.flying, frame]}>
-      <Animated.View collapsable={false} style={[{ width: IW, height: IH }, picture]}>
+    <Animated.View collapsable={false} pointerEvents="none" style={[styles.flying, { width, height: coverH }, frame]}>
+      <Animated.View collapsable={false} style={[{ position: 'absolute', left: width / 2 - IW / 2, top: coverH / 2 - IH / 2, width: IW, height: IH }, picture]}>
         <Image source={source} style={styles.fill} contentFit="cover" />
       </Animated.View>
     </Animated.View>
@@ -443,7 +453,7 @@ const styles = StyleSheet.create({
   // Transparent: the list stays visible while the reader opens and closes over it.
   root: { flex: 1 },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg },
-  flying: { position: 'absolute', overflow: 'hidden', backgroundColor: colors.surfaceSoft },
+  flying: { position: 'absolute', left: 0, top: 0, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   measure: { position: 'absolute', left: 0, top: 0, opacity: 0 },
   cover: { position: 'absolute', left: 0, right: 0, top: 0, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   fill: { width: '100%', height: '100%' },

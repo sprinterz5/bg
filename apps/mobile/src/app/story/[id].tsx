@@ -120,18 +120,27 @@ export default function StoryViewer() {
   }, [close]);
 
   const photoCY = insets.top + (385 - 47);
+  // Transforms only (plus radius and opacity), so the window and the viewer inside it move in the same UI-thread
+  // update: the window is a fixed full-screen box scaled to the current rect, the viewer inside is counter-scaled
+  // so it stays undistorted, scaled `sc` overall, with its photo centre where it should be.
   const frameStyle = useAnimatedStyle(() => {
     const k = t.value;
     const d = os.value;
+    const w = d + (width - d) * k;
+    const h = d + (height - d) * k;
+    const sx = w / width;
+    const sy = h / height;
     const drag = Math.max(0, dragY.value);
+    const ds = 1 - Math.min(drag / height, 1) * 0.35;
     return {
-      left: ox.value * (1 - k),
-      top: oy.value * (1 - k),
-      width: d + (width - d) * k,
-      height: d + (height - d) * k,
-      borderRadius: (d / 2) * (1 - k) + Math.min(drag * 0.15, 22),
       opacity: fade.value,
-      transform: [{ translateY: drag * 0.9 }, { scale: 1 - Math.min(drag / height, 1) * 0.35 }],
+      borderRadius: ((d / 2) * (1 - k) + Math.min(drag * 0.15, 22)) / (((sx + sy) / 2) * ds),
+      transform: [
+        { translateX: ox.value * (1 - k) + w / 2 - width / 2 },
+        { translateY: oy.value * (1 - k) + h / 2 - height / 2 + drag * 0.9 },
+        { scaleX: sx * ds },
+        { scaleY: sy * ds },
+      ],
     };
   });
   // Keeps the viewer's photo centre (width / 2, photoCY) on the window's centre at t 0 and in place at t 1.
@@ -140,15 +149,15 @@ export default function StoryViewer() {
     const d = os.value;
     const sc = d / width + (1 - d / width) * k;
     const w = d + (width - d) * k;
-    const ty = d / 2 + (photoCY - d / 2) * k;
+    const h = d + (height - d) * k;
+    const sx = w / width;
+    const sy = h / height;
+    const ty = d / 2 + (photoCY - d / 2) * k; // photo centre from the window top
     return {
-      transform: [
-        { translateX: w / 2 - width / 2 },
-        { translateY: ty - height / 2 - sc * (photoCY - height / 2) },
-        { scale: sc },
-      ],
+      transform: [{ translateY: (ty - h / 2 - sc * (photoCY - height / 2)) / sy }, { scaleX: sc / sx }, { scaleY: sc / sy }],
     };
   });
+
 
   const [snaps, setSnaps] = useState<Record<string, Snapshot>>({});
   const onSnapshot = useCallback((storyId: string, image: Snapshot) => {
@@ -363,7 +372,7 @@ export default function StoryViewer() {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <Animated.View collapsable={false} style={[styles.frame, frameStyle]}>
+      <Animated.View collapsable={false} style={[styles.frame, { width, height }, frameStyle]}>
       <Animated.View collapsable={false} style={[{ width, height }, innerStyle]}>
       <GestureDetector gesture={gestures}>
         {/* Not flattened on Android, or the pan has no view to attach to. */}
@@ -545,7 +554,7 @@ function StoryPage({ story, top, snapshot, hidden, progress, barH, onTap, onSnap
 const styles = StyleSheet.create({
   // Transparent: Home shows around the window while it opens, closes or is dragged.
   root: { flex: 1 },
-  frame: { position: 'absolute', overflow: 'hidden', backgroundColor: '#000000' },
+  frame: { position: 'absolute', left: 0, top: 0, overflow: 'hidden', backgroundColor: '#000000' },
   page: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000' },
   half: { position: 'absolute', top: 0 },
   back: { position: 'absolute', left: 15.775 },
