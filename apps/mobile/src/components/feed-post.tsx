@@ -1,12 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { memo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
 
 import type { Post } from '@/mock/data';
 import { colors, fonts } from '@/theme';
 import { AuthorAvatar } from './author-row';
 import { Icon } from './icon';
+import { PostActions } from './post-actions';
 import { PressableScale } from './pressable-scale';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
@@ -20,8 +21,9 @@ function formatCount(n: number) {
 // Frame 1198 home card. Offsets from the avatar top (design y 242.5): photo 265 tall at +39, title (2 lines of
 // 27) 17.5 under the photo, excerpt 10 under the title, counters 23 under the excerpt, time 17 under them, the next
 // card's avatar ~25 below.
-export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
+export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; onHide: (id: string) => void }) {
   const [saved, setSaved] = useState(false);
+  const [menu, setMenu] = useState(false);
   // The reader grows its cover out of this photo.
   const media = useRef<View>(null);
   const openArticle = () => openArticleFrom(post.articleId, media.current, post.image);
@@ -42,7 +44,7 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
             Recommended for you
           </Text>
         </View>
-        <PressableScale hitSlop={12} accessibilityLabel="More" style={styles.menu}>
+        <PressableScale onPress={() => setMenu(true)} hitSlop={12} accessibilityLabel="More" style={styles.menu}>
           <Icon name="postMenu" width={20} height={10.5} />
         </PressableScale>
       </View>
@@ -75,6 +77,17 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
       </View>
 
       <Text style={styles.time}>{post.timeAgo}</Text>
+
+      <PostActions
+        visible={menu}
+        onClose={() => setMenu(false)}
+        actions={[
+          { label: saved ? 'Remove from saved' : 'Save', onPress: () => setSaved((v) => !v) },
+          { label: 'Share', onPress: () => Share.share({ message: post.title }).catch(() => {}) },
+          { label: 'Not interested', onPress: () => onHide(post.id) },
+          { label: 'Report', destructive: true, onPress: () => Alert.alert('Thanks for letting us know', 'We will look at this post.') },
+        ]}
+      />
     </View>
   );
 });

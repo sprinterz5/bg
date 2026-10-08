@@ -21,7 +21,7 @@ import { push } from '@/lib/nav';
 export default function Home() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const { posts, publishing, loadMore } = useFeed();
+  const { posts, publishing, loadMore, hidePost } = useFeed();
   // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
   // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
   // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
@@ -95,10 +95,10 @@ export default function Home() {
     const entering = !first ? undefined : intro ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : index < 3 ? FadeInUp.delay(index * 60).duration(380) : undefined;
     return (
       <Animated.View collapsable={false} entering={entering}>
-        <FeedPost post={item} />
+        <FeedPost post={item} onHide={hidePost} />
       </Animated.View>
     );
-  }, []);
+  }, [hidePost]);
 
   return (
     <View style={styles.root}>

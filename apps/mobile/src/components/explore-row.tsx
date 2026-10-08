@@ -1,13 +1,14 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { memo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
 
 import { ARTICLES, displayName, type ExplorePost } from '@/mock/data';
 import { colors } from '@/theme';
 import { openArticle } from '@/lib/article-origin';
 import { AuthorAvatar } from './author-row';
 import { Icon } from './icon';
+import { PostActions } from './post-actions';
 import { PressableScale } from './pressable-scale';
 import { INTER_FAMILIES, Text } from './text';
 
@@ -24,6 +25,9 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
   const article = ARTICLES[post.articleId];
   const author = article?.author;
   const [saved, setSaved] = useState(false);
+  const [menu, setMenu] = useState(false);
+  // "Not interested": the row folds away (Explore is mock data, nothing to tell the server yet).
+  const [hidden, setHidden] = useState(false);
   // The reader grows its cover out of the picture.
   const thumb = useRef<View>(null);
   const open = () => openArticle(post.articleId, thumb.current, post.image, 2);
@@ -32,6 +36,7 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
     setSaved((v) => !v);
   };
 
+  if (hidden) return null;
   return (
     <View style={styles.row}>
       <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={post.title}>
@@ -62,11 +67,22 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
         <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
           <Icon name="rowBookmark" width={16.7} height={16.7} tintColor={saved ? colors.primary : undefined} />
         </PressableScale>
-        <PressableScale hitSlop={12} accessibilityLabel="More" style={styles.more}>
+        <PressableScale onPress={() => setMenu(true)} hitSlop={12} accessibilityLabel="More" style={styles.more}>
           <Icon name="rowMore" width={17.3} height={3.34} />
         </PressableScale>
       </View>
       <View style={styles.hairline} />
+
+      <PostActions
+        visible={menu}
+        onClose={() => setMenu(false)}
+        actions={[
+          { label: saved ? 'Remove from saved' : 'Save', onPress: () => setSaved((v) => !v) },
+          { label: 'Share', onPress: () => Share.share({ message: post.title }).catch(() => {}) },
+          { label: 'Not interested', onPress: () => setHidden(true) },
+          { label: 'Report', destructive: true, onPress: () => Alert.alert('Thanks for letting us know', 'We will look at this post.') },
+        ]}
+      />
     </View>
   );
 });

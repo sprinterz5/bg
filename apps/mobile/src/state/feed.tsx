@@ -21,6 +21,8 @@ type FeedContextValue = {
   publish: (author: Author) => void;
   /** Next page of the feed (mock: the same posts again under new ids, so long scrolling can be tested). */
   loadMore: () => void;
+  /** "Not interested": drops the post from the feed. */
+  hidePost: (id: string) => void;
 };
 
 type SeenContextValue = {
@@ -91,11 +93,12 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     }, PUBLISH_MS);
   }, []);
 
+  const hidePost = useCallback((id: string) => setPosts((p) => p.filter((post) => post.id !== id)), []);
   const loadMore = useCallback(() => setPosts((p) => (p.length >= MOCK_MAX ? p : [...p, ...mockPage(p.length)])), []);
 
   const value = useMemo(
-    () => ({ posts, articles, draft, updateDraft, publishing, publish, loadMore }),
-    [posts, articles, draft, updateDraft, publishing, publish, loadMore],
+    () => ({ posts, articles, draft, updateDraft, publishing, publish, loadMore, hidePost }),
+    [posts, articles, draft, updateDraft, publishing, publish, loadMore, hidePost],
   );
 
   return (
