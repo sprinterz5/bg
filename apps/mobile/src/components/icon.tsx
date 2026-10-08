@@ -41,6 +41,12 @@ const icons = {
   rowShare: require('@/assets/icons/row-share.svg'),
   rowBookmark: require('@/assets/icons/row-bookmark.svg'),
   rowMore: require('@/assets/icons/row-more.svg'),
+  // Frame 1198 "Choose a cover".
+  coverClose: require('@/assets/icons/cover-close.svg'),
+  coverChevron: require('@/assets/icons/cover-chevron.svg'),
+  coverCheck: require('@/assets/icons/cover-check.svg'),
+  coverNext: require('@/assets/icons/cover-next.svg'),
+  coverTileFade: require('@/assets/icons/cover-tile-fade.svg'),
   storyRingSeen: require('@/assets/icons/story-ring-seen.svg'),
   storyBack: require('@/assets/icons/story-back.svg'),
   storyHeart: require('@/assets/icons/story-heart.svg'),

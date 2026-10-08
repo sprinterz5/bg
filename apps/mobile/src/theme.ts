@@ -21,6 +21,8 @@ export const fonts = {
   // Home header: the frame's logo has a thin stroke, one weight up stands in for it.
   logoMedium: 'Caveat_500Medium',
   display: 'Sen_800ExtraBold',
+  // Home card titles: the design's Sentinel Bold is licence-only (annual app licence), Source Serif 4 Bold is the free match.
+  headline: 'SourceSerif4_700Bold',
   serif: Platform.select({ ios: 'Georgia', default: 'serif' }),
   reading: Platform.select({ ios: 'Iowan Old Style', default: 'serif' }),
 } as const;

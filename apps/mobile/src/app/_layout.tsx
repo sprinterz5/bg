@@ -7,12 +7,12 @@ import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
 import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
 import { Inter_900Black } from '@expo-google-fonts/inter/900Black';
 import { Sen_800ExtraBold } from '@expo-google-fonts/sen/800ExtraBold';
+import { SourceSerif4_700Bold } from '@expo-google-fonts/source-serif-4/700Bold';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -24,14 +24,18 @@ import { colors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
-// Android stands in Inter for SF Pro (see components/text.tsx); iOS uses the system font like Figma.
+// Inter: where Frame 1198 sets it explicitly (both platforms), and on Android in place of SF Pro (components/text.tsx).
 const FONTS = {
   Caveat_400Regular,
   Caveat_500Medium,
   Sen_800ExtraBold,
-  ...(Platform.OS === 'android'
-    ? { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Inter_900Black }
-    : {}),
+  SourceSerif4_700Bold,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+  Inter_900Black,
 };
 
 export default function RootLayout() {
@@ -68,6 +72,7 @@ export default function RootLayout() {
               options={{ presentation: 'transparentModal', animation: 'none', gestureEnabled: false, contentStyle: { backgroundColor: 'transparent' } }}
             />
             <Stack.Screen name="story/new" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="cover-picker" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: '#000000' } }} />
             {/* The viewer animates itself (grows out of the story on Home); Home stays visible around it. */}
             <Stack.Screen
               name="story/[id]"

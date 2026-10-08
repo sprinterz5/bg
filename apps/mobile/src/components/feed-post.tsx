@@ -89,8 +89,8 @@ const styles = StyleSheet.create({
   menu: { position: 'absolute', left: 358, top: 9.5 },
   media: { height: 265, marginTop: 8, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
-  // Sentinel Bold 20/27 in the design (licensed font, not in the app yet): the system serif stands in.
-  title: { marginTop: 17.5, marginLeft: 14, width: 352, fontFamily: fonts.serif, fontWeight: '700', fontSize: 20, lineHeight: 27, letterSpacing: 20 * -0.014, color: colors.text },
+  // Sentinel Bold 20/27 in the design; Source Serif 4 Bold in the app (see fonts.headline).
+  title: { marginTop: 17.5, marginLeft: 14, width: 352, fontFamily: fonts.headline, fontSize: 20, lineHeight: 27, letterSpacing: 20 * -0.014, color: colors.text },
   excerpt: { marginTop: 10, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 13.5, lineHeight: 18.5, letterSpacing: 13.5 * 0.005, color: EXCERPT },
   // counters (SF Pro Semibold 13/16) 23 under the excerpt: eye 25x18 at x 16.85, "520" at x 50, send at x 106.65,
   // its count at x 133, bookmark at x 363.3

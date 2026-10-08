@@ -49,6 +49,17 @@
           "iosUrlScheme": "com.googleusercontent.apps.380177386353-prjvke8s4u7dtftpsv8d9h2v2jcaj318"
         }
       ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Smarts shows your photos so you can pick a cover for your article.",
+          "savePhotosPermission": false,
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": [
+            "photo"
+          ]
+        }
+      ],
       "expo-secure-store"
     ],
     "experiments": {
