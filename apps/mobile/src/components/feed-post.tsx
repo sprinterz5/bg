@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
   count: { position: 'absolute', top: 0, fontSize: 13.8, lineHeight: 17, fontWeight: '600', color: colors.text },
   viewsCount: { left: 50 },
   sendCount: { left: 133 },
-  time: { marginTop: 20, marginLeft: 18, fontFamily: INTER_FAMILIES['400'], fontSize: 11.5, lineHeight: 16, color: '#788690' },
+  time: { marginTop: 13, marginLeft: 18, fontFamily: INTER_FAMILIES['400'], fontSize: 11.5, lineHeight: 16, color: '#788690' },
 });
