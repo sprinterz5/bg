@@ -1,3 +1,4 @@
+import type { ApiTokens } from '@api/api';
 import * as SecureStore from 'expo-secure-store';
 
 // Dev backend on the VPS. Override with EXPO_PUBLIC_API_URL (e.g. http://<PC LAN IP>:4000 for a local backend).
@@ -14,7 +15,7 @@ export class ApiError extends Error {
   }
 }
 
-type Tokens = { accessToken: string; refreshToken: string };
+type Tokens = ApiTokens;
 
 let accessToken: string | null = null;
 // One refresh at a time: the server rotates refresh tokens, so two parallel refreshes with the same token

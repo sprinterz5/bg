@@ -8,6 +8,9 @@
       ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "@api/*": [
+        "../backend/src/contracts/*"
       ]
     }
   },

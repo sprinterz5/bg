@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getBlockedIds } from "../services/blockService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { fuzzyArticleIds, fuzzyBookIds, fuzzyReviewIds, fuzzyUserIds } from "../services/searchPlanner.js";
+import { asApi, type ApiUserSearch } from "../contracts/api.js";
 
 const searchQuerySchema = z.object({
   q: z.string().min(1).max(120),
@@ -42,6 +43,11 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
       }, 0);
     };
 
+    // Matching happens in the trigram queries (searchPlanner: substring + similarity on the indexed expressions);
+    // the rows are then loaded by id. Matching again here with `contains` (ILIKE on each column, the whole article
+    // body included) could use no index and scanned every table on each keystroke. Under 3 characters trigrams
+    // don't work: a title / name prefix instead.
+    const short = q.length < 3;
     const fuzzyLimit = query.limit * 4;
     const [fuzzyUsers, fuzzyBooks, fuzzyArticles, fuzzyReviews] = await Promise.all([
       include("users") ? fuzzyUserIds(app.prisma, q, fuzzyLimit, hiddenAuthorIds) : Promise.resolve([]),
@@ -55,13 +61,8 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
         ? app.prisma.user.findMany({
             where: {
               deletedAt: null,
-              id: { notIn: hiddenAuthorIds },
-              OR: [
-                ...(fuzzyUsers.length > 0 ? [{ id: { in: fuzzyUsers } }] : []),
-                { username: { contains: q, mode: "insensitive" } },
-                { displayName: { contains: q, mode: "insensitive" } },
-                { bio: { contains: q, mode: "insensitive" } }
-              ]
+              id: short ? { notIn: hiddenAuthorIds } : { in: fuzzyUsers, notIn: hiddenAuthorIds },
+              ...(short ? { OR: [{ username: { startsWith: q, mode: "insensitive" } }, { displayName: { startsWith: q, mode: "insensitive" } }] } : {})
             },
             take: query.limit * 4,
             orderBy: { createdAt: "desc" },
@@ -78,15 +79,7 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
       include("books")
         ? app.prisma.book.findMany({
             where: {
-              OR: [
-                ...(fuzzyBooks.length > 0 ? [{ id: { in: fuzzyBooks } }] : []),
-                { title: { contains: q, mode: "insensitive" } },
-                { subtitle: { contains: q, mode: "insensitive" } },
-                { isbn10: { contains: q, mode: "insensitive" } },
-                { isbn13: { contains: q, mode: "insensitive" } },
-                { authors: { has: q } },
-                { categories: { has: q } }
-              ]
+              ...(short ? { title: { startsWith: q, mode: "insensitive" } } : { id: { in: fuzzyBooks } })
             },
             take: query.limit * 4,
             orderBy: { updatedAt: "desc" }
@@ -99,14 +92,7 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
               moderationStatus: "APPROVED",
               deletedAt: null,
               ...(hiddenAuthorIds.length > 0 ? { authorId: { notIn: hiddenAuthorIds } } : {}),
-              OR: [
-                ...(fuzzyArticles.length > 0 ? [{ id: { in: fuzzyArticles } }] : []),
-                { title: { contains: q, mode: "insensitive" } },
-                { subtitle: { contains: q, mode: "insensitive" } },
-                { excerpt: { contains: q, mode: "insensitive" } },
-                { body: { contains: q, mode: "insensitive" } },
-                { tags: { has: q } }
-              ]
+              ...(short ? { title: { startsWith: q, mode: "insensitive" } } : { id: { in: fuzzyArticles } })
             },
             take: query.limit * 4,
             orderBy: { publishedAt: "desc" },
@@ -120,13 +106,7 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
               moderationStatus: "APPROVED",
               deletedAt: null,
               ...(hiddenAuthorIds.length > 0 ? { authorId: { notIn: hiddenAuthorIds } } : {}),
-              OR: [
-                ...(fuzzyReviews.length > 0 ? [{ id: { in: fuzzyReviews } }] : []),
-                { title: { contains: q, mode: "insensitive" } },
-                { body: { contains: q, mode: "insensitive" } },
-                { tags: { has: q } },
-                { book: { title: { contains: q, mode: "insensitive" } } }
-              ]
+              ...(short ? { title: { startsWith: q, mode: "insensitive" } } : { id: { in: fuzzyReviews } })
             },
             take: query.limit * 4,
             orderBy: { publishedAt: "desc" },
@@ -201,7 +181,7 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
       .sort((a, b) => b.searchScore - a.searchScore)
       .slice(0, query.limit);
 
-    return {
+    const body = {
       query: q,
       algorithm: "trigram_text_relevance_quality_v2",
       data: {
@@ -211,5 +191,6 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
         reviews: rankedReviews
       }
     };
+    return asApi<ApiUserSearch>(body);
   });
 };

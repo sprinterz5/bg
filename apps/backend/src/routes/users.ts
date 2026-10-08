@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createNotification } from "../services/notificationService.js";
 import { publicUserSelect } from "../utils/users.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
+import { asApi, type ApiConnection, type ApiProfile, type ApiSessionUser, type ApiUserArticle, type Page } from "../contracts/api.js";
 
 const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(80).optional(),
@@ -46,11 +47,12 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
             authoredReviews: true
           }
         },
-        shelfItems: {
-          take: 12,
-          orderBy: { updatedAt: "desc" },
-          include: { book: true }
-        },
+        // Shelves are off with the book routes (app.ts).
+        // shelfItems: {
+        //   take: 12,
+        //   orderBy: { updatedAt: "desc" },
+        //   include: { book: true }
+        // },
         stories: {
           where: {
             status: "ACTIVE",
@@ -77,7 +79,7 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
           )
         : false;
 
-    return { ...user, isFollowing, isMe: viewer === user.id };
+    return asApi<ApiProfile>({ ...user, isFollowing, isMe: viewer === user.id });
   });
 
   app.get("/users/:username/articles", async (request, reply) => {
@@ -98,7 +100,7 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
       _count: { _all: true }
     });
     const likeCount = new Map(likes.map((l) => [l.targetId, l._count._all]));
-    return { ...page, data: page.data.map((a) => ({ ...a, likeCount: likeCount.get(a.id) ?? 0 })) };
+    return asApi<Page<ApiUserArticle>>({ ...page, data: page.data.map((a) => ({ ...a, likeCount: likeCount.get(a.id) ?? 0 })) });
   });
 
   // followers: who follows :username; following: whom :username follows.
@@ -133,10 +135,10 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
           )
         : new Set<string>();
 
-      return {
+      return asApi<Page<ApiConnection>>({
         data: users.map((u) => ({ ...u, isFollowing: followed.has(u.id), isMe: u.id === viewer })),
         nextCursor: page.nextCursor
-      };
+      });
     });
   }
 
@@ -155,11 +157,13 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
       }
       avatarUrl = asset.url;
     }
-    return app.prisma.user.update({
-      where: { id: request.user.sub },
-      data: { ...body, ...(avatarUrl !== undefined ? { avatarUrl } : {}) },
-      select: publicUserSelect
-    });
+    return asApi<ApiSessionUser>(
+      await app.prisma.user.update({
+        where: { id: request.user.sub },
+        data: { ...body, ...(avatarUrl !== undefined ? { avatarUrl } : {}) },
+        select: publicUserSelect
+      })
+    );
   });
 
   app.post("/users/:id/follow", { preHandler: [app.authenticate] }, async (request, reply) => {

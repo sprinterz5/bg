@@ -11,6 +11,7 @@ import { checkUsernameAvailability, normalizeUsername, validateUsername } from "
 import { sha256 } from "../utils/hash.js";
 import { toTokenPayload } from "../utils/authPayload.js";
 import { privateUserSelect } from "../utils/users.js";
+import { asApi, type ApiAuthResponse, type ApiSocialResponse, type ApiUsernameAvailability } from "../contracts/api.js";
 
 const refreshSecret = new TextEncoder().encode(env.JWT_REFRESH_SECRET);
 const appleJwks = createRemoteJWKSet(new URL("https://appleid.apple.com/auth/keys"));
@@ -184,7 +185,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/auth/username-availability", async (request) => {
     const query = usernameAvailabilitySchema.parse(request.query);
-    return checkUsernameAvailability(app.prisma, query.username);
+    return asApi<ApiUsernameAvailability>(await checkUsernameAvailability(app.prisma, query.username));
   });
 
   app.post("/auth/register", { preHandler: [authWriteLimit] }, async (request, reply) => {
@@ -228,8 +229,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const tokens = await issueTokens(app, user, request);
     const emailVerificationToken = await createEmailVerificationToken(app, user);
     return reply.status(201).send({
-      user,
-      ...tokens,
+      ...asApi<ApiAuthResponse>({ user, ...tokens }),
       ...(shouldExposeDevEmailToken() ? { devEmailVerificationToken: emailVerificationToken } : {})
     });
   });
@@ -260,7 +260,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       select: privateUserSelect
     });
     const tokens = await issueTokens(app, safeUser, request);
-    return { user: safeUser, ...tokens };
+    return asApi<ApiAuthResponse>({ user: safeUser, ...tokens });
   });
 
   async function socialSignIn(identity: SocialIdentity, body: z.infer<typeof socialSchema>, request: any, reply: any) {
@@ -288,12 +288,12 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         });
       }
       const tokens = await issueTokens(app, user, request);
-      return { signupRequired: false, user, ...tokens };
+      return asApi<ApiSocialResponse>({ signupRequired: false, user, ...tokens });
     }
 
     if (!body.username) {
       // New person: the app runs the signup steps and calls again with the same token.
-      return { signupRequired: true, email: identity.email ?? null };
+      return asApi<ApiSocialResponse>({ signupRequired: true, email: identity.email ?? null });
     }
 
     const usernameValidationReason = validateUsername(body.username);
@@ -322,7 +322,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     });
 
     const tokens = await issueTokens(app, user, request);
-    return { signupRequired: false, user, ...tokens };
+    return asApi<ApiSocialResponse>({ signupRequired: false, user, ...tokens });
   }
 
   app.post("/auth/apple", { preHandler: [authWriteLimit] }, async (request, reply) => {
@@ -518,7 +518,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       select: privateUserSelect
     });
     const tokens = await issueTokens(app, user, request);
-    return { user, ...tokens };
+    return asApi<ApiAuthResponse>({ user, ...tokens });
   });
 
   app.post("/auth/logout", async (request) => {

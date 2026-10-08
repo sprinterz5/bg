@@ -1,9 +1,10 @@
+import type { ApiMediaAsset } from '@api/api';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
 import { api } from './api';
 
 export type MediaKind = 'AVATAR' | 'ARTICLE_COVER' | 'STORY_IMAGE' | 'CHAT_ATTACHMENT';
-export type MediaAsset = { id: string; url: string; width: number | null; height: number | null };
+export type MediaAsset = ApiMediaAsset;
 
 // Longest side after resizing. The backend accepts JPEG/PNG/WebP up to 10 MB; photos from the
 // gallery can be HEIC or huge, so everything is re-encoded to JPEG first.

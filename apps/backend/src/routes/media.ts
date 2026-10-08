@@ -5,6 +5,7 @@ import { saveMultipartFile, UnsupportedMediaTypeError } from "../services/mediaS
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { withIdempotency } from "../services/idempotencyService.js";
 import { moderateMediaAsset } from "../services/mediaModerationService.js";
+import { asApi, type ApiMediaAsset } from "../contracts/api.js";
 
 export const mediaRoutes: FastifyPluginAsync = async (app) => {
   app.post("/media/upload-url", { preHandler: [app.authenticate, endpointRateLimit({ key: "media-upload-url", limit: 120, windowSeconds: 60, by: "userOrIp" })] }, async (request, reply) => {
@@ -83,7 +84,7 @@ export const mediaRoutes: FastifyPluginAsync = async (app) => {
       include: { variants: true }
     });
 
-      return { statusCode: 201, body: moderatedAsset };
+      return { statusCode: 201, body: asApi<ApiMediaAsset>(moderatedAsset) };
     });
 
     return reply.status(result.statusCode ?? 201).send(result.body);

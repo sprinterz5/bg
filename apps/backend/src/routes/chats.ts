@@ -5,6 +5,7 @@ import { createNotification } from "../services/notificationService.js";
 import { getBlockedIds } from "../services/blockService.js";
 import { withIdempotency } from "../services/idempotencyService.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
+import { asApi, type ApiChatMessage, type ApiConversation, type ApiConversationBase, type Page } from "../contracts/api.js";
 
 const directConversationSchema = z.object({
   userId: z.string().uuid()
@@ -77,7 +78,7 @@ function directKey(a: string, b: string) {
 export const chatRoutes: FastifyPluginAsync = async (app) => {
   app.get("/conversations", { preHandler: [app.authenticate] }, async (request) => {
     const blockedIds = await getBlockedIds(app, request.user.sub);
-    return app.prisma.conversation.findMany({
+    const conversations = await app.prisma.conversation.findMany({
       where: {
         members: {
           some: { userId: request.user.sub }
@@ -99,6 +100,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
         }
       }
     });
+    return asApi<ApiConversation[]>(conversations);
   });
 
   app.post("/conversations/direct", { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -132,7 +134,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
     });
 
     app.io.to(`user:${body.userId}`).emit("conversation:created", conversation);
-    return reply.status(201).send(conversation);
+    return reply.status(201).send(asApi<ApiConversationBase>(conversation));
   });
 
   app.get("/conversations/:id/messages", { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -164,7 +166,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    return pageResult(messages, limit);
+    return asApi<Page<ApiChatMessage>>(pageResult(messages, limit));
   });
 
   app.post("/conversations/:id/messages", { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -255,7 +257,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
       )
     );
 
-      return { statusCode: 201, body: message };
+      return { statusCode: 201, body: asApi<ApiChatMessage>(message) };
     });
 
     return reply.status(result.statusCode ?? 201).send(result.body);

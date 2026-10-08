@@ -1,3 +1,4 @@
+import type { ApiAuthResponse, ApiSessionUser, ApiSocialResponse, ApiUsernameAvailability } from '@api/api';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 import type { SessionUser, SignupDraft } from '@/state/session';
@@ -13,6 +14,8 @@ let google: GoogleModule | null = null;
 function getGoogle(): GoogleModule {
   if (!googleSignInAvailable) throw new Error('Google sign-in works only in the Smarts dev build, not in Expo Go');
   if (!google) {
+    // Lazy: the native module exists only in the dev build (Expo Go would crash on import).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     google = require('@react-native-google-signin/google-signin') as GoogleModule;
     // OAuth client ids are public. The ID token's audience is the web client; the backend accepts all three.
     google.GoogleSignin.configure({
@@ -30,9 +33,9 @@ export function normalizeUsername(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9_.]/g, '');
 }
 
-type ApiUser = { id: string; username: string; displayName: string | null; avatarUrl: string | null; interests: string[] };
-type AuthResponse = { user: ApiUser; accessToken: string; refreshToken: string };
-type SocialResponse = ({ signupRequired: false } & AuthResponse) | { signupRequired: true; email: string | null };
+type ApiUser = ApiSessionUser;
+type AuthResponse = ApiAuthResponse;
+type SocialResponse = ApiSocialResponse;
 
 function toSessionUser(u: ApiUser): SessionUser {
   return { id: u.id, name: u.displayName ?? u.username, username: u.username, avatarUri: u.avatarUrl, interests: u.interests };
@@ -100,7 +103,7 @@ export async function loginWithUsername(username: string, password: string): Pro
 }
 
 export async function checkUsernameAvailable(username: string) {
-  const data = await api<{ available: boolean }>(`/auth/username-availability?username=${encodeURIComponent(username)}`);
+  const data = await api<ApiUsernameAvailability>(`/auth/username-availability?username=${encodeURIComponent(username)}`);
   return data.available;
 }
 

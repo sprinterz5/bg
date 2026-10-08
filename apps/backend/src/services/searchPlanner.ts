@@ -85,6 +85,8 @@ export async function fuzzyReviewIds(prisma: PrismaClient, query: string, limit:
     return [];
   }
 
+  // Each branch matches one indexed expression (review text, book text, tags), so all of them can use an index;
+  // a LIKE over review + book text joined together could not and scanned every review.
   const rows = await prisma.$queryRaw<IdRank[]>`
     SELECT r.id::text, GREATEST(
       similarity(lower(coalesce(r.title, '') || ' ' || coalesce(r.body, '')), lower(${query})),
@@ -96,11 +98,18 @@ export async function fuzzyReviewIds(prisma: PrismaClient, query: string, limit:
       AND r."moderationStatus" = 'APPROVED'
       AND r."deletedAt" IS NULL
       AND r."authorId"::text <> ALL(${hiddenAuthorIds})
-      AND (
-        lower(coalesce(r.title, '') || ' ' || coalesce(r.body, '')) % lower(${query})
-        OR lower(coalesce(b.title, '') || ' ' || coalesce(b.subtitle, '')) % lower(${query})
-        OR lower(coalesce(r.title, '') || ' ' || coalesce(r.body, '') || ' ' || coalesce(b.title, '')) LIKE '%' || lower(${query}) || '%'
-        OR r."tags" && ARRAY[${query}]::text[]
+      AND r.id IN (
+        SELECT id FROM "Review"
+        WHERE lower(coalesce(title, '') || ' ' || coalesce(body, '')) % lower(${query})
+          OR lower(coalesce(title, '') || ' ' || coalesce(body, '')) LIKE '%' || lower(${query}) || '%'
+          OR "tags" && ARRAY[${query}]::text[]
+        UNION
+        SELECT rv.id FROM "Review" rv
+        WHERE rv."bookId" IN (
+          SELECT id FROM "Book"
+          WHERE lower(coalesce(title, '') || ' ' || coalesce(subtitle, '') || ' ' || coalesce(isbn10, '') || ' ' || coalesce(isbn13, '') || ' ' || coalesce(publisher, '')) % lower(${query})
+            OR lower(coalesce(title, '') || ' ' || coalesce(subtitle, '') || ' ' || coalesce(isbn10, '') || ' ' || coalesce(isbn13, '') || ' ' || coalesce(publisher, '')) LIKE '%' || lower(${query}) || '%'
+        )
       )
     ORDER BY rank DESC, r."publishedAt" DESC
     LIMIT ${limit}

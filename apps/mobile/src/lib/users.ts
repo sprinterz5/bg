@@ -1,35 +1,9 @@
 import type { Profile } from '@/mock/data';
+import type { ApiConnection, ApiProfile, ApiUserArticle, ApiUserSearch, Page } from '@api/api';
+
 import { api, ApiError } from './api';
 
-export type ApiProfile = {
-  id: string;
-  username: string;
-  displayName: string | null;
-  bio: string | null;
-  avatarUrl: string | null;
-  isFollowing: boolean;
-  isMe: boolean;
-  _count: { followers: number; following: number; authoredArticles: number };
-};
-
-export type ApiUserArticle = {
-  id: string;
-  title: string;
-  coverImageUrl: string | null;
-  publishedAt: string | null;
-  likeCount: number;
-};
-
-export type ApiConnection = {
-  id: string;
-  username: string;
-  displayName: string | null;
-  avatarUrl: string | null;
-  isFollowing: boolean;
-  isMe: boolean;
-};
-
-type Page<T> = { data: T[]; nextCursor: string | null };
+export type { ApiConnection, ApiProfile, ApiUserArticle };
 
 const enc = encodeURIComponent;
 
@@ -96,11 +70,9 @@ export async function loadProfile(username: string) {
   }
 }
 
-type SearchUser = { id: string; username: string; displayName: string | null; avatarUrl: string | null };
-
 /** Accounts matching the query, shaped like the search screen's profile rows. */
 export const searchUsers = (q: string) =>
-  api<{ data: { users: SearchUser[] } }>(`/search?type=users&limit=20&q=${enc(q)}`, { auth: true }).then((r) =>
+  api<ApiUserSearch>(`/search?type=users&limit=20&q=${enc(q)}`, { auth: true }).then((r) =>
     r.data.users.map((u) => ({
       username: u.username,
       subtitle: u.displayName ?? '',
