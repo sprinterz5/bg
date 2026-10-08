@@ -192,5 +192,5 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 24 },
   storiesGap: { marginBottom: 20.5 },
   postingGap: { marginBottom: 32 },
-  separator: { height: 27 },
+  separator: { height: 29 },
 });
