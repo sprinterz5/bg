@@ -11,7 +11,7 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { AnimatedText, INTER_FAMILIES, Text, TextInput } from '@/components/text';
 import { searchUsers } from '@/lib/users';
-import { EXPLORE_FEED, EXPLORE_TOPICS, RESULT_TABS, SEARCH_ARTICLES, SEARCH_PROFILES, SEARCH_SUGGESTIONS, type Author, type ExplorePost } from '@/mock/data';
+import { EXPLORE_FEED, EXPLORE_TOPICS, QUICK_RESULTS, RESULT_TABS, SEARCH_ARTICLES, SEARCH_PROFILES, SEARCH_SUGGESTIONS, type Author, type ExplorePost } from '@/mock/data';
 import { colors, motion } from '@/theme';
 import { push } from '@/lib/nav';
 
@@ -230,7 +230,7 @@ export default function Search() {
           <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
             <View style={styles.listLayer}>
               {RESULT_TABS[resultTab] === 'Quick' ? (
-                <FlatList key="quick" data={results} keyExtractor={(p) => p.id} renderItem={renderCard} contentContainerStyle={styles.cardsContent} showsVerticalScrollIndicator={false} />
+                <FlatList key="quick" data={QUICK_RESULTS} keyExtractor={(p) => p.id} renderItem={renderCard} contentContainerStyle={styles.cardsContent} showsVerticalScrollIndicator={false} />
               ) : (
                 <FlatList key="rows" data={results} keyExtractor={(p) => p.id} renderItem={renderRow} contentContainerStyle={styles.rowsContent} showsVerticalScrollIndicator={false} />
               )}

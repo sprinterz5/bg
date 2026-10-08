@@ -38,7 +38,7 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
         <View style={styles.head}>
           {author ? <AuthorAvatar author={author} size={19.5} /> : <View style={styles.avatarStub} />}
           <Text style={styles.meta} numberOfLines={1}>
-            <Text style={styles.author}>{author ? displayName(author.username) : ''}</Text>
+            <Text style={styles.author}>{author ? (author.name ?? displayName(author.username)) : ''}</Text>
             {` ·  ${post.timeAgo}`}
           </Text>
         </View>

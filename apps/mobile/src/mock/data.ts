@@ -28,6 +28,8 @@ export type Author = {
   avatar: ImageSourcePropType | null;
   subtitle: string;
   verified?: boolean;
+  /** Display name where the design shows one (Explore rows: "Bill Gates"); otherwise derived from the username. */
+  name?: string;
 };
 
 export type Story = {
@@ -68,7 +70,7 @@ export type Article = {
 
 const bookgram: Author = { username: 'smarts', avatar: require('@/assets/mock/avatar-bookgram.jpg'), subtitle: 'Smarts', verified: true };
 const sam: Author = { username: 'sam_altman', avatar: require('@/assets/mock/avatar-sam.png'), subtitle: 'Recommended' };
-const nori: Author = { username: 'j_nori_k', avatar: require('@/assets/mock/avatar-nori.png'), subtitle: 'Recommended' };
+const nori: Author = { username: 'j_nori_k', avatar: require('@/assets/mock/avatar-nori-2.jpg'), subtitle: 'Recommended' };
 
 const mx: Author = { username: 'fintech_notes', avatar: require('@/assets/mock/avatar-fintech.png'), subtitle: 'Recommended' };
 const gadgets: Author = { username: 'gadget.daily', avatar: require('@/assets/mock/avatar-gadget.png'), subtitle: 'Recommended' };
@@ -143,9 +145,12 @@ export const ARTICLES: Record<string, Article> = {
   },
 };
 
-const miniBill: Author = { username: 'mini.bill_g', avatar: require('@/assets/mock/avatar-mini-bill.jpg'), subtitle: 'Recommended for you' };
+const miniBill: Author = { username: 'mini.bill_g', name: 'Bill Gates', avatar: require('@/assets/mock/avatar-mini-bill.jpg'), subtitle: 'Recommended for you' };
+// Frame 1198 Explore / search authors.
+const miniBoozie: Author = { username: 'mini_boozie', name: 'Mini Boozie', avatar: require('@/assets/mock/avatar-mini-boozie.jpg'), subtitle: 'Recommended' };
+const boss: Author = { username: 'boss', name: 'Boss', avatar: require('@/assets/mock/avatar-boss.jpg'), subtitle: 'Recommended' };
 const billijean: Author = { username: 'billijean', avatar: require('@/assets/mock/avatar-billijean.jpg'), subtitle: 'Recommended for you' };
-const dinara: Author = { username: 'dinara_satzhan', avatar: require('@/assets/mock/avatar-billijean.jpg'), subtitle: '' };
+const dinara: Author = { username: 'dinara_satzhan', avatar: require('@/assets/mock/avatar-dinara.jpg'), subtitle: '' };
 
 /** Home stories row (Frame 1049): the circles show the story photo; the last one is already watched. */
 export const HOME_STORIES: Story[] = [
@@ -157,6 +162,20 @@ export const HOME_STORIES: Story[] = [
 ];
 
 export const FEED: Post[] = [
+  // Frame 1198 home card.
+  {
+    id: 'p-nighty',
+    author: miniBill,
+    image: require('@/assets/mock/post-habits.jpg'),
+    title: '3 Nighty Habits that Helped Steve Jobs to Rest and Charge',
+    caption: 'and these are not simple ones like meditation or journaling, these are really the unique ones',
+    timeAgo: '1 day ago',
+    likes: 520,
+    comments: 14,
+    shares: 39,
+    views: 520,
+    articleId: 'journal',
+  },
   {
     id: 'p-kindergarten',
     author: miniBill,
@@ -287,15 +306,36 @@ export type ExplorePost = {
 };
 
 export const EXPLORE_FEED: ExplorePost[] = [
-  // The two posts from the Explore frame (THIS.svg); they open existing mock articles.
+  // Frame 1198 Explore rows: Bill Gates, Mini Boozie, Boss.
   {
     id: 'e-kindergarten',
     image: require('@/assets/mock/explore-kindergarten.jpg'),
-    title: 'Wiggling is Welcome in This Kindergarten Classroom',
+    title: 'Wiggling is Welcome in This Kindergarten Classroom in Germany',
     lead: 'Kim',
     rest: ' Broomer`s classroom is one of the most unique and supportive learning environments I`ve ever seen in life',
-    timeAgo: '1 day ago',
+    timeAgo: '2d ago',
     reads: '100K',
+    articleId: 'tinkov',
+  },
+  {
+    id: 'e-nighty',
+    image: require('@/assets/mock/post-habits.jpg'),
+    title: '3 Nighty Habits that Helped Steve Jobs Rest and Recharge',
+    lead: '',
+    rest: 'and these are not simple ones like meditation or journaling.',
+    timeAgo: '3mon ago',
+    reads: '3K',
+    articleId: 'tinkov',
+  },
+  {
+    id: 'e-mason',
+    image: require('@/assets/mock/story-mason.jpg'),
+    // Cut off in the design ("…in Such Sl"); the end is made up.
+    title: 'Why Mason Thames Started to Play in Such Slow Films',
+    lead: '',
+    rest: 'He turned down two blockbusters this year. In a long talk he explains why quiet roles teach him more.',
+    timeAgo: '2w ago',
+    reads: '12K',
     articleId: 'tinkov',
   },
   {
@@ -491,19 +531,62 @@ export const EXPLORE_FEED: ExplorePost[] = [
 ];
 
 /** Figma 3170:2017 — article results for "Steve Jobs". */
+// Frame 1198 search results (Related / Detailed).
 export const SEARCH_ARTICLES: ExplorePost[] = [
-  EXPLORE_FEED[4],
   {
-    id: 'r2',
-    image: require('@/assets/mock/explore-habits.png'),
-    title: 'All the 7 Extraordinary Habits Steve Practiced as a teenager',
-    lead: 'All the',
-    rest: ' 7 extraordinary habits Steve practiced as a teenager and in his 20s. And how this is connected with the products we use today',
-    timeAgo: '2 days ago',
-    reads: '310K',
-    articleId: 'steveIve',
+    id: 'r-craziness',
+    image: require('@/assets/mock/result-craziness.jpg'),
+    title: 'Steve Jobs` Craziness is Actually His Genius as He Explains Himself',
+    lead: '',
+    rest: '“Genius and madness - how interconnected these things are” - one interview from 1995 that explains a lot.',
+    timeAgo: '2d ago',
+    articleId: 'tinkov',
   },
-  ...EXPLORE_FEED.slice(2, 4),
+  EXPLORE_FEED[1],
+  {
+    id: 'r-madness',
+    image: require('@/assets/mock/result-madness.jpg'),
+    title: 'Steve Jobs` Madness is Actually His Genius as He Explains Himself',
+    lead: '',
+    rest: '“Genius and maddness - how closely related these two traits are”, in his own words.',
+    timeAgo: '2w ago',
+    articleId: 'tinkov',
+  },
+  EXPLORE_FEED[2],
+];
+
+/** Frame 1198 search results, Quick tab: the big picture cards. */
+export const QUICK_RESULTS: ExplorePost[] = [
+  {
+    id: 'q-k2',
+    image: require('@/assets/mock/quick-k2.jpg'),
+    title: 'K2- Apple`s newest docu - mentary about climbers',
+    lead: '',
+    rest: 'A 6 series documentary which discovers the climbing of K2 mountain. 20 days of frosty climbing.',
+    timeAgo: '3 months',
+    reads: '1M',
+    articleId: 'tinkov',
+  },
+  {
+    id: 'q-netflix',
+    image: require('@/assets/mock/quick-netflix.jpg'),
+    title: 'What Went Wrong With These Netflix “SuperHits”',
+    lead: '',
+    rest: 'Netflix poured so much effort into making these shows successful, but they turned into a failure',
+    timeAgo: '3 months',
+    reads: '1M',
+    articleId: 'tinkov',
+  },
+  {
+    id: 'q-winter',
+    image: require('@/assets/mock/quick-winter-k2.jpg'),
+    title: 'K2- Apple`s newest docu - mentary about climbers',
+    lead: '',
+    rest: 'A 6 series documentary which discovers the climbing of K2 mountain. 20 days of frosty climbing.',
+    timeAgo: '3 months',
+    reads: '1M',
+    articleId: 'tinkov',
+  },
 ];
 
 /** Figma 3158:793 — query completions. */
@@ -760,6 +843,14 @@ function articleFrom(id: string, author: Author, cover: ImageSourcePropType, tit
 
 // Body source per post: a key into BODIES, or an existing hand-written article.
 const BODY_OF: Record<string, string> = {
+  'p-nighty': 'habits',
+  'e-nighty': 'habits',
+  'e-mason': 'spiderman',
+  'r-craziness': 'stevePresentations',
+  'r-madness': 'sayingNo',
+  'q-k2': 'marathon',
+  'q-netflix': 'spiderman',
+  'q-winter': 'lakes',
   'p-kindergarten': 'kindergarten',
   'p-foldables': 'foldables',
   p1: 'journal',
@@ -793,6 +884,13 @@ const BODY_OF: Record<string, string> = {
 
 // Explore cards have no author line; their articles still need one.
 const EXPLORE_AUTHOR: Record<string, Author> = {
+  'e-nighty': miniBoozie,
+  'e-mason': boss,
+  'r-craziness': miniBill,
+  'r-madness': boss,
+  'q-k2': mx,
+  'q-netflix': gadgets,
+  'q-winter': mx,
   'e-kindergarten': miniBill,
   'e-nurse': billijean,
   e1: mx,
@@ -836,9 +934,18 @@ for (const p of FEED) {
   p.articleId = id;
   TIME_AGO[id] = p.timeAgo;
 }
-for (const p of [...EXPLORE_FEED, ...SEARCH_ARTICLES]) {
+// Counters shown in the Frame 1198 rows (likes, shares).
+const ROW_STATS: Record<string, [number, number]> = {
+  'e-kindergarten': [520, 39],
+  'e-nighty': [3000, 212],
+  'r-craziness': [520, 39],
+  'r-madness': [3000, 212],
+};
+
+for (const p of [...EXPLORE_FEED, ...SEARCH_ARTICLES, ...QUICK_RESULTS]) {
   const id = `a-${p.id}`;
-  if (!ARTICLES[id]) articleFrom(id, EXPLORE_AUTHOR[p.id] ?? bookgram, p.image, p.title, bodyFor(p.id));
+  const [likes, shares] = ROW_STATS[p.id] ?? [];
+  if (!ARTICLES[id]) articleFrom(id, EXPLORE_AUTHOR[p.id] ?? bookgram, p.image, p.title, bodyFor(p.id), likes, undefined, shares);
   p.articleId = id;
   TIME_AGO[id] ??= p.timeAgo;
 }
