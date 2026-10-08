@@ -112,11 +112,11 @@ const styles = StyleSheet.create({
   // counters (SF Pro Semibold 13/16) 23 under the excerpt: eye 25x18 at x 16.85, "520" at x 50, send at x 106.65,
   // its count at x 133, bookmark at x 363.3
   actions: { height: 16, marginTop: 18 },
-  views: { position: 'absolute', left: 16.85, top: -0.75 },
-  send: { position: 'absolute', left: 106.65, top: 0.3 },
+  views: { position: 'absolute', left: 16.35, top: -0.75 },
+  send: { position: 'absolute', left: 106.15, top: 0.3 },
   bookmark: { position: 'absolute', left: 363.27, top: -1.38 },
   count: { position: 'absolute', top: 0, fontSize: 13.8, lineHeight: 17, fontWeight: '600', color: colors.text },
-  viewsCount: { left: 50 },
-  sendCount: { left: 133 },
-  time: { marginTop: 13, marginLeft: 17.5, fontFamily: INTER_FAMILIES['400'], fontSize: 11.5, lineHeight: 16, color: '#788690' },
+  viewsCount: { left: 49.5 },
+  sendCount: { left: 132.5 },
+  time: { marginTop: 13, marginLeft: 17, fontFamily: INTER_FAMILIES['400'], fontSize: 11.5, lineHeight: 16, color: '#788690' },
 });
