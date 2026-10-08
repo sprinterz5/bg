@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   excerpt: { marginTop: 10, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 14.15, lineHeight: 19.4, letterSpacing: 14.15 * 0.005, color: EXCERPT },
   // counters (SF Pro Semibold 13/16) 23 under the excerpt: eye 25x18 at x 16.85, "520" at x 50, send at x 106.65,
   // its count at x 133, bookmark at x 363.3
-  actions: { height: 16, marginTop: 14 },
+  actions: { height: 16, marginTop: 18 },
   views: { position: 'absolute', left: 16.85, top: -0.75 },
   send: { position: 'absolute', left: 106.65, top: 0.3 },
   bookmark: { position: 'absolute', left: 363.27, top: -1.38 },
