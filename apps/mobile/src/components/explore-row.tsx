@@ -6,6 +6,7 @@ import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
 import { ARTICLES, displayName, type ExplorePost } from '@/mock/data';
 import { colors } from '@/theme';
 import { openArticle } from '@/lib/article-origin';
+import { openProfile } from '@/lib/nav';
 import { AuthorAvatar } from './author-row';
 import { Icon } from './icon';
 import { PostActions } from './post-actions';
@@ -40,13 +41,13 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
   return (
     <View style={styles.row}>
       <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={post.title}>
-        <View style={styles.head}>
+        <Pressable onPress={() => author && openProfile(author.username)} hitSlop={6} accessibilityRole="link" style={styles.head}>
           {author ? <AuthorAvatar author={author} size={19.5} /> : <View style={styles.avatarStub} />}
           <Text style={styles.meta} numberOfLines={1}>
             <Text style={styles.author}>{author ? (author.name ?? displayName(author.username)) : ''}</Text>
             {` ·  ${post.timeAgo}`}
           </Text>
-        </View>
+        </Pressable>
         <Text style={styles.title} numberOfLines={3}>
           {post.title}
         </Text>
@@ -90,7 +91,7 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
 const styles = StyleSheet.create({
   row: { paddingTop: 31 },
   // avatar 19.5 at x 22; "Bill Gates · 2d ago" (Inter 11.75, -0.5%) from x 49.6, its line 1.6 under the avatar top
-  head: { height: 19.5, flexDirection: 'row', paddingLeft: 22 },
+  head: { height: 19.5, flexDirection: 'row', marginLeft: 22, alignSelf: 'flex-start' },
   avatarStub: { width: 19.5, height: 19.5, borderRadius: 9.75, backgroundColor: colors.surfaceSoft },
   meta: { marginLeft: 8.1, marginTop: 1.6, fontFamily: INTER_FAMILIES['400'], fontSize: 11.75, lineHeight: 14.2, letterSpacing: 11.75 * -0.005, color: GRAY },
   author: { color: colors.text },

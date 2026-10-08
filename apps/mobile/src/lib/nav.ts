@@ -41,3 +41,8 @@ export function backWhenReady() {
   if (wait > 0) setTimeout(() => router.back(), wait + 10);
   else router.back();
 }
+
+/** Someone's profile (the screen shows "my" profile layout when it is the signed-in user). */
+export function openProfile(username: string) {
+  push(`/user/${encodeURIComponent(username)}` as Href);
+}

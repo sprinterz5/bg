@@ -11,6 +11,7 @@ import { PostActions } from './post-actions';
 import { PressableScale } from './pressable-scale';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
+import { openProfile } from '@/lib/nav';
 
 const EXCERPT = '#6B6B6B';
 
@@ -35,15 +36,17 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   return (
     <View>
       <View style={styles.head}>
-        <AuthorAvatar author={post.author} size={31} />
-        <View style={styles.names}>
-          <Text style={styles.name} numberOfLines={1}>
-            {post.author.username}
-          </Text>
-          <Text style={styles.sub} numberOfLines={1}>
-            Recommended for you
-          </Text>
-        </View>
+        <Pressable onPress={() => openProfile(post.author.username)} hitSlop={6} accessibilityRole="link" accessibilityLabel={`${post.author.username} profile`} style={styles.author}>
+          <AuthorAvatar author={post.author} size={31} />
+          <View style={styles.names}>
+            <Text style={styles.name} numberOfLines={1}>
+              {post.author.username}
+            </Text>
+            <Text style={styles.sub} numberOfLines={1}>
+              Recommended for you
+            </Text>
+          </View>
+        </Pressable>
         <PressableScale onPress={() => setMenu(true)} hitSlop={12} accessibilityLabel="More" style={styles.menu}>
           <Icon name="postMenu" width={20} height={10.5} />
         </PressableScale>
@@ -96,7 +99,8 @@ const styles = StyleSheet.create({
   // avatar 31 at x 11; username (Inter SemiBold 12.6) at x 52 from +0.5, "Recommended for you" (Inter 11) from +16.5;
   // menu (two bars, 20x10.5) at x 358, +9.5
   head: { height: 31, flexDirection: 'row', paddingLeft: 11 },
-  names: { marginLeft: 10, marginTop: 0.5, flex: 1 },
+  author: { flexDirection: 'row', maxWidth: 300 },
+  names: { marginLeft: 10, marginTop: 0.5 },
   name: { fontFamily: INTER_FAMILIES['600'], fontSize: 12.6, lineHeight: 15.25, letterSpacing: 12.6 * 0.035, color: colors.text },
   sub: { marginTop: 0.75, fontFamily: INTER_FAMILIES['400'], fontSize: 11, lineHeight: 13.3, letterSpacing: 11 * 0.02, color: colors.text },
   menu: { position: 'absolute', left: 358, top: 9.5 },

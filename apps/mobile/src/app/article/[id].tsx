@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, StyleSheet, View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -37,7 +37,7 @@ import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { AnimatedText, Text } from '@/components/text';
 import { articleOrigin, type ArticleOrigin } from '@/lib/article-origin';
-import { backWhenReady } from '@/lib/nav';
+import { backWhenReady, openProfile } from '@/lib/nav';
 
 // Values from Figma frames 3110:157 (page 1) and 3110:311 (page 2); design status bar = 47.
 const LINE_HEIGHT = 23;
@@ -257,13 +257,13 @@ function Reader({ article }: { article: Article }) {
             cover landed made the card and the cover blink on Android. */}
         <Glass blurTarget={targetRef} style={styles.glassFill}>
           <View style={[styles.cardRow, { width: CARD_W_2 - 14 }]}>
-            <View style={styles.author}>
+            <Pressable onPress={() => openProfile(article.author.username)} hitSlop={6} accessibilityRole="link" style={styles.author}>
               <AuthorAvatar author={article.author} size={32} />
               <View>
                 <Text style={styles.authorName}>{article.author.username}</Text>
                 <Text style={styles.authorSub}>{following ? 'You Follow' : 'Suggested'}</Text>
               </View>
-            </View>
+            </Pressable>
             <View style={styles.cardRight}>
               {pages && pages.length > 1 ? <PageDots count={pages.length} width={W} scrollX={scrollX} /> : null}
               <FollowPill following={following} onPress={toggleFollow} />
