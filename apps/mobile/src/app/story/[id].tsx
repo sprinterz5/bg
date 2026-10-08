@@ -436,8 +436,8 @@ export default function StoryViewer() {
         </View>
       </GestureDetector>
 
-      <PressableScale onPress={close} hitSlop={14} accessibilityLabel="Close" style={[styles.back, { top: insets.top + 13 }]}>
-        <Icon name="storyBack" width={15.7} height={27.06} />
+      <PressableScale onPress={close} hitSlop={14} accessibilityLabel="Close" style={[styles.close, { top: insets.top + 7 }]}>
+        <Icon name="storyClose" width={24} height={24} />
       </PressableScale>
 
       <KeyboardStickyView style={[styles.bar, { height: barH }]} offset={{ closed: 0, opened: barH - 63 }}>
@@ -621,7 +621,8 @@ const styles = StyleSheet.create({
   ringPhoto: { width: RING_BASE, height: RING_BASE },
   page: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000' },
   half: { position: 'absolute', top: 0 },
-  back: { position: 'absolute', left: 15.775 },
+  // Frame 1198: ✕ (22 + its 2px stroke) at x 349, y 7 under the status bar.
+  close: { position: 'absolute', right: 17 },
   info: { position: 'absolute', left: 14, right: 54 },
   // avatar 28; name 14/600 baseline +12, time 12 baseline +25.2; caption line 18.9 under the avatar
   author: { flexDirection: 'row', height: 28 },

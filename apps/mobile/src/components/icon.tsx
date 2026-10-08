@@ -49,6 +49,7 @@ const icons = {
   coverTileFade: require('@/assets/icons/cover-tile-fade.svg'),
   storyRingSeen: require('@/assets/icons/story-ring-seen.svg'),
   storyBack: require('@/assets/icons/story-back.svg'),
+  storyClose: require('@/assets/icons/story-close.svg'),
   storyHeart: require('@/assets/icons/story-heart.svg'),
   headerBell: require('@/assets/icons/header-bell.svg'),
   verified: require('@/assets/icons/verified.png'),
