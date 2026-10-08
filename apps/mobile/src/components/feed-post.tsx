@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   name: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.6, lineHeight: 16.5, letterSpacing: 13.6 * 0.035, color: colors.text },
   sub: { marginTop: 0.75, fontFamily: INTER_FAMILIES['400'], fontSize: 11.5, lineHeight: 14, letterSpacing: 11.5 * 0.02, color: colors.text },
   menu: { position: 'absolute', left: 358, top: 9.5 },
-  media: { height: 265, marginTop: 8, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
+  media: { height: 265, marginTop: 7, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   // Sentinel Bold 20/27 in the design; Source Serif 4 Bold in the app (see fonts.headline).
   title: { marginTop: 17.5, marginLeft: 14, width: 352, fontFamily: fonts.headline, fontSize: 21, lineHeight: 28.5, letterSpacing: 21 * -0.014, color: colors.text },
@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
   count: { position: 'absolute', top: 0, fontSize: 13.8, lineHeight: 17, fontWeight: '600', color: colors.text },
   viewsCount: { left: 50 },
   sendCount: { left: 133 },
-  time: { marginTop: 18, marginLeft: 18, fontFamily: INTER_FAMILIES['400'], fontSize: 11.1, lineHeight: 16, color: '#788690' },
+  time: { marginTop: 20, marginLeft: 18, fontFamily: INTER_FAMILIES['400'], fontSize: 11.1, lineHeight: 16, color: '#788690' },
 });
