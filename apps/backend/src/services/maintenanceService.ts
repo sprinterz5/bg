@@ -32,13 +32,12 @@ export async function recomputeRecentBookSimilarities(app: FastifyInstance, limi
 }
 
 export async function runMaintenanceJobs(app: FastifyInstance, options: { bookLimit?: number } = {}) {
-  const [stories, books] = await Promise.all([
-    expireOldStories(app),
-    recomputeRecentBookSimilarities(app, options.bookLimit ?? 50)
-  ]);
+  // Book similarity is off together with the book routes (see app.ts).
+  // const books = await recomputeRecentBookSimilarities(app, options.bookLimit ?? 50);
+  void options;
+  const stories = await expireOldStories(app);
 
   return {
-    ...stories,
-    ...books
+    ...stories
   };
 }

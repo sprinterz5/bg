@@ -23,7 +23,7 @@ import { aiRoutes } from "./routes/ai.js";
 import { authRoutes } from "./routes/auth.js";
 import { blockRoutes } from "./routes/blocks.js";
 import { bookmarkRoutes } from "./routes/bookmarks.js";
-import { bookRoutes } from "./routes/books.js";
+// import { bookRoutes } from "./routes/books.js";
 import { chatRoutes } from "./routes/chats.js";
 import { commentRoutes } from "./routes/comments.js";
 import { deviceTokenRoutes } from "./routes/deviceTokens.js";
@@ -39,11 +39,11 @@ import { moderationRoutes } from "./routes/moderation.js";
 import { noteRoutes } from "./routes/notes.js";
 import { notificationRoutes } from "./routes/notifications.js";
 import { reportRoutes } from "./routes/reports.js";
-import { reviewRoutes } from "./routes/reviews.js";
-import { readingNowRoutes } from "./routes/readingNow.js";
+// import { reviewRoutes } from "./routes/reviews.js";
+// import { readingNowRoutes } from "./routes/readingNow.js";
 import { searchRoutes } from "./routes/search.js";
 import { shareRoutes } from "./routes/share.js";
-import { shelfRoutes } from "./routes/shelves.js";
+// import { shelfRoutes } from "./routes/shelves.js";
 import { storyRoutes } from "./routes/stories.js";
 import { userRoutes } from "./routes/users.js";
 import { isMediaKeyApproved, readRemoteMediaObject } from "./services/mediaService.js";
@@ -153,6 +153,8 @@ export async function buildApp() {
   await app.register(swaggerPlugin);
   setupRealtime(app);
 
+  // Books, shelves, reviews and "reading now" are switched off while the concept is reworked (the app is about
+  // articles, stories and chat now). Code and tables stay; uncomment the routes below to bring them back.
   await app.register(healthRoutes);
   await app.register(adminRoutes);
   await app.register(aiRoutes);
@@ -161,12 +163,12 @@ export async function buildApp() {
   await app.register(userRoutes);
   await app.register(blockRoutes);
   await app.register(deviceTokenRoutes);
-  await app.register(bookRoutes);
+  // await app.register(bookRoutes);
   await app.register(bookmarkRoutes);
-  await app.register(readingNowRoutes);
-  await app.register(shelfRoutes);
+  // await app.register(readingNowRoutes);
+  // await app.register(shelfRoutes);
   await app.register(articleRoutes);
-  await app.register(reviewRoutes);
+  // await app.register(reviewRoutes);
   await app.register(commentRoutes);
   await app.register(searchRoutes);
   await app.register(shareRoutes);

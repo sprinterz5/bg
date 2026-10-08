@@ -134,31 +134,32 @@ describe("Puzzle API integration", () => {
     const bobId = bobRegister.payload.user.id as string;
     const bobToken = bobRegister.payload.accessToken as string;
 
-    const book = await app.prisma.book.upsert({
-      where: { isbn13: `9790000${suffix.slice(-6).padStart(6, "0")}` },
-      update: {},
-      create: {
-        isbn13: `9790000${suffix.slice(-6).padStart(6, "0")}`,
-        title: `Integration Book ${suffix}`,
-        authors: ["Puzzle Test"],
-        description: "A generated book used by the integration suite.",
-        thumbnailUrl: "https://example.com/book.jpg",
-        categories: ["science fiction", "ideas"],
-        source: "MANUAL"
-      }
-    });
-
-    const shelf = await json(app, {
-      method: "PUT",
-      url: `/me/shelves/${book.id}`,
-      token: aliceToken,
-      body: {
-        status: "READING",
-        progressPercent: 25
-      }
-    });
-    expect(shelf.response.statusCode).toBe(200);
-    expect(shelf.payload.status).toBe("READING");
+    // Books / shelves / reading-now are switched off (app.ts); bring this back with them.
+    // const book = await app.prisma.book.upsert({
+    //   where: { isbn13: `9790000${suffix.slice(-6).padStart(6, "0")}` },
+    //   update: {},
+    //   create: {
+    //     isbn13: `9790000${suffix.slice(-6).padStart(6, "0")}`,
+    //     title: `Integration Book ${suffix}`,
+    //     authors: ["Puzzle Test"],
+    //     description: "A generated book used by the integration suite.",
+    //     thumbnailUrl: "https://example.com/book.jpg",
+    //     categories: ["science fiction", "ideas"],
+    //     source: "MANUAL"
+    //   }
+    // });
+    //
+    // const shelf = await json(app, {
+    //   method: "PUT",
+    //   url: `/me/shelves/${book.id}`,
+    //   token: aliceToken,
+    //   body: {
+    //     status: "READING",
+    //     progressPercent: 25
+    //   }
+    // });
+    // expect(shelf.response.statusCode).toBe(200);
+    // expect(shelf.payload.status).toBe("READING");
 
     const bobFollowsAlice = await json(app, {
       method: "POST",
@@ -167,13 +168,13 @@ describe("Puzzle API integration", () => {
     });
     expect(bobFollowsAlice.response.statusCode).toBe(200);
 
-    const readingNow = await json(app, {
-      method: "GET",
-      url: "/reading-now/friends?limit=10",
-      token: bobToken
-    });
-    expect(readingNow.response.statusCode).toBe(200);
-    expect(readingNow.payload.data.some((item: any) => item.user.id === aliceId && item.book.id === book.id)).toBe(true);
+    // const readingNow = await json(app, {
+    //   method: "GET",
+    //   url: "/reading-now/friends?limit=10",
+    //   token: bobToken
+    // });
+    // expect(readingNow.response.statusCode).toBe(200);
+    // expect(readingNow.payload.data.some((item: any) => item.user.id === aliceId && item.book.id === book.id)).toBe(true);
 
     const article = await json(app, {
       method: "POST",
@@ -355,27 +356,29 @@ describe("Puzzle API integration", () => {
       token: bobToken
     });
     expect(home.response.statusCode).toBe(200);
-    expect(home.payload.readingNow.friends.some((item: any) => item.user.id === aliceId)).toBe(true);
+    // Alice no longer puts a book on her shelf (books are off), so she isn't "reading now".
+    // expect(home.payload.readingNow.friends.some((item: any) => item.user.id === aliceId)).toBe(true);
     expect(home.payload.feed.data.length).toBeGreaterThanOrEqual(1);
 
-    const similarBook = await app.prisma.book.create({
-      data: {
-        isbn13: `9780001${suffix.slice(-6).padStart(6, "0")}`,
-        title: `Integration Similar Book ${suffix}`,
-        authors: ["Puzzle Test"],
-        description: "A generated similar book used by the integration suite.",
-        categories: ["science fiction", "ideas"],
-        source: "MANUAL"
-      }
-    });
-
-    const similar = await json(app, {
-      method: "POST",
-      url: `/books/${book.id}/similar/recompute?limit=10`,
-      token: aliceToken
-    });
-    expect(similar.response.statusCode).toBe(200);
-    expect(similar.payload.data.some((item: any) => item.book.id === similarBook.id)).toBe(true);
+    // Similar books: off with the book routes.
+    // const similarBook = await app.prisma.book.create({
+    //   data: {
+    //     isbn13: `9780001${suffix.slice(-6).padStart(6, "0")}`,
+    //     title: `Integration Similar Book ${suffix}`,
+    //     authors: ["Puzzle Test"],
+    //     description: "A generated similar book used by the integration suite.",
+    //     categories: ["science fiction", "ideas"],
+    //     source: "MANUAL"
+    //   }
+    // });
+    //
+    // const similar = await json(app, {
+    //   method: "POST",
+    //   url: `/books/${book.id}/similar/recompute?limit=10`,
+    //   token: aliceToken
+    // });
+    // expect(similar.response.statusCode).toBe(200);
+    // expect(similar.payload.data.some((item: any) => item.book.id === similarBook.id)).toBe(true);
 
     const deviceToken = `apns-${suffix}-${"x".repeat(32)}`;
     const registerDeviceToken = await json(app, {
@@ -525,7 +528,8 @@ describe("Puzzle API integration", () => {
     });
     expect(maintenanceJob.response.statusCode).toBe(200);
     expect(typeof maintenanceJob.payload.expiredStories).toBe("number");
-    expect(typeof maintenanceJob.payload.recomputedBooks).toBe("number");
+    // Book similarity is off with the book routes.
+    // expect(typeof maintenanceJob.payload.recomputedBooks).toBe("number");
 
     const adminJobRuns = await json(app, {
       method: "GET",

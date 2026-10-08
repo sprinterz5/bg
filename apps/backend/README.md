@@ -2,6 +2,8 @@
 
 Backend for Bookgram: a social network around books, articles, reviews, reading shelves, stories, notes, chats, and moderated Explore.
 
+> Books, shelves, reviews and "reading now" are switched off for now (routes commented out in `src/app.ts`; tables and code stay): the app is about articles, stories and chat. The `/books`, `/me/shelves`, `/reviews` and `/reading-now` endpoints below return 404 until they are re-enabled.
+
 ## Stack
 
 - Node.js + TypeScript
