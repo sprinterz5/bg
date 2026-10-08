@@ -746,5 +746,10 @@ describe("Puzzle API integration", () => {
       }
     });
     expect(logoutAll.response.statusCode).toBe(200);
+
+    const deleteBob = await json(app, { method: "DELETE", url: "/users/me", token: bobToken });
+    expect(deleteBob.response.statusCode).toBe(200);
+    const bobGone = await json(app, { method: "GET", url: `/users/${bobUsername}` });
+    expect(bobGone.response.statusCode).toBe(404);
   });
 });

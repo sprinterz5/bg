@@ -166,6 +166,13 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
     );
   });
 
+  // Account deletion (required by the App Store and Google Play). Everything the user owns cascades in the
+  // schema; moderation and notification references fall back to null. Uploaded files stay in storage.
+  app.delete("/users/me", { preHandler: [app.authenticate] }, async (request) => {
+    await app.prisma.user.delete({ where: { id: request.user.sub } });
+    return { ok: true };
+  });
+
   app.post("/users/:id/follow", { preHandler: [app.authenticate] }, async (request, reply) => {
     const { id } = z.object({ id: z.string().uuid() }).parse(request.params);
     if (id === request.user.sub) {

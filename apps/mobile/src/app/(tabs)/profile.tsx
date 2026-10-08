@@ -9,7 +9,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
 import { Text } from '@/components/text';
-import { loadProfile } from '@/lib/users';
+import { deleteAccount, loadProfile } from '@/lib/users';
 import type { Profile as ProfileData } from '@/mock/data';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
@@ -42,10 +42,25 @@ export default function Profile() {
     }, [username]),
   );
 
-  // No settings screen in the design yet: the gear opens a system sheet with Log out.
+  // Account deletion is required by the stores; asked twice since it can't be undone.
+  const confirmDelete = () =>
+    Alert.alert('Delete account?', 'Your profile, posts, stories and messages will be deleted for good.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () =>
+          deleteAccount()
+            .then(signOut)
+            .catch(() => Alert.alert("Couldn't delete the account", 'Check the connection and try again.')),
+      },
+    ]);
+
+  // No settings screen in the design yet: the gear opens a system sheet with Log out and Delete account.
   const openSettings = () =>
     Alert.alert(user?.username ?? '', undefined, [
-      { text: 'Log out', style: 'destructive', onPress: signOut },
+      { text: 'Log out', onPress: signOut },
+      { text: 'Delete account', style: 'destructive', onPress: confirmDelete },
       { text: 'Cancel', style: 'cancel' },
     ]);
 

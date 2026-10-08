@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { QUALITY_PRIOR } from "./contentScoreService.js";
 
 type FeedItem = {
   targetType: "ARTICLE" | "REVIEW";
@@ -9,20 +10,32 @@ type FeedItem = {
   publishedAt: Date;
 };
 
-function normalize(values: string[]) {
-  return new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean));
+// "#Machine-Learning", "machine learning" and "machine_learning" are one interest; a trailing plural "s" too.
+function canonical(value: string) {
+  const v = value.trim().toLowerCase().replace(/^#/, "").replace(/[\s_-]+/g, " ").trim();
+  return v.length > 3 && v.endsWith("s") && !v.endsWith("ss") ? v.slice(0, -1) : v;
 }
 
-function interestScore(item: FeedItem, interests: string[]) {
+function normalize(values: string[]) {
+  return new Set(values.map(canonical).filter(Boolean));
+}
+
+// 12 per tag that matches an interest; 6 when one only contains the other ("ai" never counts that way:
+// both sides need 4+ letters), e.g. "startup" ~ "startup funding".
+export function interestScore(item: Pick<FeedItem, "tags" | "categories">, interests: string[]) {
   const normalizedInterests = normalize(interests);
   if (normalizedInterests.size === 0) {
     return 0;
   }
 
-  return [...normalize([...item.tags, ...item.categories])].reduce(
-    (score, value) => score + (normalizedInterests.has(value) ? 12 : 0),
-    0
-  );
+  return [...normalize([...item.tags, ...item.categories])].reduce((score, value) => {
+    if (normalizedInterests.has(value)) return score + 12;
+    if (value.length < 4) return score;
+    for (const interest of normalizedInterests) {
+      if (interest.length >= 4 && (value.includes(interest) || interest.includes(value))) return score + 6;
+    }
+    return score;
+  }, 0);
 }
 
 function ageHours(publishedAt: Date) {
@@ -106,7 +119,7 @@ export async function scoreFeedItems<T extends FeedItem>(
         socialBoost +
         interestScore(item, interests) +
         recencyScore(item.publishedAt) +
-        (stats?.qualityScore ?? 0) * 0.22 +
+        (stats?.qualityScore ?? QUALITY_PRIOR) * 0.22 +
         trending * 0.35 -
         (stats?.spamScore ?? 0) * 0.5 +
         behavioralBoost;
@@ -118,7 +131,7 @@ export async function scoreFeedItems<T extends FeedItem>(
           socialBoost,
           interestBoost: interestScore(item, interests),
           recencyBoost: recencyScore(item.publishedAt),
-          qualityScore: stats?.qualityScore ?? 0,
+          qualityScore: stats?.qualityScore ?? QUALITY_PRIOR,
           trendingScore: trending,
           spamPenalty: stats?.spamScore ?? 0
         }

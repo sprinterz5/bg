@@ -22,6 +22,9 @@ function toContentTarget(targetType: FeedEventTargetType | string): ContentScore
   return targetType === "ARTICLE" || targetType === "REVIEW" ? targetType : null;
 }
 
+export const QUALITY_PRIOR = 35;
+const QUALITY_PRIOR_VIEWS = 30;
+
 function scoreFromStats(stats: {
   impressions: number;
   opens: number;
@@ -55,12 +58,12 @@ function scoreFromStats(stats: {
       (stats.shares / impressions) * 90 -
       spamScore * 0.35
   );
+  // Rates over a handful of views are noise (1 view + 1 like would be a perfect post): the quality moves away
+  // from the neutral prior only as impressions pile up (half way at QUALITY_PRIOR_VIEWS).
+  const confidence = stats.impressions / (stats.impressions + QUALITY_PRIOR_VIEWS);
   const qualityScore = clamp(
-    35 +
-      completionRate * 25 +
-      clamp(avgDwellSeconds / 180, 0, 1) * 18 +
-      likeRate * 80 +
-      saveRate * 90 -
+    QUALITY_PRIOR +
+      (completionRate * 25 + clamp(avgDwellSeconds / 180, 0, 1) * 18 + likeRate * 80 + saveRate * 90) * confidence -
       spamScore * 0.45
   );
   const trendingScore = clamp(

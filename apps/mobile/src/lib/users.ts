@@ -18,6 +18,8 @@ export const fetchConnections = (username: string, kind: 'followers' | 'followin
 export const setFollow = (userId: string, follow: boolean) =>
   api(`/users/${userId}/follow`, { method: follow ? 'POST' : 'DELETE', auth: true });
 
+export const deleteAccount = () => api('/users/me', { method: 'DELETE', auth: true });
+
 /** Design style: followers "1,5M" (comma), likes "1.2K" (dot). */
 export function formatCount(n: number, sep: ',' | '.' = ',') {
   const short = (v: number, unit: string) => `${(Math.floor(v * 10) / 10).toString().replace('.', sep)}${unit}`;
