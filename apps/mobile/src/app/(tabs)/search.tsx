@@ -1,4 +1,3 @@
-import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useFocusEffect, useScrollToTop, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -61,7 +60,7 @@ export default function Search() {
   const { width: W } = useWindowDimensions();
   const inputRef = useRef<TextInput>(null);
   // Tapping the Search tab again scrolls Explore back to the top.
-  const feedRef = useRef<FlashListRef<ExplorePost>>(null);
+  const feedRef = useRef<FlatList<ExplorePost>>(null);
   const scrollTarget = useMemo(() => ({ current: { scrollToTop: () => feedRef.current?.scrollToOffset({ offset: 0, animated: true }) } }), []);
   useScrollToTop(scrollTarget);
   const [mode, setMode] = useState<Mode>('explore');
@@ -187,7 +186,7 @@ export default function Search() {
         {mode === 'explore' ? (
           <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
             <View style={styles.listLayer}>
-              <FlashList
+              <FlatList
                 ref={feedRef}
                 data={EXPLORE_FEED}
                 keyExtractor={(p) => p.id}
@@ -231,9 +230,9 @@ export default function Search() {
           <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
             <View style={styles.listLayer}>
               {RESULT_TABS[resultTab] === 'Quick' ? (
-                <FlashList key="quick" data={results} keyExtractor={(p) => p.id} renderItem={renderCard} contentContainerStyle={styles.cardsContent} showsVerticalScrollIndicator={false} />
+                <FlatList key="quick" data={results} keyExtractor={(p) => p.id} renderItem={renderCard} contentContainerStyle={styles.cardsContent} showsVerticalScrollIndicator={false} />
               ) : (
-                <FlashList key="rows" data={results} keyExtractor={(p) => p.id} renderItem={renderRow} contentContainerStyle={styles.rowsContent} showsVerticalScrollIndicator={false} />
+                <FlatList key="rows" data={results} keyExtractor={(p) => p.id} renderItem={renderRow} contentContainerStyle={styles.rowsContent} showsVerticalScrollIndicator={false} />
               )}
             </View>
             <Tabs labels={RESULT_TABS} xs={RESULT_TAB_X} selected={resultTab} onSelect={setResultTab} />

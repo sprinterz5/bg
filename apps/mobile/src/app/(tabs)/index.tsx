@@ -1,9 +1,8 @@
-import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useScrollToTop } from 'expo-router';
-import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, RefreshControl, ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
-import { Gesture, GestureDetector, type GestureType } from 'react-native-gesture-handler';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInDown, FadeInUp, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -71,20 +70,18 @@ export default function Home() {
       }
     });
   const native = Gesture.Native();
-  const listGesture = Gesture.Simultaneous(pan, native);
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
-  const listRef = useRef<FlashListRef<Post>>(null);
+  const listRef = useRef<FlatList<Post>>(null);
   const scrollTarget = useMemo(
     () => ({ current: { scrollToTop: () => listRef.current?.scrollToOffset({ offset: IOS ? -top : 0, animated: true }) } }),
     [top],
   );
   useScrollToTop(scrollTarget);
 
-  // Posts scrolled into view must appear as they are, not fade in mid-scroll. A post animates in only the first
-  // time it is shown, while the screen opens or at the top (new post). (FlashList reuses the cell views of posts
-  // that left the screen; an entering animation only runs when a cell view is first created.)
+  // FlatList mounts posts lazily while scrolling and remounts ones it dropped off-screen: those must appear as they
+  // are, not fade in mid-scroll. A post animates in only on its first mount, while the screen opens or at the top (new post).
   const seen = useRef(new Set<string>());
   const introUntil = useRef<number | null>(null);
   const renderItem = useCallback(({ item, index }: { item: Post; index: number }) => {
@@ -107,20 +104,21 @@ export default function Home() {
     <View style={styles.root}>
       <PullSpinner pull={pull} threshold={THRESHOLD} refreshing={refreshing} top={top} />
       <Animated.View collapsable={false} style={[styles.list, listStyle]}>
-      {/* The native gesture goes on the scroll view itself (FlashList wraps it in a View): on a wrapping view
-          Android forwards touches to it and the scroll got stuck. */}
-      <ScrollGesture.Provider value={listGesture}>
-      <AnimatedFlashList
+      {/* The native gesture goes on the list itself: on a wrapping view Android forwards touches to it and the scroll got stuck. */}
+      <GestureDetector gesture={Gesture.Simultaneous(pan, native)}>
+      <Animated.FlatList
         ref={listRef}
         data={posts}
-        keyExtractor={(p: Post) => p.id}
+        keyExtractor={(p) => p.id}
         renderItem={renderItem}
-        renderScrollComponent={GestureScrollView}
         onScroll={onScroll}
         onEndReached={loadMore}
         onEndReachedThreshold={1.5}
-        drawDistance={900}
-        maintainVisibleContentPosition={{ disabled: true }}
+        // Posts are ~500pt tall: a few per batch keeps the JS thread free; Android detaches posts far off screen.
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={7}
+        removeClippedSubviews={!IOS}
         scrollEventThrottle={16}
         ListHeaderComponent={
           <>
@@ -135,11 +133,11 @@ export default function Home() {
         contentInset={IOS ? { top } : undefined}
         contentOffset={IOS ? { x: 0, y: -top } : undefined}
         scrollIndicatorInsets={IOS ? { top } : undefined}
-        contentContainerStyle={IOS ? styles.content : { ...styles.content, paddingTop: top }}
+        contentContainerStyle={[styles.content, IOS ? null : { paddingTop: top }]}
         showsVerticalScrollIndicator={false}
         refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
       />
-      </ScrollGesture.Provider>
+      </GestureDetector>
       </Animated.View>
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: insets.top }, headerStyle]}>
             <View style={styles.header}>
@@ -175,18 +173,6 @@ const MAX_PULL = 140;
 const INTRO_MS = 1000;
 
 const Separator = () => <View style={styles.separator} />;
-
-// The feed is a FlashList (it reuses the views of posts scrolled away instead of mounting new ones: the feed can
-// run to thousands of posts). Animated for the scroll handler on the UI thread.
-const AnimatedFlashList = Animated.createAnimatedComponent(FlashList) as unknown as typeof FlashList;
-
-// Pull-to-refresh pan + native scroll, attached to FlashList's inner scroll view.
-const ScrollGesture = createContext<GestureType | ReturnType<typeof Gesture.Simultaneous> | null>(null);
-const GestureScrollView = forwardRef<ScrollView, ScrollViewProps>(function GestureScrollView(props, ref) {
-  const gesture = useContext(ScrollGesture);
-  const scroll = <ScrollView ref={ref} {...props} />;
-  return gesture ? <GestureDetector gesture={gesture}>{scroll}</GestureDetector> : scroll;
-});
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },

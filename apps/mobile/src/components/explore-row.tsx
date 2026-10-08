@@ -1,7 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import { useRecyclingState } from '@shopify/flash-list';
-import { memo, useRef } from 'react';
+import { memo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ARTICLES, displayName, type ExplorePost } from '@/mock/data';
@@ -24,7 +23,7 @@ function formatCount(n: number) {
 export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost }) {
   const article = ARTICLES[post.articleId];
   const author = article?.author;
-  const [saved, setSaved] = useRecyclingState(false, [post.id]);
+  const [saved, setSaved] = useState(false);
   // The reader grows its cover out of the picture.
   const thumb = useRef<View>(null);
   const open = () => openArticle(post.articleId, thumb.current, post.image, 2);
