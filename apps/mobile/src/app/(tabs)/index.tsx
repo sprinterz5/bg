@@ -26,7 +26,9 @@ export default function Home() {
   // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
   // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
   // overscroll, so there a pan gesture drags the list down past the top.
-  const top = insets.top + HEADER_H;
+  // Header and list sit 1 above the design's status-bar line (asked for after checking on the phone).
+  const headerTop = insets.top - 1;
+  const top = headerTop + HEADER_H;
   const y = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
     y.set(e.contentOffset.y + (IOS ? top : 0));
@@ -139,7 +141,7 @@ export default function Home() {
       />
       </GestureDetector>
       </Animated.View>
-      <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: insets.top }, headerStyle]}>
+      <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: headerTop }, headerStyle]}>
             <View style={styles.header}>
               <PressableScale haptic onPress={() => push('/story/new')} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
                 <Icon name="homePlus" width={21} />
