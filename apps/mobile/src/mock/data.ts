@@ -167,7 +167,7 @@ export const FEED: Post[] = [
     id: 'p-nighty',
     author: miniBill,
     image: require('@/assets/mock/post-habits.jpg'),
-    title: '3 Nighty Habits that Helped Steve Jobs to Rest and Charge',
+    title: 'Why I Journal Everyday for an Hour or Two',
     caption: 'and these are not simple ones like meditation or journaling, these are really the unique ones',
     timeAgo: '1 day ago',
     likes: 520,
