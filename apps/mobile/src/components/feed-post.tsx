@@ -107,16 +107,16 @@ const styles = StyleSheet.create({
   media: { height: 265, marginTop: 8, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   // Sentinel Bold 20/27 in the design; Source Serif 4 Bold in the app (see fonts.headline).
-  title: { marginTop: 17.5, marginLeft: 14, width: 352, fontFamily: fonts.headline, fontSize: 21.5, lineHeight: 29, letterSpacing: 21.5 * -0.014, color: colors.text },
-  excerpt: { marginTop: 10, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 14.25, lineHeight: 19.5, letterSpacing: 14.25 * 0.005, color: EXCERPT },
+  title: { marginTop: 17.5, marginLeft: 14, width: 352, fontFamily: fonts.headline, fontSize: 21, lineHeight: 28.5, letterSpacing: 21 * -0.014, color: colors.text },
+  excerpt: { marginTop: 10, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 14.15, lineHeight: 19.4, letterSpacing: 14.15 * 0.005, color: EXCERPT },
   // counters (SF Pro Semibold 13/16) 23 under the excerpt: eye 25x18 at x 16.85, "520" at x 50, send at x 106.65,
   // its count at x 133, bookmark at x 363.3
   actions: { height: 16, marginTop: 23 },
   views: { position: 'absolute', left: 16.85, top: -0.75 },
   send: { position: 'absolute', left: 106.65, top: 0.3 },
   bookmark: { position: 'absolute', left: 363.27, top: -1.38 },
-  count: { position: 'absolute', top: 0, fontSize: 14, lineHeight: 17, fontWeight: '600', color: colors.text },
+  count: { position: 'absolute', top: 0, fontSize: 13.8, lineHeight: 17, fontWeight: '600', color: colors.text },
   viewsCount: { left: 50 },
   sendCount: { left: 133 },
-  time: { marginTop: 17, marginLeft: 18, fontFamily: INTER_FAMILIES['400'], fontSize: 11.25, lineHeight: 16, color: EXCERPT },
+  time: { marginTop: 17, marginLeft: 18, fontFamily: INTER_FAMILIES['400'], fontSize: 11.1, lineHeight: 16, color: EXCERPT },
 });

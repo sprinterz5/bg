@@ -170,5 +170,5 @@ const styles = StyleSheet.create({
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
-  name: { marginTop: 4.4, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 11.5, lineHeight: 14, letterSpacing: 11.5 * 0.04, color: '#000000' },
+  name: { marginTop: 4.4, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 11.25, lineHeight: 14, letterSpacing: 11.25 * 0.04, color: '#000000' },
 });
