@@ -9,7 +9,7 @@ const FILL = '#EEF1F3';
 export function Skeleton({ width, height, radius = 4, style }: { width?: number | `${number}%`; height: number; radius?: number; style?: StyleProp<ViewStyle> }) {
   const o = useSharedValue(1);
   useEffect(() => {
-    o.value = withRepeat(withTiming(0.45, { duration: 800, easing: Easing.inOut(Easing.quad) }), -1, true);
+    o.set(withRepeat(withTiming(0.45, { duration: 800, easing: Easing.inOut(Easing.quad) }), -1, true));
   }, [o]);
   const pulse = useAnimatedStyle(() => ({ opacity: o.value }));
   return <Animated.View collapsable={false} style={[{ width, height, borderRadius: radius, backgroundColor: FILL }, style, pulse]} />;

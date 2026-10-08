@@ -93,9 +93,9 @@ export default function StoryViewer() {
     };
     if (!photoShown) return;
     if (origin0) {
-      fade.value = 1;
-      t.value = withTiming(1, { duration: OPEN_MS, easing: OPEN_EASING }, done);
-    } else fade.value = withTiming(1, { duration: 200 }, done);
+      fade.set(1);
+      t.set(withTiming(1, { duration: OPEN_MS, easing: OPEN_EASING }, done));
+    } else fade.set(withTiming(1, { duration: 200 }, done));
   }, [photoShown, origin0, t, fade]);
 
   // Every story shown here counts as watched (grey ring on Home). Recorded when the viewer closes, not while it
@@ -119,21 +119,21 @@ export default function StoryViewer() {
     if (o) {
       runOnUI((x: number, y: number, size: number, h: number) => {
         'worklet';
-        ox.value = x;
-        oy.value = y;
-        os.value = size;
-        ph.value = h;
-        dragY.value = withTiming(0, { duration: CLOSE_MS, easing: CLOSE_EASING });
-        t.value = withTiming(0, { duration: CLOSE_MS, easing: CLOSE_EASING }, (fin) => {
+        ox.set(x);
+        oy.set(y);
+        os.set(size);
+        ph.set(h);
+        dragY.set(withTiming(0, { duration: CLOSE_MS, easing: CLOSE_EASING }));
+        t.set(withTiming(0, { duration: CLOSE_MS, easing: CLOSE_EASING }, (fin) => {
           if (fin) runOnJS(backWhenReady)();
-        });
+        }));
       })(o.x, o.y, o.size, photoHeight(story, width));
     } else {
-      fade.value = withTiming(0, { duration: 200 }, (fin) => {
+      fade.set(withTiming(0, { duration: 200 }, (fin) => {
         if (fin) runOnJS(backWhenReady)();
-      });
+      }));
     }
-  }, [story.id, ox, oy, os, dragY, t, fade]);
+  }, [story, width, ox, oy, os, ph, dragY, t, fade]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -148,21 +148,21 @@ export default function StoryViewer() {
   // update: the window is a fixed full-screen box scaled to the current rect, the viewer inside is counter-scaled
   // so it stays undistorted, scaled `sc` overall, with its photo centre where it should be.
   const frameStyle = useAnimatedStyle(() => {
-    const k = t.value;
-    const d = os.value;
+    const k = t.get();
+    const d = os.get();
     const w = d + (width - d) * k;
     const h = d + (height - d) * k;
     const sx = w / width;
     const sy = h / height;
-    const drag = Math.max(0, dragY.value);
+    const drag = Math.max(0, dragY.get());
     const ds = 1 - Math.min(drag / height, 1) * 0.35;
     return {
       // Near the ring the round copy below takes over (a scaled window can't keep its corners round).
-      opacity: fade.value * interpolate(k, [0, RING_HANDOFF], [0, 1], Extrapolation.CLAMP),
+      opacity: fade.get() * interpolate(k, [0, RING_HANDOFF], [0, 1], Extrapolation.CLAMP),
       borderRadius: ((d / 2) * (1 - k) + Math.min(drag * 0.15, 22)) / (((sx + sy) / 2) * ds),
       transform: [
-        { translateX: ox.value * (1 - k) + w / 2 - width / 2 },
-        { translateY: oy.value * (1 - k) + h / 2 - height / 2 + drag * 0.9 },
+        { translateX: ox.get() * (1 - k) + w / 2 - width / 2 },
+        { translateY: oy.get() * (1 - k) + h / 2 - height / 2 + drag * 0.9 },
         { scaleX: sx * ds },
         { scaleY: sy * ds },
       ],
@@ -171,25 +171,25 @@ export default function StoryViewer() {
   // Round copy of the ring's picture over the window's last stretch: scaled uniformly, so it is a true circle the
   // whole way, cross-fading with the (rounded-rect) window as it lands on the ring or leaves it.
   const ringStyle = useAnimatedStyle(() => {
-    const k = t.value;
-    const d = os.value;
+    const k = t.get();
+    const d = os.get();
     const w = d + (width - d) * k;
     const h = d + (height - d) * k;
-    const drag = Math.max(0, dragY.value);
+    const drag = Math.max(0, dragY.get());
     const ds = 1 - Math.min(drag / height, 1) * 0.35;
-    const cx = ox.value * (1 - k) + w / 2;
-    const cy = oy.value * (1 - k) + h / 2 + drag * 0.9;
+    const cx = ox.get() * (1 - k) + w / 2;
+    const cy = oy.get() * (1 - k) + h / 2 + drag * 0.9;
     return {
-      opacity: fade.value * interpolate(k, [0, RING_HANDOFF], [1, 0], Extrapolation.CLAMP),
+      opacity: fade.get() * interpolate(k, [0, RING_HANDOFF], [1, 0], Extrapolation.CLAMP),
       transform: [{ translateX: cx - RING_BASE / 2 }, { translateY: cy - RING_BASE / 2 }, { scale: (Math.min(w, h) * ds) / RING_BASE }],
     };
   });
   // Keeps the viewer's photo centre (width / 2, photoCY) on the window's centre at t 0 and in place at t 1.
   const innerStyle = useAnimatedStyle(() => {
-    const k = t.value;
-    const d = os.value;
+    const k = t.get();
+    const d = os.get();
     // At t 0 the photo covers the circle like the ring's own picture (cropped, not letterboxed).
-    const sc0 = d / Math.min(width, ph.value);
+    const sc0 = d / Math.min(width, ph.get());
     const sc = sc0 + (1 - sc0) * k;
     const w = d + (width - d) * k;
     const h = d + (height - d) * k;
@@ -247,11 +247,11 @@ export default function StoryViewer() {
       raf = requestAnimationFrame(() =>
         runOnUI(() => {
           'worklet';
-          active.value = '';
-          under.value = '';
-          hidden.value = '';
-          progress.value = 0;
-          mode.value = 0;
+          active.set('');
+          under.set('');
+          hidden.set('');
+          progress.set(0);
+          mode.set(0);
         })(),
       );
     });
@@ -286,17 +286,17 @@ export default function StoryViewer() {
     warmed.current = true;
     runOnUI((id: string) => {
       'worklet';
-      if (mode.value !== 0) return;
-      progress.value = 1;
-      active.value = id;
+      if (mode.get() !== 0) return;
+      progress.set(1);
+      active.set(id);
     })(currentId);
     const t = setTimeout(
       () =>
         runOnUI(() => {
           'worklet';
-          if (mode.value !== 0) return;
-          active.value = '';
-          progress.value = 0;
+          if (mode.get() !== 0) return;
+          active.set('');
+          progress.set(0);
         })(),
       200,
     );
@@ -307,21 +307,21 @@ export default function StoryViewer() {
 
   const startTurn = (step: number, layer: string, base: string, tilt: number) => {
     'worklet';
-    mode.value = step;
-    angle.value = tilt;
-    progress.value = step === 1 ? 0 : 1;
-    if (step === 1 && !nextSnapped) hidden.value = layer;
-    else under.value = base;
-    active.value = layer;
-    progress.value = withTiming(step === 1 ? 1 : 0, { duration: TURN_MS, easing: TURN_EASING }, (done) => {
+    mode.set(step);
+    angle.set(tilt);
+    progress.set(step === 1 ? 0 : 1);
+    if (step === 1 && !nextSnapped) hidden.set(layer);
+    else under.set(base);
+    active.set(layer);
+    progress.set(withTiming(step === 1 ? 1 : 0, { duration: TURN_MS, easing: TURN_EASING }, (done) => {
       if (done) runOnJS(commit)(step);
-    });
+    }));
   };
 
   // Tap on the right / left half; past the last (or before the first) story closes the viewer.
   const turn = (step: 1 | -1) => {
     if (!(step === 1 ? hasNext : hasPrev)) return close();
-    if (mode.value !== 0) return;
+    if (mode.get() !== 0) return;
     if (step === 1 ? canForward : canBack) runOnUI(startTurn)(step, step === 1 ? currentId : prevId, step === 1 ? nextId : currentId, 0.08);
     else commit(step);
   };
@@ -337,63 +337,64 @@ export default function StoryViewer() {
     'worklet';
     if (dx < 0) {
       if (canForward) {
-        mode.value = 1;
-        angle.value = tilt(y, y);
-        progress.value = 0;
-        if (nextSnapped) under.value = nextId;
-        else hidden.value = currentId;
-        active.value = currentId;
-      } else mode.value = hasNext ? 3 : 2;
+        mode.set(1);
+        angle.set(tilt(y, y));
+        progress.set(0);
+        if (nextSnapped) under.set(nextId);
+        else hidden.set(currentId);
+        active.set(currentId);
+      } else mode.set(hasNext ? 3 : 2);
     } else if (canBack) {
-      mode.value = -1;
-      angle.value = tilt(y, y);
-      progress.value = 1;
-      under.value = currentId;
-      active.value = prevId;
-    } else if (hasPrev) mode.value = -3;
-    else owner.value = 0; // nothing before the first story
+      mode.set(-1);
+      angle.set(tilt(y, y));
+      progress.set(1);
+      under.set(currentId);
+      active.set(prevId);
+    } else if (hasPrev) mode.set(-3);
+    else owner.set(0); // nothing before the first story
   };
 
   const pan = Gesture.Pan()
     .activeOffsetX([-12, 12])
     .failOffsetY([-16, 16])
     .onStart((e) => {
-      owner.value = mode.value === 0 ? 1 : 0;
-      startY.value = e.y;
+      owner.set(mode.get() === 0 ? 1 : 0);
+      startY.set(e.y);
     })
     .onUpdate((e) => {
-      if (!owner.value) return;
+      if (!owner.get()) return;
       // Direction is picked on the first move: Android reports translationX 0 in onStart.
-      if (mode.value === 0) {
+      if (mode.get() === 0) {
         if (e.translationX === 0) return;
         pick(e.translationX, e.y);
       }
-      angle.value = tilt(startY.value, e.y);
-      if (mode.value === 1) progress.value = Math.max(0, Math.min(1, -e.translationX / width));
-      else if (mode.value === -1) progress.value = Math.max(0, Math.min(1, 1 - e.translationX / width));
+      angle.set(tilt(startY.get(), e.y));
+      if (mode.get() === 1) progress.set(Math.max(0, Math.min(1, -e.translationX / width)));
+      else if (mode.get() === -1) progress.set(Math.max(0, Math.min(1, 1 - e.translationX / width)));
     })
+    // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
-      if (!owner.value) return;
-      owner.value = 0;
-      const m = mode.value;
+      if (!owner.get()) return;
+      owner.set(0);
+      const m = mode.get();
       const v = e.velocityX;
       if (m === 1 || m === -1) {
-        const p = progress.value;
+        const p = progress.get();
         const done = m === 1 ? (p > 0.35 && v < 300) || v < -600 : (p < 0.65 && v > -300) || v > 600;
         const target = done === (m === 1) ? 1 : 0;
-        progress.value = withTiming(target, { duration: 180 + 320 * Math.abs(target - p), easing: RELEASE_EASING }, (fin) => {
+        progress.set(withTiming(target, { duration: 180 + 320 * Math.abs(target - p), easing: RELEASE_EASING }, (fin) => {
           if (!fin) return;
           if (done) runOnJS(commit)(m);
           else {
-            active.value = '';
-            under.value = '';
-            hidden.value = '';
-            mode.value = 0;
+            active.set('');
+            under.set('');
+            hidden.set('');
+            mode.set(0);
           }
-        });
+        }));
         return;
       }
-      mode.value = 0;
+      mode.set(0);
       if (Math.abs(e.translationX) < width * 0.25 && Math.abs(v) < 600) return;
       if (m === 2) runOnJS(close)();
       else if (m === 3 || m === -3) runOnJS(commit)(m / 3);
@@ -403,13 +404,14 @@ export default function StoryViewer() {
     .activeOffsetY(14)
     .failOffsetX([-14, 14])
     .onUpdate((e) => {
-      if (mode.value !== 0) return;
-      dragY.value = Math.max(0, e.translationY);
+      if (mode.get() !== 0) return;
+      dragY.set(Math.max(0, e.translationY));
     })
+    // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
-      if (mode.value !== 0) return;
-      if (dragY.value > 110 || e.velocityY > 800) runOnJS(close)();
-      else dragY.value = withTiming(0, { duration: 240, easing: Easing.out(Easing.cubic) });
+      if (mode.get() !== 0) return;
+      if (dragY.get() > 110 || e.velocityY > 800) runOnJS(close)();
+      else dragY.set(withTiming(0, { duration: 240, easing: Easing.out(Easing.cubic) }));
     });
   // Sideways turns the page, down closes; whichever moves first wins.
   const gestures = Gesture.Race(pan, dismiss);
@@ -495,14 +497,14 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
     const next = !expanded;
     setExpanded(next);
     if (next) setShowFull(true);
-    open.value = withTiming(next ? 1 : 0, { duration: CAPTION_MS, easing: Easing.out(Easing.cubic) }, (fin) => {
+    open.set(withTiming(next ? 1 : 0, { duration: CAPTION_MS, easing: Easing.out(Easing.cubic) }, (fin) => {
       if (fin) runOnJS(onCaptionSettled)(next);
-    });
+    }));
   };
   const captionStyle = useAnimatedStyle(() => {
     if (!lines) return {};
     const shut = Math.min(lines, 2);
-    return { height: CAPTION_LH * (shut + (lines - shut) * open.value) + CAPTION_SLACK };
+    return { height: CAPTION_LH * (shut + (lines - shut) * open.get()) + CAPTION_SLACK };
   });
   const [photoReady, setPhotoReady] = useState(false);
   const [avatarReady, setAvatarReady] = useState(!story.author.avatar);
@@ -543,7 +545,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
     };
   }, [ready, snapshot, closing, settled, cut, story.id, onSnapshot]);
 
-  const hideStyle = useAnimatedStyle(() => ({ opacity: hidden.value === story.id && progress.value > 0.03 ? 0 : 1 }));
+  const hideStyle = useAnimatedStyle(() => ({ opacity: hidden.get() === story.id && progress.get() > 0.03 ? 0 : 1 }));
 
   return (
     <Animated.View

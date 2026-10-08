@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { ARTICLES, FEED, type Article, type Author, type Post } from '@/mock/data';
 
@@ -19,6 +19,8 @@ type FeedContextValue = {
   updateDraft: (patch: Partial<ArticleDraft>) => void;
   publishing: Publishing | null;
   publish: (author: Author) => void;
+  /** Next page of the feed (mock: the same posts again under new ids, so long scrolling can be tested). */
+  loadMore: () => void;
 };
 
 type SeenContextValue = {
@@ -26,6 +28,16 @@ type SeenContextValue = {
   seenStories: ReadonlySet<string>;
   markStoriesSeen: (ids: string[]) => void;
 };
+
+const MOCK_PAGE = 10;
+const MOCK_MAX = 3000;
+
+function mockPage(from: number): Post[] {
+  return Array.from({ length: MOCK_PAGE }, (_, i) => {
+    const src = FEED[(from + i) % FEED.length];
+    return { ...src, id: `${src.id}~${from + i}` };
+  });
+}
 
 const emptyDraft: ArticleDraft = { coverUri: null, body: '', label: '' };
 
@@ -44,8 +56,11 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     [],
   );
   const seen = useMemo(() => ({ seenStories, markStoriesSeen }), [seenStories, markStoriesSeen]);
+  // Latest draft for publish() without re-creating it on every keystroke.
   const draftRef = useRef(draft);
-  draftRef.current = draft;
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
 
   const updateDraft = useCallback((patch: Partial<ArticleDraft>) => setDraft((d) => ({ ...d, ...patch })), []);
 
@@ -76,9 +91,11 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     }, PUBLISH_MS);
   }, []);
 
+  const loadMore = useCallback(() => setPosts((p) => (p.length >= MOCK_MAX ? p : [...p, ...mockPage(p.length)])), []);
+
   const value = useMemo(
-    () => ({ posts, articles, draft, updateDraft, publishing, publish }),
-    [posts, articles, draft, updateDraft, publishing, publish],
+    () => ({ posts, articles, draft, updateDraft, publishing, publish, loadMore }),
+    [posts, articles, draft, updateDraft, publishing, publish, loadMore],
   );
 
   return (

@@ -20,16 +20,16 @@ export function PullSpinner({ pull, threshold, refreshing, top }: { pull: Shared
     () => Math.max(0, pull.value),
     (p) => {
       const n = Math.min(SPOKES, Math.ceil((p / threshold) * SPOKES));
-      if (n !== shown.value) shown.value = n;
-      if (p !== gap.value && (p > 0 || gap.value > 0)) gap.value = p;
+      if (n !== shown.value) shown.set(n);
+      if (p !== gap.value && (p > 0 || gap.value > 0)) gap.set(p);
     },
   );
 
   useEffect(() => {
-    active.value = refreshing ? 1 : 0;
+    active.set(refreshing ? 1 : 0);
     if (refreshing) {
-      spin.value = 0;
-      spin.value = withRepeat(withTiming(SPOKES, { duration: 1000, easing: Easing.linear }), -1, false);
+      spin.set(0);
+      spin.set(withRepeat(withTiming(SPOKES, { duration: 1000, easing: Easing.linear }), -1, false));
     } else {
       cancelAnimation(spin);
     }

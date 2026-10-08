@@ -23,7 +23,7 @@ export const PostCard = memo(function PostCard({ post }: { post: Post }) {
   const savePop = useSharedValue(1);
 
   const pop = (v: typeof savePop) => {
-    v.value = withSequence(withSpring(1.28, { damping: 8, stiffness: 400 }), withSpring(1, { damping: 10, stiffness: 300 }));
+    v.set(withSequence(withSpring(1.28, { damping: 8, stiffness: 400 }), withSpring(1, { damping: 10, stiffness: 300 })));
   };
 
   const toggleSave = () => {

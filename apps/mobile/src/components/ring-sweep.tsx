@@ -33,12 +33,12 @@ function easeOut(x: number) {
 export function RingSweep({ size, delay, onDone }: { size: number; delay: number; onDone: () => void }) {
   const p = useSharedValue(0);
   useEffect(() => {
-    p.value = withDelay(
+    p.set(withDelay(
       delay,
       withTiming(1, { duration: SWEEP_MS, easing: Easing.linear }, (fin) => {
         if (fin) runOnJS(onDone)();
       }),
-    );
+    ));
   }, [delay, p, onDone]);
 
   const half = size / 2;

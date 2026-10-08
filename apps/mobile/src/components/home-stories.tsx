@@ -33,8 +33,8 @@ export function HomeStories({ stories }: { stories: Story[] }) {
   const max = useSharedValue(0);
   const contentW = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
-    x.value = e.contentOffset.x;
-    max.value = Math.max(0, contentW.value - e.layoutMeasurement.width);
+    x.set(e.contentOffset.x);
+    max.set(Math.max(0, contentW.value - e.layoutMeasurement.width));
   });
 
   // Watched stories turn grey in front of the user: the grey runs round the ring as the viewer shrinks back into
@@ -108,7 +108,7 @@ export function HomeStories({ stories }: { stories: Story[] }) {
       horizontal
       onScroll={onScroll}
       scrollEventThrottle={16}
-      onContentSizeChange={(w) => (contentW.value = w)}
+      onContentSizeChange={(w) => (contentW.set(w))}
       overScrollMode={Platform.OS === 'android' ? 'always' : undefined}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}>

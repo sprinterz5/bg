@@ -12,7 +12,7 @@ export function PostingRow({ coverUri }: { coverUri: string }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withTiming(1, { duration: PUBLISH_MS - 200, easing: Easing.out(Easing.cubic) });
+    progress.set(withTiming(1, { duration: PUBLISH_MS - 200, easing: Easing.out(Easing.cubic) }));
   }, [progress]);
 
   const fillStyle = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));

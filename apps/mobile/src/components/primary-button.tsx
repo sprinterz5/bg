@@ -19,7 +19,7 @@ export function PrimaryButton({ title, onPress, enabled = true, loading = false,
   const active = useSharedValue(enabled ? 1 : 0);
 
   useEffect(() => {
-    active.value = withTiming(enabled ? 1 : 0, { duration: motion.base });
+    active.set(withTiming(enabled ? 1 : 0, { duration: motion.base }));
   }, [enabled, active]);
 
   const outline = variant === 'outline';

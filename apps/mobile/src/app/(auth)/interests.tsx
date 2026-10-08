@@ -39,12 +39,12 @@ export default function InterestsStep() {
     }
     if (current.length >= INTERESTS_MAX) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      shake.value = withSequence(
+      shake.set(withSequence(
         withTiming(-6, { duration: 50 }),
         withTiming(6, { duration: 70 }),
         withTiming(-3, { duration: 60 }),
         withTiming(0, { duration: 50 }),
-      );
+      ));
       return;
     }
     Haptics.selectionAsync();
@@ -88,7 +88,7 @@ function InterestRow({ label, checked, onPress }: { label: string; checked: bool
   const progress = useSharedValue(checked ? 1 : 0);
 
   useEffect(() => {
-    progress.value = withSpring(checked ? 1 : 0, { damping: 14, stiffness: 260 });
+    progress.set(withSpring(checked ? 1 : 0, { damping: 14, stiffness: 260 }));
   }, [checked, progress]);
 
   const fillStyle = useAnimatedStyle(() => ({

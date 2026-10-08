@@ -53,6 +53,8 @@ export const Text = forwardRef<RNText, TextProps>(function Text({ style, ...prop
 export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput({ style, ...props }, ref) {
   return <RNTextInput ref={ref} {...props} style={interStyle(style)} />;
 });
+// Same name as the component, like React Native's own TextInput (value + type).
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export type TextInput = RNTextInput;
 
 export const AnimatedText = Animated.createAnimatedComponent(Text);

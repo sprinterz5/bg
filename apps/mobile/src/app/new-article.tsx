@@ -29,7 +29,7 @@ export default function NewArticle() {
 
   const active = useSharedValue(canPost ? 1 : 0);
   useEffect(() => {
-    active.value = withTiming(canPost ? 1 : 0, { duration: motion.base });
+    active.set(withTiming(canPost ? 1 : 0, { duration: motion.base }));
   }, [canPost, active]);
   const buttonStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(active.value, [0, 1], [colors.disabled, colors.primary]),

@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { completeSignup } from '@/lib/auth';
 import { useSession } from '@/state/session';
@@ -15,7 +15,7 @@ export default function Ready() {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) });
+    progress.set(withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
 
     let cancelled = false;
     const started = Date.now();

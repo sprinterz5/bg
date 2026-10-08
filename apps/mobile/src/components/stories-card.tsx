@@ -82,7 +82,7 @@ function Reactions() {
   const toggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setLiked((v) => !v);
-    pop.value = withSequence(withSpring(1.25, { damping: 8, stiffness: 400 }), withSpring(1, { damping: 10, stiffness: 300 }));
+    pop.set(withSequence(withSpring(1.25, { damping: 8, stiffness: 400 }), withSpring(1, { damping: 10, stiffness: 300 })));
   };
 
   return (

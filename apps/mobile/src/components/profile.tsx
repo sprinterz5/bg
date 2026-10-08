@@ -101,7 +101,7 @@ export function ProfileButton({
 }) {
   const on = useSharedValue(primary ? 1 : 0);
   useEffect(() => {
-    on.value = withTiming(primary ? 1 : 0, EASE);
+    on.set(withTiming(primary ? 1 : 0, EASE));
   }, [primary, on]);
   const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [GRAY, colors.primary]) }));
   const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.text, '#FFFFFF']) }));
@@ -135,7 +135,7 @@ export function ProfileTabs({
 }) {
   const x = useSharedValue(tab === 'posts' ? 0 : 1);
   useEffect(() => {
-    x.value = withTiming(tab === 'posts' ? 0 : 1, EASE);
+    x.set(withTiming(tab === 'posts' ? 0 : 1, EASE));
   }, [tab, x]);
   const underline = useAnimatedStyle(() => ({ transform: [{ translateX: LIST_X - 19 + x.value * TABS_STEP }] }));
 
@@ -156,9 +156,11 @@ export function ProfileTabs({
 export function ProfilePostRow({ post }: { post: ProfilePost }) {
   // The reader grows its cover out of the thumbnail.
   const thumb = useRef<View>(null);
-  const open = post.articleId ? () => openArticle(post.articleId!, thumb.current, post.image, 12) : undefined;
+  const open = () => {
+    if (post.articleId) openArticle(post.articleId, thumb.current, post.image, 12);
+  };
   return (
-    <PressableScale disabled={!open} onPress={open} scaleTo={0.985} style={styles.post} accessibilityRole="button" accessibilityLabel={post.title}>
+    <PressableScale disabled={!post.articleId} onPress={open} scaleTo={0.985} style={styles.post} accessibilityRole="button" accessibilityLabel={post.title}>
       <View ref={thumb} collapsable={false}>
         <Image source={post.image} style={styles.thumb} contentFit="cover" transition={150} />
       </View>

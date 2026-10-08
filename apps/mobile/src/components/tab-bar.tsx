@@ -86,7 +86,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
 function TabGlyph({ meta, focused, k }: { meta: (typeof TABS)[string]; focused: boolean; k: number }) {
   const on = useSharedValue(focused ? 1 : 0);
   useEffect(() => {
-    on.value = withTiming(focused ? 1 : 0, { duration: motion.fast });
+    on.set(withTiming(focused ? 1 : 0, { duration: motion.fast }));
   }, [focused, on]);
   const onStyle = useAnimatedStyle(() => ({ opacity: on.value }));
   const offStyle = useAnimatedStyle(() => ({ opacity: 1 - on.value }));

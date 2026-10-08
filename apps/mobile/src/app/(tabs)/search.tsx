@@ -94,7 +94,7 @@ export default function Search() {
 
   const m = useSharedValue(0);
   useEffect(() => {
-    m.value = withTiming(MODE_VALUE[mode], EASE);
+    m.set(withTiming(MODE_VALUE[mode], EASE));
   }, [mode, m]);
 
   // Opening search (not in the design): the field grows out of the bar's magnifier and the magnifier pulls it to
@@ -103,7 +103,7 @@ export default function Search() {
   const o = useSharedValue(0);
   const searching = mode !== 'explore';
   useEffect(() => {
-    o.value = withTiming(searching ? 1 : 0, { duration: searching ? 360 : 300, easing: SEARCH_EASING });
+    o.set(withTiming(searching ? 1 : 0, { duration: searching ? 360 : 300, easing: SEARCH_EASING }));
   }, [searching, o]);
   // Field: collapsed around the magnifier (icon centre x 361, y 46) → 15..325 (typing, "Exit" on the right) → 44..325
   // (results, back chevron on the left).
@@ -133,11 +133,14 @@ export default function Search() {
     const y = e.contentOffset.y + (Platform.OS === 'ios' ? FEED_TOP : 0);
     const next = Math.min(Math.max(hidden.value + y - lastY.value, 0), FEED_TOP);
     const h = Math.min(next, Math.max(y, 0)); // near the top it stays glued to the content
-    if (h !== hidden.value) hidden.value = h;
-    lastY.value = y;
+    if (h !== hidden.value) hidden.set(h);
+    lastY.set(y);
   });
   useEffect(() => {
-    if (mode !== 'explore') hidden.value = lastY.value = 0;
+    if (mode !== 'explore') {
+      hidden.set(0);
+      lastY.set(0);
+    }
   }, [mode, hidden, lastY]);
   const barShift = useAnimatedStyle(() => ({ transform: [{ translateY: -hidden.value }] }));
   const openSearch = useCallback(() => {
@@ -390,7 +393,7 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
   // The fill and the text colour cross-fade when the topic changes.
   const on = useSharedValue(active ? 1 : 0);
   useEffect(() => {
-    on.value = withTiming(active ? 1 : 0, { duration: 180, easing: Easing.out(Easing.cubic) });
+    on.set(withTiming(active ? 1 : 0, { duration: 180, easing: Easing.out(Easing.cubic) }));
   }, [active, on]);
   const fill = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [CHIP_BG, CHIP_ACTIVE]) }));
   const text = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.text, '#FFFFFF']) }));
@@ -412,7 +415,7 @@ function Segmented({ tab, onChange, width }: { tab: Tab; onChange: (t: Tab) => v
   const segW = (width - SEG_SIDE_L - SEG_SIDE_R - SEG_GAP) / 2;
   const x = useSharedValue(tab === 'articles' ? 0 : 1);
   useEffect(() => {
-    x.value = withTiming(tab === 'articles' ? 0 : 1, EASE);
+    x.set(withTiming(tab === 'articles' ? 0 : 1, EASE));
   }, [tab, x]);
 
   const indicator = useAnimatedStyle(() => ({ transform: [{ translateX: x.value * (segW + SEG_GAP) }] }));

@@ -76,11 +76,11 @@ export function LikeButton({ liked, onToggle, count, format = String, icons, wid
       return;
     }
     if (liked) {
-      fill.value = withTiming(1, { duration: 120 });
-      scale.value = withSequence(withTiming(0.55, { duration: 0 }), withSpring(1, { damping: 7, stiffness: 260, mass: 0.6 }));
+      fill.set(withTiming(1, { duration: 120 }));
+      scale.set(withSequence(withTiming(0.55, { duration: 0 }), withSpring(1, { damping: 7, stiffness: 260, mass: 0.6 })));
     } else {
-      fill.value = withTiming(0, { duration: 180, easing: Easing.out(Easing.quad) });
-      scale.value = withSequence(withTiming(0.8, { duration: 90 }), withSpring(1, { damping: 14, stiffness: 300 }));
+      fill.set(withTiming(0, { duration: 180, easing: Easing.out(Easing.quad) }));
+      scale.set(withSequence(withTiming(0.8, { duration: 90 }), withSpring(1, { damping: 14, stiffness: 300 })));
     }
   }, [liked, fill, scale]);
 
@@ -88,7 +88,7 @@ export function LikeButton({ liked, onToggle, count, format = String, icons, wid
   const filled = useAnimatedStyle(() => ({ opacity: fill.value, transform: [{ scale: scale.value }] }));
 
   const press = () => {
-    dir.value = liked ? -1 : 1;
+    dir.set(liked ? -1 : 1);
     Haptics.impactAsync(liked ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium);
     onToggle();
   };

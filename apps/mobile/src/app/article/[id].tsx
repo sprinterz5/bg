@@ -104,17 +104,17 @@ function Reader({ article }: { article: Article }) {
   }, [lines, titleH, H, BAR_H, TEXT_TOP_1, TEXT_TOP_2]);
 
   const onScroll = useAnimatedScrollHandler((e) => {
-    scrollX.value = e.contentOffset.x;
+    scrollX.set(e.contentOffset.x);
   });
 
   const imageStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: interpolate(scrollX.value, [0, W], [0, -PARALLAX], Extrapolation.CLAMP) }],
+    transform: [{ translateY: interpolate(scrollX.get(), [0, W], [0, -PARALLAX], Extrapolation.CLAMP) }],
   }));
   const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: interpolate(scrollX.value, [0, W], [SHEET_1, SHEET_2], Extrapolation.CLAMP) }],
+    transform: [{ translateY: interpolate(scrollX.get(), [0, W], [SHEET_1, SHEET_2], Extrapolation.CLAMP) }],
   }));
   const cardStyle = useAnimatedStyle(() => {
-    const x = scrollX.value;
+    const x = scrollX.get();
     return {
       top: interpolate(x, [0, W], [CARD_TOP_1, CARD_TOP_2], Extrapolation.CLAMP),
       height: interpolate(x, [0, W], [CARD_H_1, CARD_H_COMPACT], Extrapolation.CLAMP),
@@ -122,11 +122,11 @@ function Reader({ article }: { article: Article }) {
     };
   });
   const titleStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollX.value, [0, W * 0.45], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(scrollX.get(), [0, W * 0.45], [1, 0], Extrapolation.CLAMP),
   }));
   // Section 7: on page 2+ the close button sits 9.5px higher (design y 38.5 instead of 48).
   const closeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: interpolate(scrollX.value, [0, W], [0, -9.5], Extrapolation.CLAMP) }],
+    transform: [{ translateY: interpolate(scrollX.get(), [0, W], [0, -9.5], Extrapolation.CLAMP) }],
   }));
 
   // Double tap on the text likes the article (never unlikes) and pops a big heart where the finger was.
@@ -142,6 +142,7 @@ function Reader({ article }: { article: Article }) {
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
     .maxDelay(260)
+    // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e, ok) => {
       if (ok) runOnJS(onDoubleTap)(e.absoluteX, e.absoluteY);
     });
@@ -167,11 +168,11 @@ function Reader({ article }: { article: Article }) {
   }, [coverReady]);
   useEffect(() => {
     if (!coverReady) return;
-    t.value = withTiming(1, { duration: origin ? OPEN_MS : 220, easing: OPEN_EASING }, (fin) => {
+    t.set(withTiming(1, { duration: origin ? OPEN_MS : 220, easing: OPEN_EASING }, (fin) => {
       if (!fin) return;
-      flying.value = 0;
+      flying.set(0);
       runOnJS(setOpened)(true);
-    });
+    }));
   }, [coverReady, origin, t, flying]);
   const onCoverShown = useCallback(() => setCoverReady(true), []);
   const closing = useRef(false);
@@ -181,10 +182,10 @@ function Reader({ article }: { article: Article }) {
     const fly = !!articleOrigin(article.id);
     runOnUI(() => {
       'worklet';
-      if (fly) flying.value = 1;
-      t.value = withTiming(0, { duration: fly ? CLOSE_MS : 200, easing: CLOSE_EASING }, (fin) => {
+      if (fly) flying.set(1);
+      t.set(withTiming(0, { duration: fly ? CLOSE_MS : 200, easing: CLOSE_EASING }, (fin) => {
         if (fin) runOnJS(backWhenReady)();
-      });
+      }));
     })();
   }, [article.id, flying, t]);
   useEffect(() => {
@@ -195,9 +196,9 @@ function Reader({ article }: { article: Article }) {
     return () => sub.remove();
   }, [close]);
   // White early in the flight, so the picture left behind in the list doesn't show through while the copy flies.
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.value, [0, 0.3], [0, 1], Extrapolation.CLAMP) }));
-  const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.value, [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
-  const coverVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.value : t.value }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) }));
+  const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
+  const coverVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.get() : t.get() }));
 
   return (
     <View style={styles.root}>
@@ -335,13 +336,13 @@ function FlyingCover({
   const IH = Math.max(coverHeight(origin.w, origin.h), coverHeight(width, coverH));
   const IW = IH * aspect;
   const frame = useAnimatedStyle(() => {
-    const k = t.value;
+    const k = t.get();
     const w = origin.w + (width - origin.w) * k;
     const h = origin.h + (coverH - origin.h) * k;
     const sx = w / width;
     const sy = h / coverH;
     return {
-      opacity: flying.value,
+      opacity: flying.get(),
       borderRadius: (origin.radius * (1 - k)) / ((sx + sy) / 2),
       transform: [
         { translateX: origin.x * (1 - k) + w / 2 - width / 2 },
@@ -352,7 +353,7 @@ function FlyingCover({
     };
   });
   const picture = useAnimatedStyle(() => {
-    const k = t.value;
+    const k = t.get();
     const w = origin.w + (width - origin.w) * k;
     const h = origin.h + (coverH - origin.h) * k;
     const s = coverHeight(w, h) / IH;
@@ -371,10 +372,10 @@ function FlyingCover({
 function FollowPill({ following, onPress }: { following: boolean; onPress: () => void }) {
   const on = useSharedValue(following ? 1 : 0);
   useEffect(() => {
-    on.value = withTiming(following ? 1 : 0, { duration: 220, easing: Easing.out(Easing.cubic) });
+    on.set(withTiming(following ? 1 : 0, { duration: 220, easing: Easing.out(Easing.cubic) }));
   }, [following, on]);
-  const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [colors.primary, 'rgba(15,20,25,0.08)']) }));
-  const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], ['#FFFFFF', colors.text]) }));
+  const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.get(), [0, 1], [colors.primary, 'rgba(15,20,25,0.08)']) }));
+  const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.get(), [0, 1], ['#FFFFFF', colors.text]) }));
   return (
     <PressableScale onPress={onPress} scaleTo={0.94} accessibilityRole="button" accessibilityLabel={following ? 'Following' : 'Follow'}>
       <Animated.View collapsable={false} style={[styles.follow, bg]}>
@@ -393,18 +394,18 @@ function BigHeart({ id, x, y, tilt, onDone }: { id: number; x: number; y: number
   const lift = useSharedValue(0);
   const fade = useSharedValue(1);
   useEffect(() => {
-    scale.value = withSequence(withSpring(1.12, { damping: 9, stiffness: 320, mass: 0.7 }), withSpring(1, { damping: 14, stiffness: 260 }));
-    lift.value = withDelay(420, withTiming(-46, { duration: 380, easing: Easing.in(Easing.cubic) }));
-    fade.value = withDelay(
+    scale.set(withSequence(withSpring(1.12, { damping: 9, stiffness: 320, mass: 0.7 }), withSpring(1, { damping: 14, stiffness: 260 })));
+    lift.set(withDelay(420, withTiming(-46, { duration: 380, easing: Easing.in(Easing.cubic) })));
+    fade.set(withDelay(
       440,
       withTiming(0, { duration: 340, easing: Easing.in(Easing.quad) }, (fin) => {
         if (fin) runOnJS(onDone)(id);
       }),
-    );
+    ));
   }, [id, onDone, scale, lift, fade]);
   const style = useAnimatedStyle(() => ({
-    opacity: fade.value,
-    transform: [{ translateY: lift.value }, { rotate: `${tilt}deg` }, { scale: scale.value }],
+    opacity: fade.get(),
+    transform: [{ translateY: lift.get() }, { rotate: `${tilt}deg` }, { scale: scale.get() }],
   }));
   return (
     <Animated.View collapsable={false} pointerEvents="none" style={[styles.bigHeart, { left: x - HEART_W / 2, top: y - HEART_H / 2 }, style]}>
@@ -426,7 +427,7 @@ type PageProps = {
 function ReaderPage({ index, text, width, textWidth, top, rise, scrollX }: PageProps) {
   const riseStyle = useAnimatedStyle(() => {
     if (index !== 1) return {};
-    return { transform: [{ translateY: interpolate(scrollX.value, [0, width], [rise, 0], Extrapolation.CLAMP) }] };
+    return { transform: [{ translateY: interpolate(scrollX.get(), [0, width], [rise, 0], Extrapolation.CLAMP) }] };
   });
 
   return (
@@ -448,7 +449,7 @@ function PageDots({ count, width, scrollX }: { count: number; width: number; scr
 
 function Dot({ index, width, scrollX }: { index: number; width: number; scrollX: SharedValue<number> }) {
   const style = useAnimatedStyle(() => {
-    const distance = Math.min(1, Math.abs(scrollX.value / width - index));
+    const distance = Math.min(1, Math.abs(scrollX.get() / width - index));
     return { backgroundColor: interpolateColor(distance, [0, 1], ['#000000', colors.textSubtle]) };
   });
   return <Animated.View collapsable={false} style={[styles.dot, style]} />;

@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import { memo, useRef, useState } from 'react';
+import { useRecyclingState } from '@shopify/flash-list';
+import { memo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { Post } from '@/mock/data';
@@ -18,7 +19,8 @@ function formatCount(n: number) {
 // Frame 1049 home card. Offsets are from the avatar top (design y 242.25): photo 270 tall at +37.25,
 // actions 11 under the photo, caption line 35.8 under it, time 3.2 under the caption, next post ~30 below.
 export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
-  const [saved, setSaved] = useState(false);
+  // The list reuses this view for other posts: state resets when the post changes.
+  const [saved, setSaved] = useRecyclingState(false, [post.id]);
   // The reader grows its cover out of this photo.
   const media = useRef<View>(null);
   const openArticle = () => openArticleFrom(post.articleId, media.current, post.image);
@@ -48,7 +50,7 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
 
       <PressableScale onPress={openArticle} accessibilityRole="button" accessibilityLabel={post.title} style={styles.media}>
         <View ref={media} collapsable={false} style={StyleSheet.absoluteFill}>
-          <Image source={post.image} style={styles.image} contentFit="cover" transition={200} />
+          <Image source={post.image} recyclingKey={post.id} style={styles.image} contentFit="cover" transition={200} />
         </View>
         <View style={styles.chip}>
           <Text style={styles.title} numberOfLines={2}>
