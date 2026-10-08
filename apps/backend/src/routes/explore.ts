@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { QUALITY_PRIOR } from "../services/contentScoreService.js";
 import { getBlockedIds } from "../services/blockService.js";
 
 const exploreQuerySchema = z.object({
@@ -100,7 +101,7 @@ export const exploreRoutes: FastifyPluginAsync = async (app) => {
                   item.score +
                   interestBoost(article.tags, user.interests) +
                   freshnessBoost(article.publishedAt) +
-                  (scoreMap.get(`ARTICLE:${article.id}`)?.qualityScore ?? 0) * 0.3 +
+                  (scoreMap.get(`ARTICLE:${article.id}`)?.qualityScore ?? QUALITY_PRIOR) * 0.3 +
                   (scoreMap.get(`ARTICLE:${article.id}`)?.trendingScore ?? 0) * 0.45 -
                   (scoreMap.get(`ARTICLE:${article.id}`)?.spamScore ?? 0) * 0.7,
                 content: article
@@ -117,7 +118,7 @@ export const exploreRoutes: FastifyPluginAsync = async (app) => {
                 item.score +
                 interestBoost([...review.tags, ...review.book.categories], user.interests) +
                 freshnessBoost(review.publishedAt) +
-                (scoreMap.get(`REVIEW:${review.id}`)?.qualityScore ?? 0) * 0.3 +
+                (scoreMap.get(`REVIEW:${review.id}`)?.qualityScore ?? QUALITY_PRIOR) * 0.3 +
                 (scoreMap.get(`REVIEW:${review.id}`)?.trendingScore ?? 0) * 0.45 -
                 (scoreMap.get(`REVIEW:${review.id}`)?.spamScore ?? 0) * 0.7,
               content: review

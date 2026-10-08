@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { QUALITY_PRIOR } from "../services/contentScoreService.js";
 import { getBlockedIds } from "../services/blockService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { fuzzyArticleIds, fuzzyBookIds, fuzzyReviewIds, fuzzyUserIds } from "../services/searchPlanner.js";
@@ -155,7 +156,7 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
           searchScore:
             textScore(article.title, article.subtitle, article.excerpt, article.body) +
             article.tags.reduce((score, tag) => score + textScore(tag), 0) +
-            (stats?.qualityScore ?? 0) * 0.15 +
+            (stats?.qualityScore ?? QUALITY_PRIOR) * 0.15 +
             (stats?.trendingScore ?? 0) * 0.2 -
             (stats?.spamScore ?? 0) * 0.4
         };
@@ -173,7 +174,7 @@ export const searchRoutes: FastifyPluginAsync = async (app) => {
             review.tags.reduce((score, tag) => score + textScore(tag), 0) +
             review.book.authors.reduce((score, author) => score + textScore(author), 0) +
             review.book.categories.reduce((score, category) => score + textScore(category), 0) +
-            (stats?.qualityScore ?? 0) * 0.15 +
+            (stats?.qualityScore ?? QUALITY_PRIOR) * 0.15 +
             (stats?.trendingScore ?? 0) * 0.2 -
             (stats?.spamScore ?? 0) * 0.4
         };

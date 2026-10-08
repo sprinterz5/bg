@@ -1,6 +1,6 @@
 import argon2 from "argon2";
 import { Prisma } from "@prisma/client";
-import type { FastifyPluginAsync } from "fastify";
+import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { createRemoteJWKSet, jwtVerify, SignJWT } from "jose";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -31,7 +31,9 @@ const registerSchema = z.object({
     .transform(normalizeUsername),
   displayName: z.string().min(1).max(80).optional(),
   password: z.string().min(8).max(200),
-  interests: z.array(z.string().min(1).max(40)).max(20).default([])
+  interests: z.array(z.string().min(1).max(40)).max(20).default([]),
+  // "I'm 13 or older" at signup; logged as a consent.
+  ageConfirmed: z.literal(true)
 });
 
 const loginSchema = z.object({
@@ -67,6 +69,13 @@ const usernameAvailabilitySchema = z.object({
 // Sign-in with Apple / Google. Accounts are only created through these providers: the first call
 // (token only) tells the app whether the account exists; for a new one the app collects name,
 // username, password and interests, then calls again with the same token plus those fields.
+// Minimum age agreed at signup; bump the version when the wording or the age changes.
+const AGE_CONSENT = { kind: "AGE_13", version: "1" } as const;
+
+function ageConsent(request: FastifyRequest) {
+  return { ...AGE_CONSENT, ipAddress: request.ip, userAgent: request.headers["user-agent"] };
+}
+
 const socialSchema = z.object({
   identityToken: z.string().min(1),
   username: z
@@ -79,7 +88,9 @@ const socialSchema = z.object({
   displayName: z.string().min(1).max(80).optional(),
   // Optional: lets the user also log in by username. The signup screen asks for at least 6 characters.
   password: z.string().min(6).max(200).optional(),
-  interests: z.array(z.string().min(1).max(40)).max(20).default([])
+  interests: z.array(z.string().min(1).max(40)).max(20).default([]),
+  // Required when the call creates the account (with username).
+  ageConfirmed: z.literal(true).optional()
 });
 
 type SocialIdentity = {
@@ -216,7 +227,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         username: body.username,
         displayName: body.displayName,
         passwordHash,
-        interests: body.interests
+        interests: body.interests,
+        consents: { create: ageConsent(request) }
       },
       select: privateUserSelect
     }).catch((error) => {
@@ -302,6 +314,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(409).send({ error: "username_unavailable", ...availability });
     }
 
+    if (!body.ageConfirmed) {
+      throw reply.badRequest("Confirm that you are 13 or older");
+    }
+
     const passwordHash = body.password ? await argon2.hash(body.password) : undefined;
     user = await app.prisma.user.create({
       data: {
@@ -311,7 +327,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         passwordHash,
         [providerField]: identity.subject,
         emailVerified: identity.emailVerified,
-        interests: body.interests
+        interests: body.interests,
+        consents: { create: ageConsent(request) }
       },
       select: privateUserSelect
     }).catch((error) => {

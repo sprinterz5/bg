@@ -1,7 +1,9 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
+import { deleteMediaObjects } from "../services/mediaService.js";
 import { createNotification } from "../services/notificationService.js";
-import { publicUserSelect } from "../utils/users.js";
+import { endpointRateLimit } from "../services/rateLimitService.js";
+import { privateUserSelect, publicUserSelect } from "../utils/users.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
 import { asApi, type ApiConnection, type ApiProfile, type ApiSessionUser, type ApiUserArticle, type Page } from "../contracts/api.js";
 
@@ -166,10 +168,52 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
     );
   });
 
+  // Data export (GDPR access / portability): everything the account owns as one JSON file. Raw feed events
+  // (views, read progress) are kept 30 days and left out; passwords and session tokens never leave.
+  const exportLimit = endpointRateLimit({ key: "user-export", limit: 3, windowSeconds: 3600, by: "userOrIp" });
+  app.get("/users/me/export", { preHandler: [app.authenticate, exportLimit] }, async (request, reply) => {
+    const account = await app.prisma.user.findUnique({
+      where: { id: request.user.sub },
+      select: {
+        ...privateUserSelect,
+        interests: true,
+        authoredArticles: true,
+        authoredReviews: true,
+        shelfItems: true,
+        notes: true,
+        stories: true,
+        comments: true,
+        likes: true,
+        bookmarks: true,
+        sentMessages: true,
+        following: { select: { followingId: true, createdAt: true } },
+        followers: { select: { followerId: true, createdAt: true } },
+        blocksGiven: { select: { blockedId: true, createdAt: true } },
+        mutesGiven: { select: { mutedId: true, createdAt: true } },
+        mediaAssets: { select: { id: true, kind: true, url: true, createdAt: true } },
+        notifications: true,
+        consents: true
+      }
+    });
+    if (!account) throw reply.notFound("User not found");
+    reply.header("content-disposition", `attachment; filename="smarts-${account.username}.json"`);
+    return { exportedAt: new Date().toISOString(), account };
+  });
+
   // Account deletion (required by the App Store and Google Play). Everything the user owns cascades in the
-  // schema; moderation and notification references fall back to null. Uploaded files stay in storage.
+  // schema; moderation and notification references fall back to null. Uploaded files go too, after the commit.
   app.delete("/users/me", { preHandler: [app.authenticate] }, async (request) => {
-    await app.prisma.user.delete({ where: { id: request.user.sub } });
+    const userId = request.user.sub;
+    const assets = await app.prisma.mediaAsset.findMany({
+      where: { ownerId: userId },
+      select: { provider: true, storageKey: true, variants: { select: { storageKey: true } } }
+    });
+    await app.prisma.$transaction([
+      app.prisma.mediaAsset.deleteMany({ where: { ownerId: userId } }),
+      app.prisma.user.delete({ where: { id: userId } })
+    ]);
+    const files = assets.flatMap((a) => [a, ...a.variants.map((v) => ({ provider: a.provider, storageKey: v.storageKey }))]);
+    deleteMediaObjects(files).catch((error) => app.log.warn({ err: error, userId }, "Deleting a removed account's files failed"));
     return { ok: true };
   });
 

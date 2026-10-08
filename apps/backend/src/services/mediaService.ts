@@ -1,9 +1,9 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectsCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { MultipartFile } from "@fastify/multipart";
 import type { PrismaClient } from "@prisma/client";
 import { fileTypeFromBuffer } from "file-type";
 import { randomUUID } from "node:crypto";
-import { mkdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { env } from "../config/env.js";
@@ -172,6 +172,31 @@ async function writeObject(storageKey: string, buffer: Buffer, mimeType: string)
   }
 
   return writeRemoteObject(storageKey, buffer, mimeType);
+}
+
+/** Removes stored files (main + variants) of deleted assets. Keys outside the media folder are ignored. */
+export async function deleteMediaObjects(objects: { provider: string; storageKey: string }[]) {
+  const root = path.resolve(env.MEDIA_STORAGE_DIR);
+  const remote: string[] = [];
+  for (const { provider, storageKey } of objects) {
+    const key = normalizeStorageKey(storageKey);
+    if (provider !== "LOCAL") {
+      remote.push(key);
+      continue;
+    }
+    const absolutePath = path.resolve(root, key);
+    if (absolutePath.startsWith(root + path.sep)) {
+      await rm(absolutePath, { force: true });
+    }
+  }
+  for (let i = 0; i < remote.length; i += 1000) {
+    await getS3Client().send(
+      new DeleteObjectsCommand({
+        Bucket: env.MEDIA_BUCKET,
+        Delete: { Objects: remote.slice(i, i + 1000).map((Key) => ({ Key })), Quiet: true }
+      })
+    );
+  }
 }
 
 export interface StoredMedia {

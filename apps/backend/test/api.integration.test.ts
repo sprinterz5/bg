@@ -1,4 +1,7 @@
 import type { FastifyInstance } from "fastify";
+import { existsSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 function setIntegrationEnv() {
@@ -81,7 +84,8 @@ describe("Puzzle API integration", () => {
         username: aliceUsername.toUpperCase(),
         displayName: "Integration Alice",
         password: "Puzzle123!",
-        interests: ["science fiction", "ideas", "culture"]
+        interests: ["science fiction", "ideas", "culture"],
+        ageConfirmed: true
       }
     });
     expect(aliceRegister.response.statusCode).toBe(201);
@@ -127,7 +131,8 @@ describe("Puzzle API integration", () => {
         username: bobUsername,
         displayName: "Integration Bob",
         password: "Puzzle123!",
-        interests: ["psychology"]
+        interests: ["psychology"],
+        ageConfirmed: true
       }
     });
     expect(bobRegister.response.statusCode).toBe(201);
@@ -747,8 +752,28 @@ describe("Puzzle API integration", () => {
     });
     expect(logoutAll.response.statusCode).toBe(200);
 
+    const clientLog = await json(app, { method: "POST", url: "/client-logs", body: { level: "error", message: "it: test crash", platform: "android" } });
+    expect(clientLog.response.statusCode).toBe(204);
+
+    const bobExport = await json(app, { method: "GET", url: "/users/me/export", token: bobToken });
+    expect(bobExport.response.statusCode).toBe(200);
+    expect(bobExport.payload.account.username).toBe(bobUsername);
+    expect(bobExport.payload.account.passwordHash).toBeUndefined();
+    expect(bobExport.payload.account.consents).toHaveLength(1);
+
+    // Bob's uploads are removed from storage with the account.
+    const bobFileKey = `avatar/it/${suffix}.webp`;
+    const bobFile = path.resolve("storage/uploads", bobFileKey);
+    await mkdir(path.dirname(bobFile), { recursive: true });
+    await writeFile(bobFile, "x");
+    await app.prisma.mediaAsset.create({
+      data: { ownerId: bobId, kind: "AVATAR", provider: "LOCAL", url: `http://localhost:4000/media/${bobFileKey}`, storageKey: bobFileKey, mimeType: "image/webp", byteSize: 1 }
+    });
+
     const deleteBob = await json(app, { method: "DELETE", url: "/users/me", token: bobToken });
     expect(deleteBob.response.statusCode).toBe(200);
+    await expect.poll(() => existsSync(bobFile)).toBe(false);
+    expect(await app.prisma.mediaAsset.count({ where: { storageKey: bobFileKey } })).toBe(0);
     const bobGone = await json(app, { method: "GET", url: `/users/${bobUsername}` });
     expect(bobGone.response.statusCode).toBe(404);
   });

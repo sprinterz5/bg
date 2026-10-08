@@ -98,7 +98,7 @@ Uploads are processed before storage:
 
 ## Main API Areas
 
-- `POST /auth/register`
+- `POST /auth/register` (needs `ageConfirmed: true`, logged in `UserConsent`; same for social signup)
 - `GET /auth/username-availability`
 - `POST /auth/login`
 - `POST /auth/apple`
@@ -130,6 +130,8 @@ Uploads are processed before storage:
 - `GET /me/bookmarks`
 - `POST /bookmarks/toggle`
 - `GET /me/blocks`
+- `GET /users/me/export` (GDPR data export), `DELETE /users/me` (account + uploaded files)
+- `POST /client-logs` (app errors into the server log)
 - `POST /users/:id/block`
 - `DELETE /users/:id/block`
 - `GET /me/mutes`

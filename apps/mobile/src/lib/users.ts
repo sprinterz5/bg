@@ -20,6 +20,9 @@ export const setFollow = (userId: string, follow: boolean) =>
 
 export const deleteAccount = () => api('/users/me', { method: 'DELETE', auth: true });
 
+/** Everything the account owns (GDPR export), as the backend's JSON. */
+export const exportMyData = () => api<unknown>('/users/me/export', { auth: true });
+
 /** Design style: followers "1,5M" (comma), likes "1.2K" (dot). */
 export function formatCount(n: number, sep: ',' | '.' = ',') {
   const short = (v: number, unit: string) => `${(Math.floor(v * 10) / 10).toString().replace('.', sep)}${unit}`;

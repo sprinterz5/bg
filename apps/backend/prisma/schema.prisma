@@ -300,6 +300,7 @@ model User {
   mutesGiven     UserMute[]  @relation("MutesGiven")
   mutesReceived  UserMute[]  @relation("MutesReceived")
   deviceTokens   DeviceToken[]
+  consents       UserConsent[]
 
   @@index([username])
   @@index([createdAt])
@@ -954,4 +955,20 @@ model AiEmbedding {
   @@unique([targetType, targetId, model])
   @@index([targetType, targetId])
   @@index([model, status, updatedAt])
+}
+
+// Consent journal: what the user agreed to (AGE_13 now; TERMS / PRIVACY once the documents exist), which
+// version of it, when and from where.
+model UserConsent {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  kind       String
+  version    String
+  ipAddress  String?
+  userAgent  String?
+  acceptedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
 }

@@ -1,15 +1,16 @@
 import { router, useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, Share, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from '@/components/icon';
+import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
 import { Text } from '@/components/text';
-import { deleteAccount, loadProfile } from '@/lib/users';
+import { deleteAccount, exportMyData, loadProfile } from '@/lib/users';
 import type { Profile as ProfileData } from '@/mock/data';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
@@ -56,13 +57,15 @@ export default function Profile() {
       },
     ]);
 
-  // No settings screen in the design yet: the gear opens a system sheet with Log out and Delete account.
-  const openSettings = () =>
-    Alert.alert(user?.username ?? '', undefined, [
-      { text: 'Log out', onPress: signOut },
-      { text: 'Delete account', style: 'destructive', onPress: confirmDelete },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+  // The export goes out through the share sheet (save to Files, mail it, ...).
+  const downloadData = () =>
+    exportMyData()
+      .then((data) => Share.share({ title: 'My Smarts data', message: JSON.stringify(data, null, 2) }))
+      .catch(() => Alert.alert("Couldn't export your data", 'Check the connection and try again.'));
+
+  // No settings screen in the design yet: the gear opens a bottom sheet with Log out, the data export and
+  // Delete account (an Android alert can't hold more than three buttons).
+  const [settings, setSettings] = useState(false);
 
   if (!user) return null;
   const posts = data?.posts ?? [];
@@ -76,7 +79,7 @@ export default function Profile() {
         <Text style={styles.title} numberOfLines={1}>
           {user.username}
         </Text>
-        <PressableScale onPress={openSettings} hitSlop={10} scaleTo={0.88} accessibilityLabel="Settings" style={styles.settings}>
+        <PressableScale onPress={() => setSettings(true)} hitSlop={10} scaleTo={0.88} accessibilityLabel="Settings" style={styles.settings}>
           <Icon name="profileSettings" width={21.6} height={21.67} />
         </PressableScale>
       </View>
@@ -126,6 +129,16 @@ export default function Profile() {
         </Animated.View>
         )}
       </ScrollView>
+
+      <PostActions
+        visible={settings}
+        onClose={() => setSettings(false)}
+        actions={[
+          { label: 'Log out', onPress: signOut },
+          { label: 'Download my data', onPress: downloadData },
+          { label: 'Delete account', destructive: true, onPress: confirmDelete },
+        ]}
+      />
     </View>
   );
 }

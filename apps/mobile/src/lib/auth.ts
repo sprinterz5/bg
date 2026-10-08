@@ -69,6 +69,7 @@ export async function completeSignup(draft: SignupDraft): Promise<SessionUser> {
       displayName: draft.name,
       password: draft.password || undefined,
       interests: draft.interests,
+      ageConfirmed: draft.ageConfirmed || undefined,
     },
   });
   if (data.signupRequired) throw new Error('Signup was not completed');

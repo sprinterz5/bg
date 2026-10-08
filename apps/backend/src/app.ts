@@ -25,6 +25,7 @@ import { blockRoutes } from "./routes/blocks.js";
 import { bookmarkRoutes } from "./routes/bookmarks.js";
 // import { bookRoutes } from "./routes/books.js";
 import { chatRoutes } from "./routes/chats.js";
+import { clientLogRoutes } from "./routes/clientLogs.js";
 import { commentRoutes } from "./routes/comments.js";
 import { deviceTokenRoutes } from "./routes/deviceTokens.js";
 import { exploreRoutes } from "./routes/explore.js";
@@ -163,6 +164,7 @@ export async function buildApp() {
   await app.register(userRoutes);
   await app.register(blockRoutes);
   await app.register(deviceTokenRoutes);
+  await app.register(clientLogRoutes);
   // await app.register(bookRoutes);
   await app.register(bookmarkRoutes);
   // await app.register(readingNowRoutes);

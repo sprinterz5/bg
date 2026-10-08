@@ -17,6 +17,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { installErrorReporting } from '@/lib/report-errors';
 import { FeedProvider } from '@/state/feed';
 import { SessionProvider } from '@/state/session';
 import { DesignOverlay } from '@/components/design-overlay';
@@ -37,6 +38,8 @@ const FONTS = {
   Inter_800ExtraBold,
   Inter_900Black,
 };
+
+installErrorReporting();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONTS);
