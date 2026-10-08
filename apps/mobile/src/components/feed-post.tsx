@@ -13,7 +13,7 @@ import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 
-const EXCERPT = '#0F1419';
+const EXCERPT = '#4E4E4E';
 
 function formatCount(n: number) {
   return n >= 10000 ? `${(n / 1000).toFixed(n >= 100000 ? 0 : 1)}k` : String(n);
