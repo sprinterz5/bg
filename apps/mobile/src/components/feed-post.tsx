@@ -107,8 +107,8 @@ const styles = StyleSheet.create({
   media: { height: 265, marginTop: 7, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   // Sentinel Bold 20/27 in the design; Source Serif 4 Bold in the app (see fonts.headline).
-  title: { marginTop: 18.5, marginLeft: 13.5, width: 306, fontFamily: fonts.headline, fontSize: 21.25, lineHeight: 26.5, letterSpacing: 21.25 * -0.014, color: colors.text },
-  excerpt: { marginTop: 10, marginLeft: 15.5, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 14.15, lineHeight: 19.4, letterSpacing: 14.15 * 0.005, color: EXCERPT },
+  title: { marginTop: 18.5, marginLeft: 13.5, width: 306, fontFamily: fonts.headline, fontSize: 21.25, lineHeight: 26.5, letterSpacing: 21.25 * -0.012, color: colors.text },
+  excerpt: { marginTop: 10, marginLeft: 15.5, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 14.25, lineHeight: 19.4, letterSpacing: 14.25 * 0.005, color: EXCERPT },
   // counters (SF Pro Semibold 13/16) 23 under the excerpt: eye 25x18 at x 16.85, "520" at x 50, send at x 106.65,
   // its count at x 133, bookmark at x 363.3
   actions: { height: 16, marginTop: 18 },
