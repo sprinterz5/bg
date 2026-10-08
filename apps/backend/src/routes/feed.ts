@@ -63,13 +63,16 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 // for_you ranks a pool of candidates once and keeps the ranked ids for a while; later pages are slices of that
 // list (cursor = snapshot id + offset). Paging by publishedAt lost posts: the order is by score, not by date.
+// The feed doesn't end with the first pool: when a page runs past the list, the next older batch of posts
+// (before `frontier`, the oldest point the newest-first source reached) is ranked and appended.
 const SNAPSHOT_TTL_SECONDS = 30 * 60;
-const SNAPSHOT_SIZE = 300;
+const SNAPSHOT_MAX = 20_000;
 const FRESH_TAKE = 150;
 const SOURCE_TAKE = 100;
 
 type FeedFilter = "all" | "articles" | "books";
 type CandidateContext = { userId: string; filter: FeedFilter; hiddenAuthorIds: string[]; interests: string[] };
+type Snapshot = { keys: string[]; frontier: string | null };
 
 function visibleWhere(hiddenAuthorIds: string[]) {
   return {
@@ -80,35 +83,46 @@ function visibleWhere(hiddenAuthorIds: string[]) {
   };
 }
 
-/** Candidate pool from several sources: newest, followed authors, trending this week, matching interests. */
-async function loadCandidates(app: FastifyInstance, ctx: CandidateContext) {
+/**
+ * Candidate pool from several sources: newest, followed authors, trending this week, matching interests.
+ * With `before` (extending a snapshot) only the newest-first source, older than that point.
+ * `frontier` = where the newest-first source stopped (null when it ran out of posts).
+ */
+async function loadCandidates(app: FastifyInstance, ctx: CandidateContext, before?: Date) {
   const base = visibleWhere(ctx.hiddenAuthorIds);
+  const fresh = before ? { ...base, publishedAt: { lt: before } } : base;
   const since = (days: number) => ({ gte: new Date(Date.now() - days * DAY_MS) });
   const followed = { author: { followers: { some: { followerId: ctx.userId } } } };
   const interests = [...new Set(ctx.interests.flatMap((i) => [i, i.toLowerCase()]))];
 
-  const articleSources: Prisma.ArticleWhereInput[] = [
-    base,
-    { ...base, ...followed, publishedAt: since(14) },
-    ...(interests.length > 0 ? [{ ...base, tags: { hasSome: interests }, publishedAt: since(30) }] : [])
-  ];
-  const reviewSources: Prisma.ReviewWhereInput[] = [
-    base,
-    { ...base, ...followed, publishedAt: since(14) },
-    ...(interests.length > 0
-      ? [{ ...base, publishedAt: since(30), OR: [{ tags: { hasSome: interests } }, { book: { categories: { hasSome: interests } } }] }]
-      : [])
-  ];
+  const articleSources: Prisma.ArticleWhereInput[] = before
+    ? [fresh]
+    : [
+        fresh,
+        { ...base, ...followed, publishedAt: since(14) },
+        ...(interests.length > 0 ? [{ ...base, tags: { hasSome: interests }, publishedAt: since(30) }] : [])
+      ];
+  const reviewSources: Prisma.ReviewWhereInput[] = before
+    ? [fresh]
+    : [
+        fresh,
+        { ...base, ...followed, publishedAt: since(14) },
+        ...(interests.length > 0
+          ? [{ ...base, publishedAt: since(30), OR: [{ tags: { hasSome: interests } }, { book: { categories: { hasSome: interests } } }] }]
+          : [])
+      ];
 
   const trendingIds = async (targetType: "ARTICLE" | "REVIEW") =>
-    (
-      await app.prisma.contentScore.findMany({
-        where: { targetType, trendingScore: { gt: 0 }, updatedAt: since(7) },
-        orderBy: { trendingScore: "desc" },
-        take: SOURCE_TAKE,
-        select: { targetId: true }
-      })
-    ).map((row) => row.targetId);
+    before
+      ? []
+      : (
+          await app.prisma.contentScore.findMany({
+            where: { targetType, trendingScore: { gt: 0 }, updatedAt: since(7) },
+            orderBy: { trendingScore: "desc" },
+            take: SOURCE_TAKE,
+            select: { targetId: true }
+          })
+        ).map((row) => row.targetId);
 
   const [articleLists, reviewLists] = await Promise.all([
     ctx.filter === "books"
@@ -136,7 +150,17 @@ async function loadCandidates(app: FastifyInstance, ctx: CandidateContext) {
   const unique = new Map<string, ReturnType<typeof articleToFeedItem> | ReturnType<typeof reviewToFeedItem>>();
   for (const article of articleLists.flat()) unique.set(`ARTICLE:${article.id}`, articleToFeedItem(article));
   for (const review of reviewLists.flat()) unique.set(`REVIEW:${review.id}`, reviewToFeedItem(review));
-  return [...unique.values()];
+
+  // The newest-first lists are the first of each; a full one may have more behind its last post. The later of
+  // the two stopping points: older posts of the other type not reached yet come next time (seen ones are skipped).
+  const stops = [articleLists[0], reviewLists[0]]
+    .filter((list) => list && list.length === FRESH_TAKE)
+    .map((list) => {
+      const last = list!.at(-1)!;
+      return (last.publishedAt ?? last.createdAt).getTime();
+    });
+  const frontier = stops.length > 0 ? new Date(Math.max(...stops)).toISOString() : null;
+  return { items: [...unique.values()], frontier };
 }
 
 /** Items of a snapshot page, in snapshot order; posts deleted or hidden since are skipped. */
@@ -157,7 +181,7 @@ async function loadItemsByKeys(app: FastifyInstance, keys: string[]) {
 }
 
 function parseCursor(cursor: string | undefined) {
-  const match = cursor?.match(/^([0-9a-f-]{36})\.(\d{1,4})$/);
+  const match = cursor?.match(/^([0-9a-f-]{36})\.(\d{1,5})$/);
   return match?.[1] && match[2] ? { snapshotId: match[1], offset: Number(match[2]) } : null;
 }
 
@@ -178,19 +202,26 @@ export const feedRoutes: FastifyPluginAsync = async (app) => {
     // Next page of a ranked snapshot: no ranking work at all.
     const cursor = query.mode === "for_you" ? parseCursor(query.cursor) : null;
     const snapshotKey = (id: string) => `feedsnap:${userId}:${query.filter}:${id}`;
+    const servePage = async (snapshotId: string, snapshot: Snapshot, offset: number) => {
+      const pageKeys = snapshot.keys.slice(offset, offset + query.limit);
+      const end = offset + pageKeys.length;
+      const more = end < snapshot.keys.length || (snapshot.frontier !== null && snapshot.keys.length < SNAPSHOT_MAX);
+      return remember({
+        data: await enrichFeedItems(app, userId, await loadItemsByKeys(app, pageKeys)),
+        nextCursor: more ? `${snapshotId}.${end}` : null,
+        algorithm: "behavioral_ranking_v3"
+      });
+    };
+
+    let snapshot: Snapshot | null = null;
     if (cursor) {
       const stored = await app.redis.get(snapshotKey(cursor.snapshotId)).catch(() => null);
-      if (stored) {
-        const keys = JSON.parse(stored) as string[];
-        const pageKeys = keys.slice(cursor.offset, cursor.offset + query.limit);
-        const end = cursor.offset + pageKeys.length;
-        return remember({
-          data: await enrichFeedItems(app, userId, await loadItemsByKeys(app, pageKeys)),
-          nextCursor: end < keys.length ? `${cursor.snapshotId}.${end}` : null,
-          algorithm: "behavioral_ranking_v3"
-        });
+      snapshot = stored ? (JSON.parse(stored) as Snapshot) : null;
+      // Within the ranked list (or nothing older left): no ranking work at all.
+      if (snapshot && (cursor.offset + query.limit <= snapshot.keys.length || snapshot.frontier === null || snapshot.keys.length >= SNAPSHOT_MAX)) {
+        return servePage(cursor.snapshotId, snapshot, cursor.offset);
       }
-      // Snapshot expired: rank again below and continue from the same offset.
+      // Past the end: the next older batch is ranked below. Expired: ranked again, continuing from the same offset.
     }
 
     const [user, follows, blockedIds, mutedRows] = await Promise.all([
@@ -240,22 +271,29 @@ export const feedRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const candidates = await loadCandidates(app, { userId, filter: query.filter, hiddenAuthorIds, interests: user.interests });
-    const ranked = diversifyByAuthor(
-      await scoreFeedItems(app, userId, candidates, followingIds, user.interests, mutedIds, blockedIds)
-    ).slice(0, SNAPSHOT_SIZE);
+    const ctx = { userId, filter: query.filter, hiddenAuthorIds, interests: user.interests };
+    const rank = async (items: Awaited<ReturnType<typeof loadCandidates>>["items"]) =>
+      diversifyByAuthor(await scoreFeedItems(app, userId, items, followingIds, user.interests, mutedIds, blockedIds)).map(
+        (item) => `${item.targetType}:${item.targetId}`
+      );
+
+    if (snapshot?.frontier) {
+      // A few older batches at most, until this page fills (a batch may hold only posts already in the list).
+      const known = new Set(snapshot.keys);
+      const need = (cursor?.offset ?? 0) + query.limit;
+      for (let i = 0; i < 5 && snapshot.frontier && snapshot.keys.length < need; i++) {
+        const older = await loadCandidates(app, ctx, new Date(snapshot.frontier));
+        const keys = await rank(older.items.filter((item) => !known.has(`${item.targetType}:${item.targetId}`)));
+        keys.forEach((key) => known.add(key));
+        snapshot = { keys: [...snapshot.keys, ...keys].slice(0, SNAPSHOT_MAX), frontier: older.frontier };
+      }
+    } else {
+      const pool = await loadCandidates(app, ctx);
+      snapshot = { keys: await rank(pool.items), frontier: pool.frontier };
+    }
 
     const snapshotId = cursor?.snapshotId ?? randomUUID();
-    const keys = ranked.map((item) => `${item.targetType}:${item.targetId}`);
-    await app.redis.set(snapshotKey(snapshotId), JSON.stringify(keys), "EX", SNAPSHOT_TTL_SECONDS).catch(() => undefined);
-
-    const offset = Math.min(cursor?.offset ?? 0, ranked.length);
-    const data = ranked.slice(offset, offset + query.limit);
-    const end = offset + data.length;
-    return remember({
-      data: await enrichFeedItems(app, userId, data),
-      nextCursor: end < ranked.length ? `${snapshotId}.${end}` : null,
-      algorithm: "behavioral_ranking_v3"
-    });
+    await app.redis.set(snapshotKey(snapshotId), JSON.stringify(snapshot), "EX", SNAPSHOT_TTL_SECONDS).catch(() => undefined);
+    return servePage(snapshotId, snapshot, Math.min(cursor?.offset ?? 0, snapshot.keys.length));
   });
 };
