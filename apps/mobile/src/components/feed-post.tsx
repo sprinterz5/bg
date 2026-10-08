@@ -98,7 +98,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
 const styles = StyleSheet.create({
   // avatar 31 at x 11; username (Inter SemiBold 12.6) at x 52 from +0.5, "Recommended for you" (Inter 11) from +16.5;
   // menu (two bars, 20x10.5) at x 358, +9.5
-  head: { height: 31, flexDirection: 'row', paddingLeft: 11 },
+  head: { height: 31, flexDirection: 'row', paddingLeft: 10 },
   author: { flexDirection: 'row', maxWidth: 300 },
   names: { marginLeft: 10, marginTop: 0.5 },
   name: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.6, lineHeight: 16.5, letterSpacing: 13.6 * 0.035, color: colors.text },
