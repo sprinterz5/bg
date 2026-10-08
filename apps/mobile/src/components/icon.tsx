@@ -35,6 +35,12 @@ const icons = {
   postBookmark2: require('@/assets/icons/post-bookmark-2.svg'),
   postMenu: require('@/assets/icons/post-menu.svg'),
   storyRing: require('@/assets/icons/story-ring.svg'),
+  // Frame 1198 Explore list rows and the always-visible search field.
+  exploreFieldSearch: require('@/assets/icons/explore-field-search.svg'),
+  rowLike: require('@/assets/icons/row-like.svg'),
+  rowShare: require('@/assets/icons/row-share.svg'),
+  rowBookmark: require('@/assets/icons/row-bookmark.svg'),
+  rowMore: require('@/assets/icons/row-more.svg'),
   storyRingSeen: require('@/assets/icons/story-ring-seen.svg'),
   storyBack: require('@/assets/icons/story-back.svg'),
   storyHeart: require('@/assets/icons/story-heart.svg'),

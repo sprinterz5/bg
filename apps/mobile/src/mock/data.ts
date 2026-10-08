@@ -270,7 +270,8 @@ ARTICLES.steveIve = {
 };
 
 /** Figma 3163:1520 — Explore topics row ("+" sits after the selected topic). */
-export const EXPLORE_TOPICS = ['For You', 'Books', 'Following', 'News'] as const;
+export const EXPLORE_TOPICS = ['For You', 'Learn', 'Ideas', 'Grow'] as const;
+export const RESULT_TABS = ['Related', 'Detailed', 'Quick'] as const;
 
 export type ExplorePost = {
   id: string;
@@ -849,7 +850,7 @@ for (const p of tinkovProfile.posts) {
 }
 
 /** "sam_altman" → "Sam Altman". */
-function displayName(username: string) {
+export function displayName(username: string) {
   return username
     .split(/[._]/)
     .filter(Boolean)
