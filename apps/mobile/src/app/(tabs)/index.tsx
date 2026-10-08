@@ -166,7 +166,7 @@ export default function Home() {
 }
 
 const IOS = Platform.OS === 'ios';
-const HEADER_H = 62.75;
+const HEADER_H = 59.4;
 // Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
 const THRESHOLD = 64;
 const HOLD = 52;
@@ -192,16 +192,17 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   list: { flex: 1 },
   // Frame 1049 home (status bar 47): plus 21 at (14, 64), "Smarts" (Caveat 36.5) centred 3px left of the
-  // screen centre on y 73.2, bell 20x23 at (351, 62.8); story rings start at y 109.75; first avatar at 242.25.
+  // screen centre on y 73.2; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); story rings start at y 106.4;
+  // first avatar at 242.5.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   header: { height: HEADER_H, alignItems: 'center' },
-  plus: { position: 'absolute', left: 14, top: 17 },
-  bell: { position: 'absolute', left: 351, top: 15.8 },
+  plus: { position: 'absolute', left: 21, top: 18 },
+  bell: { position: 'absolute', left: 341.98, top: 16.77 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
   logo: { marginTop: 1.2, width: 160, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 38.5, lineHeight: 50, color: colors.text, transform: [{ translateX: -3.1 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
-  storiesGap: { marginBottom: 16.25 },
+  storiesGap: { marginBottom: 20.5 },
   postingGap: { marginBottom: 32 },
-  separator: { height: 37 },
+  separator: { height: 24.9 },
 });

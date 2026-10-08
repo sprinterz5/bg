@@ -2,14 +2,15 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-// Grey ring of a watched story, drawn as a bordered circle (same geometry as story-ring-seen.svg: 97.5 wide,
-// stroke 3.25 inside the edge). Not the SVG: as an image inside the half-clips below it rasterized at a different
+// Grey ring of a watched story, drawn as a bordered circle (Frame 1198: 98.2 wide, stroke 3.6 #DBE0E6 inside
+// the edge). Not the SVG: as an image inside the half-clips below it rasterized at a different
 // size on Android, so the sweeping band didn't match the ring.
-const SEEN_STROKE = 3.25;
+const SEEN_STROKE = 3.6;
+const SEEN_BASE = 98.2;
 const SEEN_COLOR = '#DBE0E6';
 
 export function SeenRing({ size }: { size: number }) {
-  return <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, borderRadius: size / 2, borderWidth: (SEEN_STROKE * size) / 97.5, borderColor: SEEN_COLOR }} />;
+  return <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, borderRadius: size / 2, borderWidth: (SEEN_STROKE * size) / SEEN_BASE, borderColor: SEEN_COLOR }} />;
 }
 
 // A watched story's ring turning grey, like a loading spinner finishing: a grey line with round ends runs
@@ -42,7 +43,7 @@ export function RingSweep({ size, delay, onDone }: { size: number; delay: number
   }, [delay, p, onDone]);
 
   const half = size / 2;
-  const stroke = (SEEN_STROKE * size) / 97.5;
+  const stroke = (SEEN_STROKE * size) / SEEN_BASE;
   const mid = half - stroke / 2; // radius of the stroke's centre line
 
   // Line length in degrees.

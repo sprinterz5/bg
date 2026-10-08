@@ -2,22 +2,25 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useRecyclingState } from '@shopify/flash-list';
 import { memo, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Post } from '@/mock/data';
 import { colors, fonts } from '@/theme';
 import { AuthorAvatar } from './author-row';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
-import { Text } from '@/components/text';
+import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
+
+const EXCERPT = '#6B6B6B';
 
 function formatCount(n: number) {
   return n >= 10000 ? `${(n / 1000).toFixed(n >= 100000 ? 0 : 1)}k` : String(n);
 }
 
-// Frame 1049 home card. Offsets are from the avatar top (design y 242.25): photo 270 tall at +37.25,
-// actions 11 under the photo, caption line 35.8 under it, time 3.2 under the caption, next post ~30 below.
+// Frame 1198 home card. Offsets from the avatar top (design y 242.5): photo 265 tall at +39, title (2 lines of
+// 27) 17.5 under the photo, excerpt 10 under the title, counters 23 under the excerpt, time 17 under them, the next
+// card's avatar ~25 below.
 export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
   // The list reuses this view for other posts: state resets when the post changes.
   const [saved, setSaved] = useRecyclingState(false, [post.id]);
@@ -32,9 +35,7 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
   return (
     <View>
       <View style={styles.head}>
-        <View style={styles.avatar}>
-          <AuthorAvatar author={post.author} size={31.5} />
-        </View>
+        <AuthorAvatar author={post.author} size={31} />
         <View style={styles.names}>
           <Text style={styles.name} numberOfLines={1}>
             {post.author.username}
@@ -44,7 +45,7 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
           </Text>
         </View>
         <PressableScale hitSlop={12} accessibilityLabel="More" style={styles.menu}>
-          <Icon name="postMenu" width={20} height={13.75} />
+          <Icon name="postMenu" width={20} height={10.5} />
         </PressableScale>
       </View>
 
@@ -52,67 +53,55 @@ export const FeedPost = memo(function FeedPost({ post }: { post: Post }) {
         <View ref={media} collapsable={false} style={StyleSheet.absoluteFill}>
           <Image source={post.image} recyclingKey={post.id} style={styles.image} contentFit="cover" transition={200} />
         </View>
-        <View style={styles.chip}>
-          <Text style={styles.title} numberOfLines={2}>
-            {post.title}
-          </Text>
-        </View>
       </PressableScale>
 
+      <Pressable onPress={openArticle} accessibilityRole="button">
+        <Text style={styles.title} numberOfLines={2}>
+          {post.title}
+        </Text>
+        <Text style={styles.excerpt} numberOfLines={2}>
+          {post.caption}
+        </Text>
+      </Pressable>
+
       <View style={styles.actions}>
-        <Icon name="postViews" width={22} height={16} style={styles.views} />
+        <Icon name="postViews" width={25.06} height={18} style={styles.views} />
         <Text style={[styles.count, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
         <PressableScale hitSlop={8} accessibilityLabel="Share" style={styles.send}>
-          <Icon name="postSend" width={16.96} height={16.54} />
+          <Icon name="postSend" width={18.03} height={17.58} />
         </PressableScale>
         <Text style={[styles.count, styles.sendCount]}>{formatCount(post.shares)}</Text>
         <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
-          <Icon name="postBookmark2" width={17.75} height={18.75} tintColor={saved ? colors.primary : undefined} />
+          <Icon name="postBookmark2" width={17.75} height={19.76} tintColor={saved ? colors.primary : undefined} />
         </PressableScale>
       </View>
 
-      <Text style={styles.caption} numberOfLines={2}>
-        {post.caption}
-      </Text>
       <Text style={styles.time}>{post.timeAgo}</Text>
     </View>
   );
 });
 
 const styles = StyleSheet.create({
-  // avatar 30 at x 8; name baseline +12.1, "Recommended for you" baseline +26.4; menu (20x13.75) at x 356, +8.25
-  head: { height: 31, flexDirection: 'row', paddingLeft: 8 },
-  avatar: { marginTop: -0.75 },
-  names: { marginLeft: 13.1, marginTop: -1, flex: 1 },
-  name: { fontSize: 13.5, lineHeight: 17, fontWeight: '700', color: colors.text },
-  sub: { fontSize: 11.75, lineHeight: 14, marginTop: 1.5, color: colors.text },
-  menu: { position: 'absolute', left: 356, top: 8.25 },
-  media: { height: 270, marginTop: 7.25, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
+  // avatar 31 at x 11; username (Inter SemiBold 12.6) at x 52 from +0.5, "Recommended for you" (Inter 11) from +16.5;
+  // menu (two bars, 20x10.5) at x 358, +9.5
+  head: { height: 31, flexDirection: 'row', paddingLeft: 11 },
+  names: { marginLeft: 10, marginTop: 0.5, flex: 1 },
+  name: { fontFamily: INTER_FAMILIES['600'], fontSize: 12.6, lineHeight: 15.25, letterSpacing: 12.6 * 0.035, color: colors.text },
+  sub: { marginTop: 0.75, fontFamily: INTER_FAMILIES['400'], fontSize: 11, lineHeight: 13.3, letterSpacing: 11 * 0.02, color: colors.text },
+  menu: { position: 'absolute', left: 358, top: 9.5 },
+  media: { height: 265, marginTop: 8, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
-  // 285x50 rect with a centred 1px white stroke → 286x51 outside, 4 from the left, 6.75 from the bottom; 60% white
-  chip: {
-    position: 'absolute',
-    left: 4,
-    bottom: 7.75,
-    width: 286,
-    height: 51,
-    paddingTop: 4.45,
-    paddingLeft: 4.1,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-    backgroundColor: 'rgba(255,255,255,0.6)',
-  },
-  // Sen measured against the frame: "Wiggling is welcome in this" is 276.8 wide → 20.4
-  title: { width: 278, fontFamily: fonts.display, fontSize: 21.3, lineHeight: 22.45, color: colors.text },
-  // eye 22x16 at x 11.25, count at x 42.9; send at x 87, count at x 113.8; bookmark at x 358.9 (all 11 under the photo)
-  actions: { height: 19, marginTop: 11 },
-  views: { position: 'absolute', left: 10.675, top: -2 },
-  send: { position: 'absolute', left: 86.98, top: -1.77 },
-  bookmark: { position: 'absolute', left: 358.875, top: -3.2 },
-  count: { position: 'absolute', top: -0.8, fontSize: 12.6, lineHeight: 16, fontWeight: '600', color: colors.text },
-  viewsCount: { left: 42.4 },
-  sendCount: { left: 113.3 },
-  caption: { marginTop: 5.8, paddingLeft: 11, paddingRight: 14, fontSize: 13.65, lineHeight: 16.8, letterSpacing: 13.65 * 0.005, color: colors.text },
-  time: { marginTop: 3.2, paddingLeft: 11.4, fontSize: 11.5, lineHeight: 14, color: colors.textSubtle },
+  // Sentinel Bold 20/27 in the design (licensed font, not in the app yet): the system serif stands in.
+  title: { marginTop: 17.5, marginLeft: 14, width: 352, fontFamily: fonts.serif, fontWeight: '700', fontSize: 20, lineHeight: 27, letterSpacing: 20 * -0.014, color: colors.text },
+  excerpt: { marginTop: 10, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 13.5, lineHeight: 18.5, letterSpacing: 13.5 * 0.005, color: EXCERPT },
+  // counters (SF Pro Semibold 13/16) 23 under the excerpt: eye 25x18 at x 16.85, "520" at x 50, send at x 106.65,
+  // its count at x 133, bookmark at x 363.3
+  actions: { height: 16, marginTop: 23 },
+  views: { position: 'absolute', left: 16.85, top: -0.75 },
+  send: { position: 'absolute', left: 106.65, top: 0.3 },
+  bookmark: { position: 'absolute', left: 363.27, top: -1.38 },
+  count: { position: 'absolute', top: 0, fontSize: 13, lineHeight: 16, fontWeight: '600', color: colors.text },
+  viewsCount: { left: 50 },
+  sendCount: { left: 133 },
+  time: { marginTop: 17, marginLeft: 18, fontFamily: INTER_FAMILIES['400'], fontSize: 10.5, lineHeight: 16, color: EXCERPT },
 });

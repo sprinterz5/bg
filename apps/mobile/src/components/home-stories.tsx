@@ -9,14 +9,14 @@ import { colors } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { RingSweep, SeenRing } from './ring-sweep';
-import { Text } from '@/components/text';
+import { INTER_FAMILIES, Text } from '@/components/text';
 import { push } from '@/lib/nav';
 import { onStoriesClosing, setStoryOrigin } from '@/lib/story-origin';
 import { useSeenStories } from '@/state/feed';
 
-// Frame 1049 home: rings 97.5 (3.25 gradient stroke) every 108 from x 3.75, photo 85 inside a 3px white
-// stroke; the username baseline 15.85 under the ring. Watched stories get the grey ring.
-const RING = 97.5;
+// Frame 1198 home: rings 98.2 (3.6 gradient stroke) every 110 from x 10.9, photo 85 inside a 3px white
+// stroke; the username (Inter 10.75, +4%) 4.4 under the ring. Watched stories get the grey ring.
+const RING = 98.2;
 const PHOTO = 85;
 
 // Overscroll like Instagram: the row barely gives at either end and every story stretches a touch
@@ -166,9 +166,9 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
 }
 
 const styles = StyleSheet.create({
-  row: { paddingLeft: 3.75, paddingRight: 8, gap: 108 - RING },
+  row: { paddingLeft: 10.9, paddingRight: 8, gap: 110 - RING },
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
-  name: { marginTop: 4.75, maxWidth: RING + 10, fontSize: 12, lineHeight: 15, color: colors.text },
+  name: { marginTop: 4.4, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 10.75, lineHeight: 13, letterSpacing: 10.75 * 0.04, color: '#000000' },
 });
