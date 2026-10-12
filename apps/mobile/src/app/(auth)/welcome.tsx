@@ -26,7 +26,7 @@ export default function Welcome() {
       const result = await socialSignIn(provider);
       if (result.kind === 'signedIn') {
         signIn(result.user);
-        router.replace('/(tabs)');
+        router.replace('/');
       } else if (result.kind === 'signup') {
         resetDraft({ provider, identityToken: result.identityToken });
         push('/name');

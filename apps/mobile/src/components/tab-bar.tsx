@@ -8,18 +8,19 @@ import { colors, motion } from '@/theme';
 import { Icon, type IconName } from './icon';
 import { PressableScale } from './pressable-scale';
 
+// Keys are the tab routes: each tab but Create is a group with its own stack.
 // Figma (Explore frame THIS.svg): icons are NOT on equal columns. cx / cy are each glyph's centre: x from the screen's left edge (design width
 // 390, scaled on other widths), y from the hairline on top of the bar.
 type Glyph = { icon: IconName; w: number; h: number; cx: number; cy: number };
 
 const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
-  index: {
+  '(home)': {
     label: 'Home',
     off: { icon: 'tabHomeInactive', w: 23, h: 22, cx: 38.25, cy: 24.5 },
     on: { icon: 'tabHome', w: 23, h: 22, cx: 39.25, cy: 24.5 },
   },
   // The messages icon has a single variant in the design.
-  chat: {
+  '(chat)': {
     label: 'Messages',
     off: { icon: 'tabMessages', w: 23.42, h: 22.64, cx: 109.27, cy: 25.9 },
     on: { icon: 'tabMessages', w: 23.42, h: 22.64, cx: 109.27, cy: 25.9 },
@@ -29,13 +30,13 @@ const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
     off: { icon: 'tabCreate', w: 25.5, h: 25.5, cx: 192, cy: 26.25 },
     on: { icon: 'tabCreateActive', w: 26.5, h: 26.5, cx: 192.5, cy: 26.25 },
   },
-  search: {
+  '(search)': {
     label: 'Search',
     off: { icon: 'tabSearch', w: 23, h: 23, cx: 272.75, cy: 25.63 },
     on: { icon: 'tabSearchActive', w: 24, h: 24, cx: 272.75, cy: 25.63 },
   },
   // No new selected profile icon yet: the old filled one, its glyph centred where the outline one is.
-  profile: {
+  '(profile)': {
     label: 'Profile',
     off: { icon: 'tabProfile', w: 26, h: 24.88, cx: 348.25, cy: 25.32 },
     on: { icon: 'tabProfileActive', w: 29, h: 29, cx: 349.25, cy: 25.67 },

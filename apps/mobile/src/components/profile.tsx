@@ -11,6 +11,7 @@ import { PressableScale } from './pressable-scale';
 import { RollingLabel } from './rolling-label';
 import { openArticle } from '@/lib/article-origin';
 import { push } from '@/lib/nav';
+import { usePathname, type Href } from 'expo-router';
 
 // Profile frames from the AutoLayouts export (other user / own): Inter throughout, name 26 bold on the left, avatar
 // 106 on the right, "@username", three stat columns, two 42px buttons, bio, list / liked tabs, article rows.
@@ -32,12 +33,9 @@ type SummaryProps = {
 
 /** Name, "@username" and the stats on the left (x 13–15), avatar 106 at the right edge (17 in). Bio sits under the buttons. */
 export function ProfileSummary({ username, name, avatar, articles, followers, following }: Omit<SummaryProps, 'bio'> & { bio?: string[] }) {
-  const openList = (kind: 'followers' | 'following') =>
-    push(
-      kind === 'followers'
-        ? { pathname: '/user/[username]/followers', params: { username } }
-        : { pathname: '/user/[username]/following', params: { username } },
-    );
+  // Stay on the same stack: the tab's own (/user/...) or the root one (/u/...).
+  const root = usePathname().startsWith('/u/');
+  const openList = (kind: 'followers' | 'following') => push(`/${root ? 'u' : 'user'}/${encodeURIComponent(username)}/${kind}` as Href);
 
   return (
     <View style={styles.top}>

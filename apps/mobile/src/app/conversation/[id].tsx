@@ -1,6 +1,6 @@
 import type { ApiProfile } from '@api/api';
 import { Image } from 'expo-image';
-import { useLocalSearchParams, type Href } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, View } from 'react-native';
 import { KeyboardAvoidingView, useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
@@ -11,7 +11,7 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { INTER_FAMILIES, Text, TextInput } from '@/components/text';
 import { chatSocket, fetchMessages, markRead, sendMessage, type ChatMessage } from '@/lib/chat';
-import { back, push } from '@/lib/nav';
+import { back, openProfile } from '@/lib/nav';
 import { fetchProfile } from '@/lib/users';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
@@ -106,7 +106,7 @@ export default function Conversation() {
       .finally(() => setSending(false));
   };
 
-  const openProfile = () => username && push(`/user/${encodeURIComponent(username)}` as Href);
+  const showProfile = () => username && openProfile(username, true);
   // No calls or photo messages yet.
   const soon = (what: string) => Alert.alert(`${what} aren't available yet`, 'They are coming in a later version.');
 
@@ -120,7 +120,7 @@ export default function Conversation() {
   const hasText = text.trim().length > 0;
 
   const card = (
-    <PressableScale onPress={openProfile} scaleTo={0.98} style={styles.card} accessibilityRole="button" accessibilityLabel={`${name} profile`}>
+    <PressableScale onPress={showProfile} scaleTo={0.98} style={styles.card} accessibilityRole="button" accessibilityLabel={`${name} profile`}>
       {avatar ? <Image source={avatar} style={styles.cardAvatar} transition={150} /> : <Icon name="avatarPlaceholder" width={105} style={styles.cardAvatar} />}
       <Text style={styles.cardName} numberOfLines={1}>
         {name}
@@ -139,7 +139,7 @@ export default function Conversation() {
         <PressableScale onPress={() => back()} hitSlop={12} scaleTo={0.85} accessibilityLabel="Back" style={styles.back}>
           <Icon name="searchBack" width={10} height={20} />
         </PressableScale>
-        <PressableScale onPress={openProfile} scaleTo={0.97} style={styles.who} accessibilityRole="button" accessibilityLabel={`${name} profile`}>
+        <PressableScale onPress={showProfile} scaleTo={0.97} style={styles.who} accessibilityRole="button" accessibilityLabel={`${name} profile`}>
           {avatar ? <Image source={avatar} style={styles.avatar} transition={150} /> : <Icon name="avatarPlaceholder" width={37.5} style={styles.avatar} />}
           <View style={styles.names}>
             <Text style={styles.name} numberOfLines={1}>

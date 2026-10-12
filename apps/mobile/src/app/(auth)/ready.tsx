@@ -25,7 +25,7 @@ export default function Ready() {
         if (cancelled) return;
         signIn(user);
         resetDraft();
-        router.replace('/(tabs)');
+        router.replace('/');
       }, remaining);
     }, (e) => {
       if (cancelled) return;

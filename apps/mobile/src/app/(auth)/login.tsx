@@ -28,7 +28,7 @@ export default function Login() {
     setLoading(false);
     if (!user) return setError(true);
     signIn(user);
-    router.replace('/(tabs)');
+    router.replace('/');
   };
 
   return (

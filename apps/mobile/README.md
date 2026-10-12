@@ -46,7 +46,9 @@ Newest exports live in `assets/icons/_inbox/` (git-ignored, 70–85 MB each, lay
 src/
   app/                 expo-router routes
     (auth)/            welcome → name → username → password → password-confirm → avatar → interests → ready; login
-    (tabs)/            home (index), create, chat, search, profile
+    (tabs)/            (home)/index, (chat)/chat, (search)/search, (profile)/profile — each with its own stack;
+                       (home,chat,search,profile)/user/[username] (+ followers, following) open inside the tab
+    u/[username]/      same profile screens on the root stack (opened from a chat or the reader)
     article/[id].tsx   paged article reader
     cover-picker.tsx   "Choose a cover" photo grid
     new-article.tsx    label + publish

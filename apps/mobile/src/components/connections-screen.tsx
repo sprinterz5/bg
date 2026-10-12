@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { type Href } from 'expo-router';
+import { usePathname } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeOut } from 'react-native-reanimated';
@@ -12,7 +12,7 @@ import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { ProfileButton } from './profile';
 import { ConnectionRowSkeleton } from './skeleton';
-import { back, push } from '@/lib/nav';
+import { back, openProfile } from '@/lib/nav';
 import { fetchConnections, setFollow } from '@/lib/users';
 
 // Figma 3184:982 (Followers, with Follow/Following buttons) and 3184:1274 (Following, no buttons).
@@ -161,11 +161,13 @@ function Row({
   onToggle: () => void;
   onOpen?: (c: Connection) => void;
 }) {
+  // On the root copy of the lists (/u/...) profiles stay on the root stack too.
+  const root = usePathname().startsWith('/u/');
   return (
     <View style={styles.row}>
       <PressableScale
         scaleTo={0.98}
-        onPress={() => (onOpen ? onOpen(item) : push(`/user/${encodeURIComponent(item.username)}` as Href))}
+        onPress={() => (onOpen ? onOpen(item) : openProfile(item.username, root))}
         style={styles.person}
         accessibilityRole="button"
         accessibilityLabel={item.username}>

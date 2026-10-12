@@ -42,7 +42,10 @@ export function backWhenReady() {
   else router.back();
 }
 
-/** Someone's profile (the screen shows "my" profile layout when it is the signed-in user). */
-export function openProfile(username: string) {
-  push(`/user/${encodeURIComponent(username)}` as Href);
+/**
+ * Someone's profile. Inside the tabs it opens in the current tab's stack (tab bar stays); screens above the tabs
+ * (chat, reader) pass `root` and get the same screen on the root stack.
+ */
+export function openProfile(username: string, root = false) {
+  push(`/${root ? 'u' : 'user'}/${encodeURIComponent(username)}` as Href);
 }

@@ -257,7 +257,7 @@ function Reader({ article }: { article: Article }) {
             cover landed made the card and the cover blink on Android. */}
         <Glass blurTarget={targetRef} style={styles.glassFill}>
           <View style={[styles.cardRow, { width: CARD_W_2 - 14 }]}>
-            <Pressable onPress={() => openProfile(article.author.username)} hitSlop={6} accessibilityRole="link" style={styles.author}>
+            <Pressable onPress={() => openProfile(article.author.username, true)} hitSlop={6} accessibilityRole="link" style={styles.author}>
               <AuthorAvatar author={article.author} size={32} />
               <View>
                 <Text style={styles.authorName}>{article.author.username}</Text>
