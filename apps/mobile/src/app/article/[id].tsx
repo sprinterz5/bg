@@ -195,14 +195,67 @@ function Reader({ article }: { article: Article }) {
     });
     return () => sub.remove();
   }, [close]);
+  // Swipe right on the first page closes the reader: everything follows the finger (the list shows through as the
+  // backdrop fades), and past a quarter of the screen, or on a quick flick, it slides away; otherwise it springs back.
+  // A swipe left still turns to page 2 (the pan fails on leftward moves and leaves them to the pages list).
+  const dragX = useSharedValue(0);
+  const armed = useSharedValue(false);
+  const swipedAway = useCallback(() => backWhenReady(), []);
+  const markClosing = useCallback(() => {
+    closing.current = true;
+  }, []);
+  // Activated by hand so it never takes a touch the pages list needs (back from page 2, or any leftward swipe):
+  // only a rightward, mostly horizontal move on the first page, once the reader is fully open.
+  const startX = useSharedValue(0);
+  const startY = useSharedValue(0);
+  const swipeBack = Gesture.Pan()
+    .manualActivation(true)
+    .onTouchesDown((e) => {
+      startX.set(e.allTouches[0]?.absoluteX ?? 0);
+      startY.set(e.allTouches[0]?.absoluteY ?? 0);
+    })
+    .onTouchesMove((e, manager) => {
+      const touch = e.allTouches[0];
+      if (!touch) return;
+      const dx = touch.absoluteX - startX.get();
+      const dy = touch.absoluteY - startY.get();
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      if (dx > 10 && Math.abs(dy) < dx * 0.7 && scrollX.get() < 1 && t.get() === 1 && !armed.get()) {
+        armed.set(true);
+        manager.activate();
+      } else if (!armed.get()) manager.fail();
+    })
+    .onUpdate((e) => {
+      dragX.set(Math.max(0, e.translationX));
+    })
+    // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
+    .onEnd((e) => {
+      if (!armed.get()) return;
+      armed.set(false);
+      if (dragX.get() > W * 0.25 || e.velocityX > 700) {
+        runOnJS(markClosing)();
+        const left = Math.max(0, W - dragX.get());
+        dragX.set(withTiming(W, { duration: Math.min(260, Math.max(140, (left / Math.max(e.velocityX, 1)) * 1000)), easing: Easing.out(Easing.quad) }, (fin) => {
+          if (fin) runOnJS(swipedAway)();
+        }));
+      } else dragX.set(withSpring(0, { damping: 22, stiffness: 260 }));
+    })
+    .onFinalize(() => {
+      armed.set(false);
+    });
+  const slideStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX.get() }] }));
   // White early in the flight, so the picture left behind in the list doesn't show through while the copy flies.
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) }));
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) * interpolate(dragX.get(), [0, W], [1, 0], Extrapolation.CLAMP),
+  }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
   const coverVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.get() : t.get() }));
 
   return (
     <View style={styles.root}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
+      <GestureDetector gesture={swipeBack}>
+      <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, slideStyle]}>
       <View pointerEvents="none" style={styles.measure}>
         <Text style={[styles.title, { width: CARD_W_2 - 5 }]} onLayout={(e) => setTitleH(e.nativeEvent.layout.height)}>
           {article.title}
@@ -300,6 +353,8 @@ function Reader({ article }: { article: Article }) {
           <Icon name="readerBookmark" width={16.5} height={18.5} tintColor={saved ? colors.primary : undefined} />
         </PressableScale>
       </Animated.View>
+      </Animated.View>
+      </GestureDetector>
     </View>
   );
 }
