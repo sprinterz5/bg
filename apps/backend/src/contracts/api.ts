@@ -63,8 +63,8 @@ export type ApiConversationMember = { userId: string; lastReadAt: string | null;
 /** POST /conversations/direct: no messages. */
 export type ApiConversationBase = { id: string; updatedAt: string; members: ApiConversationMember[] };
 
-/** GET /conversations: with the latest message. */
-export type ApiConversation = ApiConversationBase & { messages: ApiChatMessage[] };
+/** GET /conversations: with the latest message and the number of messages from the others not read yet. */
+export type ApiConversation = ApiConversationBase & { messages: ApiChatMessage[]; unreadCount: number };
 
 /** POST /media. */
 export type ApiMediaAsset = { id: string; url: string; width: number | null; height: number | null };

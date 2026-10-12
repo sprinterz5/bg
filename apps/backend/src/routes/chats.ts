@@ -100,7 +100,20 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
         }
       }
     });
-    return asApi<ApiConversation[]>(conversations);
+    // Unread badge: messages from the others since this user last opened the chat.
+    const unread = await Promise.all(
+      conversations.map((c) => {
+        const lastReadAt = c.members.find((m) => m.userId === request.user.sub)?.lastReadAt;
+        return app.prisma.message.count({
+          where: {
+            conversationId: c.id,
+            senderId: { not: request.user.sub },
+            ...(lastReadAt ? { createdAt: { gt: lastReadAt } } : {})
+          }
+        });
+      })
+    );
+    return asApi<ApiConversation[]>(conversations.map((c, i) => ({ ...c, unreadCount: unread[i] ?? 0 })));
   });
 
   app.post("/conversations/direct", { preHandler: [app.authenticate] }, async (request, reply) => {
