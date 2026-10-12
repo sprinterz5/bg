@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '@/components/icon';
 import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
-import { PROFILE_HEADER_H, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
+import { PROFILE_HEADER_H, ProfileBio, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
 import { Text } from '@/components/text';
 import { deleteAccount, exportMyData, loadProfile } from '@/lib/users';
@@ -15,7 +15,8 @@ import type { Profile as ProfileData } from '@/mock/data';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
 
-// Figma 3169:1832 — own profile, nothing posted yet: "+" · username · settings, Share / Edit profile, empty-state cards.
+// Own profile (AutoLayouts export): "+" · settings, summary, Share / Edit profile, bio, articles (empty-state cards from
+// Figma 3169:1832 while there are none).
 export default function Profile() {
   const insets = useSafeAreaInsets();
   const { user, signOut } = useSession();
@@ -74,11 +75,8 @@ export default function Profile() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <PressableScale onPress={() => router.navigate('/create')} hitSlop={8} scaleTo={0.88} accessibilityLabel="New article" style={styles.plus}>
-          <Icon name="plus" width={43} />
+          <Icon name="homePlus" width={21} height={21} />
         </PressableScale>
-        <Text style={styles.title} numberOfLines={1}>
-          {user.username}
-        </Text>
         <PressableScale onPress={() => setSettings(true)} hitSlop={10} scaleTo={0.88} accessibilityLabel="Settings" style={styles.settings}>
           <Icon name="profileSettings" width={21.6} height={21.67} />
         </PressableScale>
@@ -88,10 +86,10 @@ export default function Profile() {
         {!loaded && !data ? (
           <Animated.View collapsable={false} exiting={FadeOut.duration(150)}>
             <ProfileSummarySkeleton />
-            <ProfileButtons marginTop={28}>
-              <ProfileButtonsSkeleton height={30} />
+            <ProfileButtons>
+              <ProfileButtonsSkeleton />
             </ProfileButtons>
-            <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
+            <ProfileTabs tab={tab} onChange={setTab} marginTop={TABS_GAP} />
             <View style={styles.posts}>
               <ProfilePostRowSkeleton />
               <ProfilePostRowSkeleton />
@@ -106,13 +104,13 @@ export default function Profile() {
           articles={data?.articles ?? 0}
           followers={data?.followers ?? '0'}
           following={data?.following ?? 0}
-          bio={data?.bio ?? []}
         />
-        <ProfileButtons marginTop={data?.bio.length ? 17 : 28}>
-          <ProfileButton label="Share" height={30} />
-          <ProfileButton label="Edit profile" height={30} />
+        <ProfileButtons>
+          <ProfileButton large label="Share" />
+          <ProfileButton large label="Edit profile" />
         </ProfileButtons>
-        <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
+        <ProfileBio bio={data?.bio ?? []} />
+        <ProfileTabs tab={tab} onChange={setTab} marginTop={TABS_GAP} />
 
         {tab === 'posts' && posts.length ? (
           <View style={styles.posts}>
@@ -158,17 +156,18 @@ function EmptyCard({ icon, text, action, onPress }: { icon: IconName; text: stri
   );
 }
 
-// Header (design y 47–103): plus centred at (31.5, 74.5), settings gear 21.6x21.67 at x 352 / y 62.67,
-// username centred 3.15px left of the screen centre (same in the chats frame).
+// Bio (or buttons) → tabs block (design y 360.9 → 390.1).
+const TABS_GAP = 29.22;
+
+// Header (design y 47–83): "+" 21x21 at (14.5, 54), settings gear 21.65x21.67 at (345.5, 52.66).
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   header: { height: PROFILE_HEADER_H, alignItems: 'center', justifyContent: 'center' },
-  plus: { position: 'absolute', left: 10, top: 6 },
-  title: { maxWidth: 240, fontSize: 21, lineHeight: 26, fontWeight: '700', color: colors.text, transform: [{ translateX: -3.15 }] },
-  settings: { position: 'absolute', right: 16.4, top: 15.67 },
+  plus: { position: 'absolute', left: 14.5, top: 7 },
+  settings: { position: 'absolute', right: 22.85, top: 5.66 },
 
   cardsScroll: { marginTop: 21 },
-  posts: { marginTop: 18 },
+  posts: { marginTop: 17.75 },
   cards: { paddingHorizontal: 11, gap: 13 },
   card: { width: 210, height: 226, borderWidth: 0.5, borderColor: '#EFF3F4', borderRadius: 5 },
   cardIcon: { position: 'absolute', left: 71, top: 14 },

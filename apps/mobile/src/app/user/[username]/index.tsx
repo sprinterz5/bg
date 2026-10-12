@@ -6,16 +6,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
-import { PROFILE_HEADER_H, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
+import { PROFILE_HEADER_H, ProfileBio, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
-import { Text } from '@/components/text';
 import { getProfile, type Profile } from '@/mock/data';
 import { formatCount, loadProfile, setFollow } from '@/lib/users';
 import { colors } from '@/theme';
 import { back, push } from '@/lib/nav';
 import { openDirect } from '@/lib/chat';
 
-// Figma 3167:1542 — someone else's profile: back + username, summary, Follow / Message, article list.
+// Someone else's profile (AutoLayouts export): back, summary, Follow / Message, bio, article list.
 export default function UserProfile() {
   const insets = useSafeAreaInsets();
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -75,23 +74,22 @@ export default function UserProfile() {
   const header = loaded ? (
     <Animated.View collapsable={false} entering={FadeIn.duration(220)}>
       <ProfileSummary {...profile} followers={followers === null ? profile.followers : formatCount(followers)} />
-      <ProfileButtons marginTop={profile.bio.length > 0 ? 17 : 28}>
-        {isMe ? null : (
-          <>
-            <ProfileButton label={following ? 'Following' : 'Follow'} primary={!following} onPress={toggleFollow} />
-            <ProfileButton label="Message" onPress={message} />
-          </>
-        )}
-      </ProfileButtons>
-      <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
+      {isMe ? null : (
+        <ProfileButtons>
+          <ProfileButton large label={following ? 'Following' : 'Follow'} primary={!following} onPress={toggleFollow} />
+          <ProfileButton large label="Message" onPress={message} />
+        </ProfileButtons>
+      )}
+      <ProfileBio bio={profile.bio} />
+      <ProfileTabs tab={tab} onChange={setTab} marginTop={TABS_GAP} />
     </Animated.View>
   ) : (
     <Animated.View collapsable={false} exiting={FadeOut.duration(150)}>
       <ProfileSummarySkeleton />
-      <ProfileButtons marginTop={28}>
+      <ProfileButtons>
         <ProfileButtonsSkeleton />
       </ProfileButtons>
-      <ProfileTabs tab={tab} onChange={setTab} marginTop={43.125} />
+      <ProfileTabs tab={tab} onChange={setTab} marginTop={TABS_GAP} />
       <View style={styles.skeletonPosts}>
         <ProfilePostRowSkeleton />
         <ProfilePostRowSkeleton />
@@ -104,11 +102,8 @@ export default function UserProfile() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <PressableScale onPress={() => back()} hitSlop={12} scaleTo={0.85} accessibilityLabel="Back" style={styles.back}>
-          <Icon name="searchBack" width={12} height={20} />
+          <Icon name="profileBack" width={10.99} height={18.99} />
         </PressableScale>
-        <Text style={styles.title} numberOfLines={1}>
-          {profile.username}
-        </Text>
       </View>
 
       <FlatList
@@ -128,12 +123,14 @@ export default function UserProfile() {
   );
 }
 
+// Bio (or buttons) → tabs block (design y 360.9 → 390.1).
+const TABS_GAP = 29.22;
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   skeletonPosts: { marginTop: 18 },
-  // back chevron 12x20 at x 24, username 21 bold at x 64, both centred on design y 75
-  header: { height: PROFILE_HEADER_H, flexDirection: 'row', alignItems: 'center', paddingLeft: 24 },
-  back: { width: 12, height: 20 },
-  title: { marginLeft: 28, marginRight: 24, flex: 1, fontSize: 21, lineHeight: 26, fontWeight: '700', color: colors.text },
-  listHeader: { marginBottom: 18 },
+  // back chevron 11x19 at design (15.3, 55.5)
+  header: { height: PROFILE_HEADER_H },
+  back: { position: 'absolute', left: 15.33, top: 8.51 },
+  listHeader: { marginBottom: 17.75 },
 });

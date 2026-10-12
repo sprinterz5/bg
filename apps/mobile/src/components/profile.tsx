@@ -3,7 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { Text } from '@/components/text';
+import { INTER_FAMILIES, Text } from '@/components/text';
 import type { ProfilePost } from '@/mock/data';
 import { colors, motion } from '@/theme';
 import { Icon } from './icon';
@@ -12,9 +12,12 @@ import { RollingLabel } from './rolling-label';
 import { openArticle } from '@/lib/article-origin';
 import { push } from '@/lib/nav';
 
-// Figma 3167:1542 (other user) and 3169:1832 (own, empty). Header centre at design y 75.
-export const PROFILE_HEADER_H = 56;
+// Profile frames from the AutoLayouts export (other user / own): Inter throughout, name 26 bold on the left, avatar
+// 106 on the right, "@username", three stat columns, two 42px buttons, bio, list / liked tabs, article rows.
+// The header row (back or "+" · gear) is 36 tall (design y 47–83); everything below is laid out from y 83.
+export const PROFILE_HEADER_H = 36;
 const GRAY = '#EFF3F4';
+const SUBTLE = '#858585';
 const EASE = { duration: motion.base, easing: Easing.out(Easing.cubic) };
 
 type SummaryProps = {
@@ -27,8 +30,8 @@ type SummaryProps = {
   bio: string[];
 };
 
-/** Avatar 90 at x 11, name + three stat columns at x 131 / 207 / 297, bio below. */
-export function ProfileSummary({ username, name, avatar, articles, followers, following, bio }: SummaryProps) {
+/** Name, "@username" and the stats on the left (x 13–15), avatar 106 at the right edge (17 in). Bio sits under the buttons. */
+export function ProfileSummary({ username, name, avatar, articles, followers, following }: Omit<SummaryProps, 'bio'> & { bio?: string[] }) {
   const openList = (kind: 'followers' | 'following') =>
     push(
       kind === 'followers'
@@ -37,33 +40,39 @@ export function ProfileSummary({ username, name, avatar, articles, followers, fo
     );
 
   return (
-    <View>
-      <View style={styles.top}>
-        {avatar ? (
-          <Image source={avatar} style={styles.avatar} transition={150} />
-        ) : (
-          <Icon name="avatarPlaceholder" width={90} style={styles.avatar} />
-        )}
-        <View style={styles.right}>
-          <Text style={styles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          <View style={styles.stats}>
-            <Stat value={String(articles)} label="Articles" width={75} />
-            <Stat value={followers} label="Followers" width={90} onPress={() => openList('followers')} />
-            <Stat value={String(following)} label="Following" onPress={() => openList('following')} />
-          </View>
+    <View style={styles.top}>
+      <View style={styles.left}>
+        <Text style={styles.name} numberOfLines={1}>
+          {name}
+        </Text>
+        <Text style={styles.username} numberOfLines={1}>
+          @{username}
+        </Text>
+        <View style={styles.stats}>
+          <Stat value={String(articles)} label="Articles" width={72.4} />
+          <Stat value={followers} label="Followers" width={84.6} onPress={() => openList('followers')} />
+          <Stat value={String(following)} label="Following" onPress={() => openList('following')} />
         </View>
       </View>
-      {bio.length ? (
-        <View style={styles.bio}>
-          {bio.map((line) => (
-            <Text key={line} style={styles.bioText}>
-              {line}
-            </Text>
-          ))}
-        </View>
-      ) : null}
+      {avatar ? (
+        <Image source={avatar} style={styles.avatar} transition={150} />
+      ) : (
+        <Icon name="avatarPlaceholder" width={106} style={styles.avatar} />
+      )}
+    </View>
+  );
+}
+
+/** Bio lines under the buttons: Inter 12.5 / 17.5, 15 from the left. */
+export function ProfileBio({ bio }: { bio: string[] }) {
+  if (!bio.length) return null;
+  return (
+    <View style={styles.bio}>
+      {bio.map((line) => (
+        <Text key={line} style={styles.bioText}>
+          {line}
+        </Text>
+      ))}
     </View>
   );
 }
@@ -77,12 +86,9 @@ function Stat({ value, label, width, onPress }: { value: string; label: string; 
   );
 }
 
-/**
- * Two equal buttons, 10px apart and 11 from both edges (the other-user frame has 10 on the right by mistake).
- * marginTop is from the avatar (or bio) bottom.
- */
-export function ProfileButtons({ children, marginTop }: { children: ReactNode; marginTop: number }) {
-  return <View style={[styles.buttons, { marginTop }]}>{children}</View>;
+/** Two equal 42px buttons 16 apart, 13 from the left and 17 from the right edge (like the avatar), at design y 228. */
+export function ProfileButtons({ children }: { children: ReactNode }) {
+  return <View style={styles.buttons}>{children}</View>;
 }
 
 export function ProfileButton({
@@ -91,6 +97,7 @@ export function ProfileButton({
   primary,
   height = 28,
   fill = true,
+  large = false,
 }: {
   label: string;
   onPress?: () => void;
@@ -98,31 +105,36 @@ export function ProfileButton({
   height?: number;
   /** Stretch to share a row with a sibling (profile). Off for fixed-width buttons in lists. */
   fill?: boolean;
+  /** Profile header button: 42 tall, radius 20, dark when primary, #F0F0F0 otherwise, Inter 500 13.5. */
+  large?: boolean;
 }) {
   const on = useSharedValue(primary ? 1 : 0);
   useEffect(() => {
     on.set(withTiming(primary ? 1 : 0, EASE));
   }, [primary, on]);
-  const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [GRAY, colors.primary]) }));
+  const off = large ? '#F0F0F0' : GRAY;
+  const accent = large ? colors.text : colors.primary;
+  const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [off, accent]) }));
   const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.text, '#FFFFFF']) }));
 
   return (
     <PressableScale onPress={onPress} scaleTo={0.97} haptic style={fill ? styles.buttonWrap : undefined} accessibilityRole="button" accessibilityLabel={label}>
-      <Animated.View collapsable={false} style={[styles.button, { height }, bg]}>
-        <RollingLabel text={label} style={[styles.buttonText, fg]} />
+      <Animated.View collapsable={false} style={[styles.button, large ? styles.buttonLarge : { height }, bg]}>
+        <RollingLabel text={label} style={[large ? styles.buttonTextLarge : styles.buttonText, fg]} />
       </Animated.View>
     </PressableScale>
   );
 }
 
 const TAB_W = 76;
-const LIST_X = 101;
-const TABS_STEP = 179.5; // list icon centre → heart centre, same in both profile frames
+const LIST_X = 111; // list icon centre
+const TABS_STEP = 168.5; // list icon centre → heart centre (279.5)
+const UNDERLINE_W = 68;
 
 /**
- * List / liked tabs. The block starts at the heart's top edge (drawn with its stroke):
- * list icon 1.375 lower, 38px underline at +23.375, 0.5 hairline right under it.
- * Same on every profile: list icon centred at x 101, heart at 280.5 (3167:1542; the own-profile frame is 7.5px off by mistake).
+ * List / liked tabs. The block starts at the heart's top edge (design y 390.1, drawn with its stroke): list icon
+ * 1.4 lower, 68x1.5 underline at +24.9 on top of the full-width 0.75 hairline at +25.9. In the export the underline
+ * sits 6px right of the list icon; here it is centred under the active icon.
  */
 export function ProfileTabs({
   tab,
@@ -137,22 +149,23 @@ export function ProfileTabs({
   useEffect(() => {
     x.set(withTiming(tab === 'posts' ? 0 : 1, EASE));
   }, [tab, x]);
-  const underline = useAnimatedStyle(() => ({ transform: [{ translateX: LIST_X - 19 + x.value * TABS_STEP }] }));
+  const underline = useAnimatedStyle(() => ({ transform: [{ translateX: LIST_X - UNDERLINE_W / 2 + x.value * TABS_STEP }] }));
 
   return (
     <View style={[styles.tabs, { marginTop }]}>
       <PressableScale onPress={() => onChange('posts')} scaleTo={0.9} style={[styles.tab, { left: LIST_X - TAB_W / 2 }]} accessibilityRole="tab" accessibilityState={{ selected: tab === 'posts' }} accessibilityLabel="Articles">
-        <Icon name="profileTabArticles" width={20} height={14} style={{ marginTop: 1.375 }} tintColor={tab === 'posts' ? colors.text : colors.textSubtle} />
+        <Icon name="profileTabArticles" width={20} height={14} style={{ marginTop: 1.38 }} tintColor={tab === 'posts' ? '#000000' : SUBTLE} />
       </PressableScale>
       <PressableScale onPress={() => onChange('liked')} scaleTo={0.9} style={[styles.tab, { left: LIST_X + TABS_STEP - TAB_W / 2 }]} accessibilityRole="tab" accessibilityState={{ selected: tab === 'liked' }} accessibilityLabel="Liked">
-        <Icon name="profileTabLiked" width={20.75} height={17.75} tintColor={tab === 'liked' ? colors.text : colors.textSubtle} />
+        <Icon name="profileTabLiked" width={20.75} height={17.75} tintColor={tab === 'liked' ? '#000000' : SUBTLE} />
       </PressableScale>
+      <View style={styles.hairline} />
       <Animated.View collapsable={false} style={[styles.underline, underline]} />
     </View>
   );
 }
 
-/** Figma list row: 142x89 thumb (r 12), title 14/15.5 (4 lines max), meta 12 gray, ⋮ (2.6 dots, 5 apart) on the right. */
+/** Article row, 108 apart: 143x90 thumb (r 12) at x 14.5, title Inter 12.75 / 17 (172 wide, 4 lines max) at x 177.6, meta 12 gray, ⋮ (2.5 dots, 5 apart) 18.75 from the right. */
 export function ProfilePostRow({ post }: { post: ProfilePost }) {
   // The reader grows its cover out of the thumbnail.
   const thumb = useRef<View>(null);
@@ -173,38 +186,43 @@ export function ProfilePostRow({ post }: { post: ProfilePost }) {
         </Text>
       </View>
       <PressableScale hitSlop={12} scaleTo={0.85} style={styles.more} accessibilityLabel="More">
-        <Icon name="dot" width={2.6} height={2.5} />
-        <Icon name="dot" width={2.6} height={2.5} />
-        <Icon name="dot" width={2.6} height={2.5} />
+        <Icon name="dot" width={2.5} height={2.5} />
+        <Icon name="dot" width={2.5} height={2.5} />
+        <Icon name="dot" width={2.5} height={2.5} />
       </PressableScale>
     </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
-  top: { flexDirection: 'row', paddingLeft: 11, marginTop: 12 },
-  avatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: colors.surfaceSoft },
-  right: { marginLeft: 30, paddingTop: 3 },
-  name: { fontSize: 15, lineHeight: 18, fontWeight: '600', color: colors.text },
-  stats: { flexDirection: 'row', marginTop: 14 },
-  statValue: { fontSize: 15, lineHeight: 18, fontWeight: '600', color: colors.text },
-  statLabel: { fontSize: 13, lineHeight: 16, color: colors.text, marginTop: -1 },
-  bio: { marginTop: 16, paddingHorizontal: 12 },
-  bioText: { fontSize: 13, lineHeight: 15.5, color: colors.text },
+  // Name box top at design y 97.8 (cap top 103.85), avatar top 97.5.
+  top: { flexDirection: 'row', paddingLeft: 13, paddingRight: 17 },
+  left: { flex: 1, marginRight: 12 },
+  avatar: { width: 106, height: 106, borderRadius: 53, marginTop: 14.5, backgroundColor: colors.surfaceSoft },
+  name: { marginTop: 14.81, fontFamily: INTER_FAMILIES['700'], fontSize: 26, lineHeight: 31, color: colors.text },
+  username: { marginTop: 8.55, marginLeft: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 17, color: SUBTLE },
+  stats: { flexDirection: 'row', marginTop: 15.67, marginLeft: 2 },
+  statValue: { fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 18, color: colors.text },
+  statLabel: { marginTop: 2.55, fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 15, color: SUBTLE },
+  bio: { marginTop: 20.9, paddingLeft: 15, paddingRight: 17 },
+  bioText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 17.5, color: colors.text },
 
-  buttons: { flexDirection: 'row', paddingHorizontal: 11, gap: 10 },
+  buttons: { flexDirection: 'row', marginTop: 22.42, paddingLeft: 13, paddingRight: 17, gap: 16 },
   buttonWrap: { flex: 1 },
   button: { borderRadius: 7, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  buttonLarge: { height: 42, borderRadius: 20 },
   buttonText: { fontSize: 13, lineHeight: 16, fontWeight: '600' },
+  buttonTextLarge: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.5, lineHeight: 17 },
 
-  tabs: { height: 26.375, borderBottomWidth: 0.5, borderBottomColor: '#EFF3F4' },
+  tabs: { height: 26.63 },
   tab: { position: 'absolute', top: 0, width: TAB_W, height: 22, alignItems: 'center' },
-  underline: { position: 'absolute', left: 0, top: 23.375, width: 38, height: 2, borderRadius: 1, backgroundColor: colors.text },
+  hairline: { position: 'absolute', left: 0, right: 0, top: 25.88, height: 0.75, backgroundColor: '#E8E8E8' },
+  underline: { position: 'absolute', left: 0, top: 24.88, width: UNDERLINE_W, height: 1.5, backgroundColor: '#000000' },
 
-  post: { flexDirection: 'row', paddingLeft: 11, paddingRight: 16.2, marginBottom: 17 },
-  thumb: { width: 142, height: 89, borderRadius: 12, backgroundColor: colors.surfaceSoft },
-  postText: { flex: 1, marginLeft: 17, paddingRight: 10 },
-  postTitle: { fontSize: 14, lineHeight: 15.5, color: colors.text },
-  postMeta: { fontSize: 12, lineHeight: 15, color: colors.textSubtle, marginTop: 6 },
-  more: { paddingTop: 3.25, gap: 2.5, alignItems: 'center' },
+  post: { flexDirection: 'row', paddingLeft: 14.5, marginBottom: 18 },
+  thumb: { width: 143, height: 90, borderRadius: 12, backgroundColor: colors.surfaceSoft },
+  postText: { width: 172, marginLeft: 20.1 },
+  postTitle: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.75, lineHeight: 17, color: colors.text },
+  postMeta: { marginTop: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 15, color: colors.textSubtle },
+  more: { position: 'absolute', right: 18.75, top: 2.25, gap: 2.5, alignItems: 'center' },
 });

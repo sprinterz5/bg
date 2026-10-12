@@ -15,41 +15,42 @@ export function Skeleton({ width, height, radius = 4, style }: { width?: number 
   return <Animated.View collapsable={false} style={[{ width, height, borderRadius: radius, backgroundColor: FILL }, style, pulse]} />;
 }
 
-/** ProfileSummary: avatar 90 at x 11, name and three stat columns at x 131 / 206 / 296. */
+/** ProfileSummary: name, "@username" and three stat columns on the left, avatar 106 on the right. */
 export function ProfileSummarySkeleton() {
   return (
     <View style={styles.top}>
-      <Skeleton width={90} height={90} radius={45} />
-      <View style={styles.right}>
-        <Skeleton width={120} height={15} style={styles.mt2} />
+      <View style={styles.flex}>
+        <Skeleton width={150} height={24} style={styles.mt18} />
+        <Skeleton width={90} height={13} style={styles.mt14} />
         <View style={styles.stats}>
-          {[75, 90, 0].map((w, i) => (
+          {[72.4, 84.6, 0].map((w, i) => (
             <View key={i} style={w ? { width: w } : null}>
-              <Skeleton width={26} height={14} />
-              <Skeleton width={54} height={11} style={styles.mt4} />
+              <Skeleton width={24} height={14} />
+              <Skeleton width={54} height={11} style={styles.mt6} />
             </View>
           ))}
         </View>
       </View>
+      <Skeleton width={106} height={106} radius={53} style={styles.avatar} />
     </View>
   );
 }
 
 /** Two buttons in ProfileButtons. */
-export function ProfileButtonsSkeleton({ height = 28 }: { height?: number }) {
+export function ProfileButtonsSkeleton() {
   return (
     <>
-      <Skeleton height={height} radius={7} style={styles.flex} />
-      <Skeleton height={height} radius={7} style={styles.flex} />
+      <Skeleton height={42} radius={20} style={styles.flex} />
+      <Skeleton height={42} radius={20} style={styles.flex} />
     </>
   );
 }
 
-/** ProfilePostRow: thumbnail 142x89, title lines and the meta line next to it. */
+/** ProfilePostRow: thumbnail 143x90, title lines and the meta line next to it. */
 export function ProfilePostRowSkeleton() {
   return (
     <View style={styles.post}>
-      <Skeleton width={142} height={89} radius={12} />
+      <Skeleton width={143} height={90} radius={12} />
       <View style={styles.postText}>
         <Skeleton width="92%" height={12} style={styles.mt2} />
         <Skeleton width="80%" height={12} style={styles.mt6} />
@@ -80,11 +81,13 @@ const styles = StyleSheet.create({
   mt4: { marginTop: 4 },
   mt6: { marginTop: 6 },
   mt12: { marginTop: 12 },
-  top: { flexDirection: 'row', paddingLeft: 11, marginTop: 12 },
-  right: { marginLeft: 30, paddingTop: 3 },
-  stats: { flexDirection: 'row', marginTop: 16 },
-  post: { flexDirection: 'row', paddingLeft: 11, paddingRight: 16.2, marginBottom: 17 },
-  postText: { flex: 1, marginLeft: 17, paddingRight: 10 },
+  mt14: { marginTop: 14 },
+  mt18: { marginTop: 18 },
+  top: { flexDirection: 'row', paddingLeft: 15, paddingRight: 17 },
+  avatar: { marginTop: 14.5, marginLeft: 12 },
+  stats: { flexDirection: 'row', marginTop: 19 },
+  post: { flexDirection: 'row', paddingLeft: 14.5, marginBottom: 18 },
+  postText: { width: 172, marginLeft: 20.1 },
   row: { height: 72, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 11, gap: 13 },
   names: { flex: 1 },
 });

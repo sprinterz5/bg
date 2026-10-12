@@ -3,6 +3,7 @@ import type { StyleProp } from 'react-native';
 
 const icons = {
   profileSettings: require('@/assets/icons/profile-settings.svg'),
+  profileBack: require('@/assets/icons/profile-back.svg'),
   compose: require('@/assets/icons/compose.svg'),
   profileEmptyBio: require('@/assets/icons/profile-empty-bio.svg'),
   profileEmptyWrite: require('@/assets/icons/profile-empty-write.svg'),
