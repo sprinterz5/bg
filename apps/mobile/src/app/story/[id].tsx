@@ -9,7 +9,6 @@ import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Animated, { Easing, Extrapolation, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AuthorAvatar } from '@/components/author-row';
 import { Icon } from '@/components/icon';
 import { CURL_SUPPORTED, PageCurlCanvas, disposeSnapshot, snapshotView, type Snapshot } from '@/components/page-curl';
 import { PressableScale } from '@/components/pressable-scale';
@@ -38,6 +37,9 @@ function photoHeight(story: Story, width: number) {
 const TURN_EASING = Easing.bezier(0.45, 0.05, 0.25, 1);
 const RELEASE_EASING = Easing.out(Easing.cubic);
 const TURN_MS = 620;
+// How long an early tap waits for the page snapshots before switching without the curl.
+const PENDING_MS = 450;
+const AVATAR_PLACEHOLDER = require('@/assets/icons/avatar-placeholder.png');
 // Characters taken off the second caption line to make room for "...more".
 const MORE_CHARS = 8;
 const CAPTION_LH = 15.65;
@@ -318,12 +320,32 @@ export default function StoryViewer() {
     }));
   };
 
+  // A tap that comes before the pages are snapshotted (right after opening, or right after a turn) waits for the
+  // snapshot a moment so it still turns with the curl; if it doesn't come in time the story just switches.
+  const pending = useRef<{ step: 1 | -1; timer: ReturnType<typeof setTimeout> } | null>(null);
+  useEffect(() => {
+    const p = pending.current;
+    if (!p || !(p.step === 1 ? canForward : canBack) || mode.get() !== 0) return;
+    clearTimeout(p.timer);
+    pending.current = null;
+    runOnUI(startTurn)(p.step, p.step === 1 ? currentId : prevId, p.step === 1 ? nextId : currentId, 0.08);
+  });
+  useEffect(() => () => clearTimeout(pending.current?.timer), []);
+
   // Tap on the right / left half; past the last (or before the first) story closes the viewer.
   const turn = (step: 1 | -1) => {
     if (!(step === 1 ? hasNext : hasPrev)) return close();
-    if (mode.get() !== 0) return;
+    if (mode.get() !== 0 || pending.current) return;
     if (step === 1 ? canForward : canBack) runOnUI(startTurn)(step, step === 1 ? currentId : prevId, step === 1 ? nextId : currentId, 0.08);
-    else commit(step);
+    else if (CURL_SUPPORTED && !closing.current) {
+      pending.current = {
+        step,
+        timer: setTimeout(() => {
+          pending.current = null;
+          if (mode.get() === 0) commit(step);
+        }, PENDING_MS),
+      };
+    } else commit(step);
   };
 
   const tilt = (y0: number, y: number) => {
@@ -573,7 +595,8 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
           {story.author.avatar ? (
             <Image source={story.author.avatar} fadeDuration={0} onLoad={() => setAvatarReady(true)} style={styles.avatar} />
           ) : (
-            <AuthorAvatar author={story.author} size={28} />
+            // The placeholder through the core Image too: drawn by expo-image (a hardware bitmap) it was missing from the Android snapshot.
+            <Image source={AVATAR_PLACEHOLDER} fadeDuration={0} style={styles.avatar} />
           )}
           <View style={styles.names}>
             <Text style={styles.name}>{story.author.username}</Text>
