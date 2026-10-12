@@ -10,7 +10,8 @@ export type ArticleDraft = {
   label: string;
 };
 
-type Publishing = { coverUri: string };
+/** `done`: the post is in the feed and the "Posting..." row is folding away. */
+type Publishing = { coverUri: string; done?: boolean };
 
 type FeedContextValue = {
   posts: Post[];
@@ -89,7 +90,9 @@ export function FeedProvider({ children }: { children: ReactNode }) {
         { id: `p_${id}`, author, image: cover, title, caption: title, timeAgo: 'just now', likes: 0, comments: 0, shares: 0, articleId: id },
         ...p,
       ]);
-      setPublishing(null);
+      // The row folds away while the new post opens up in its place, then goes.
+      setPublishing((v) => v && { ...v, done: true });
+      setTimeout(() => setPublishing(null), 450);
     }, PUBLISH_MS);
   }, []);
 

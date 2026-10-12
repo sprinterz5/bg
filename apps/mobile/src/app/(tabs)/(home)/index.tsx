@@ -3,11 +3,12 @@ import { useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, FadeInUp, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { FeedPost } from '@/components/feed-post';
+import { Collapse, GrowIn } from '@/components/grow-in';
 import { PostingRow } from '@/components/posting-row';
 import { PressableScale } from '@/components/pressable-scale';
 import { HomeStories } from '@/components/home-stories';
@@ -92,9 +93,16 @@ export default function Home() {
     const first = !seen.current.has(item.id);
     seen.current.add(item.id);
     const intro = now < introUntil.current;
-    // Opening the screen: posts rise in one after another. Later, new posts at the top (a refresh, a published
-    // article) come down from above.
-    const entering = !first ? undefined : intro ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : index < 3 ? FadeInUp.delay(index * 60).duration(380) : undefined;
+    // Opening the screen: posts rise in one after another. Later, a new post at the top (a published article)
+    // opens up room for itself, so the posts below glide down instead of jumping.
+    if (first && !intro && index < 3) {
+      return (
+        <GrowIn>
+          <FeedPost post={item} onHide={hidePost} />
+        </GrowIn>
+      );
+    }
+    const entering = first && intro ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : undefined;
     return (
       <Animated.View collapsable={false} entering={entering}>
         <FeedPost post={item} onHide={hidePost} />
@@ -127,11 +135,15 @@ export default function Home() {
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)}>
               <HomeStories stories={HOME_STORIES} />
             </Animated.View>
-            {publishing ? <PostingRow coverUri={publishing.coverUri} /> : null}
+            {publishing ? (
+              <Collapse closed={!!publishing.done}>
+                <PostingRow coverUri={publishing.coverUri} />
+              </Collapse>
+            ) : null}
           </>
         }
         ItemSeparatorComponent={Separator}
-        ListHeaderComponentStyle={publishing ? styles.postingGap : styles.storiesGap}
+        ListHeaderComponentStyle={styles.storiesGap}
         contentInset={IOS ? { top } : undefined}
         contentOffset={IOS ? { x: 0, y: -top } : undefined}
         scrollIndicatorInsets={IOS ? { top } : undefined}
@@ -191,6 +203,5 @@ const styles = StyleSheet.create({
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
   storiesGap: { marginBottom: 20.5 },
-  postingGap: { marginBottom: 32 },
   separator: { height: 29 },
 });

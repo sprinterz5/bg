@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { PUBLISH_MS } from '@/state/feed';
 import { colors } from '@/theme';
@@ -18,7 +18,7 @@ export function PostingRow({ coverUri }: { coverUri: string }) {
   const fillStyle = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));
 
   return (
-    <Animated.View collapsable={false} entering={FadeIn.duration(250)} exiting={FadeOut.duration(250)} style={styles.row}>
+    <Animated.View collapsable={false} entering={FadeIn.duration(250)} style={styles.row}>
       <Image source={{ uri: coverUri }} style={styles.thumb} contentFit="cover" />
       <View style={styles.right}>
         <Text style={styles.label}>Posting...</Text>
@@ -31,7 +31,8 @@ export function PostingRow({ coverUri }: { coverUri: string }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', paddingLeft: 9, paddingRight: 31, gap: 12, marginTop: 26 },
+  // marginBottom: the extra gap under the row (32 instead of the stories' 20.5), folded away with it.
+  row: { flexDirection: 'row', alignItems: 'center', paddingLeft: 9, paddingRight: 31, gap: 12, marginTop: 26, marginBottom: 11.5 },
   thumb: { width: 42, height: 34, borderRadius: 4, backgroundColor: colors.surfaceSoft },
   right: { flex: 1, gap: 7 },
   label: { fontSize: 12, lineHeight: 14, color: colors.textMuted },
