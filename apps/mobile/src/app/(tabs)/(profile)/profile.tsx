@@ -9,7 +9,7 @@ import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileBio, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
-import { Text } from '@/components/text';
+import { INTER_FAMILIES, Text } from '@/components/text';
 import { push } from '@/lib/nav';
 import { deleteAccount, exportMyData, loadProfile } from '@/lib/users';
 import type { Profile as ProfileData } from '@/mock/data';
@@ -167,31 +167,34 @@ const styles = StyleSheet.create({
   plus: { position: 'absolute', left: 14.5, top: 7 },
   settings: { position: 'absolute', right: 22.85, top: 5.66 },
 
-  cardsScroll: { marginTop: 21 },
+  // AutoLayouted-25: cards 210x231 from x 14, 17 apart, 26.75 under the tab line; icon circle 67 at (62.5, 19.5),
+  // text Inter 12.3 / 16 #999 from 104.5, a black 104x28 button at (50, 185.5).
+  cardsScroll: { marginTop: 26.75 },
   posts: { marginTop: 17.75 },
-  cards: { paddingHorizontal: 11, gap: 13 },
-  card: { width: 210, height: 226, borderWidth: 0.5, borderColor: '#EFF3F4', borderRadius: 5 },
-  cardIcon: { position: 'absolute', left: 71, top: 14 },
+  cards: { paddingHorizontal: 14, gap: 17 },
+  card: { width: 210, height: 231, borderWidth: 0.5, borderColor: '#E9E9E9', borderRadius: 5 },
+  cardIcon: { position: 'absolute', left: 62.5, top: 19.5 },
   cardText: {
     position: 'absolute',
     left: 0,
-    right: 0,
-    top: 98.25,
+    right: 6,
+    top: 104.5,
     textAlign: 'center',
-    fontSize: 12.5,
-    lineHeight: 15,
-    color: colors.textSubtle,
+    fontFamily: INTER_FAMILIES['400'],
+    fontSize: 12.3,
+    lineHeight: 16,
+    color: '#999999',
   },
   cardButton: {
     position: 'absolute',
-    left: 52.5,
-    top: 180,
+    left: 50,
+    top: 185.5,
     width: 104,
     height: 28,
     borderRadius: 7,
-    backgroundColor: colors.primary,
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardButtonText: { fontSize: 13, lineHeight: 16, fontWeight: '600', color: '#FFFFFF' },
+  cardButtonText: { fontFamily: INTER_FAMILIES['600'], fontSize: 12.7, lineHeight: 16, color: '#FFFFFF' },
 });
