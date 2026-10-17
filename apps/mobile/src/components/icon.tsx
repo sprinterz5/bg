@@ -14,6 +14,7 @@ const icons = {
   chatVideo: require('@/assets/icons/chat-video.svg'),
   chatGallery: require('@/assets/icons/chat-gallery.svg'),
   chatSend: require('@/assets/icons/chat-send.svg'),
+  chatPlus: require('@/assets/icons/chat-plus.svg'),
   profileEmptyBio: require('@/assets/icons/profile-empty-bio.svg'),
   profileEmptyWrite: require('@/assets/icons/profile-empty-write.svg'),
   searchField: require('@/assets/icons/search-field.svg'),
