@@ -160,7 +160,7 @@ export default function Home() {
                 <Icon name="homePlus" width={21} />
               </PressableScale>
               {/* NBSPs on both sides: Android clips script glyphs at the line's advance width; symmetric keeps it centred. */}
-              <Text style={styles.logo}>{' Smarts '}</Text>
+              <Text style={styles.logo}>{' Thoughts '}</Text>
               <PressableScale haptic onPress={() => push('/notifications')} hitSlop={10} accessibilityLabel="Notifications" style={styles.bell}>
                 <Icon name="homeBell" width={20} height={23} />
               </PressableScale>
@@ -192,15 +192,14 @@ const Separator = () => <View style={styles.separator} />;
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   list: { flex: 1 },
-  // Frame 1049 home (status bar 47): plus 21 at (14, 64), "Smarts" (Caveat 36.5) centred 3px left of the
-  // screen centre on y 73.2; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
+  // AutoLayouted-12: "Thoughts" (Caveat 37.2) centred 2.7px left of the screen centre, ink top at y 62.4; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
   // first avatar at 240.5.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   header: { height: HEADER_H, alignItems: 'center' },
   plus: { position: 'absolute', left: 21, top: 18 },
   bell: { position: 'absolute', left: 341.98, top: 16.77 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
-  logo: { marginTop: 1.2, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39, lineHeight: 50, color: colors.text, transform: [{ translateX: -3.1 }] },
+  logo: { marginTop: 2.54, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 37.2, lineHeight: 50, color: colors.text, transform: [{ translateX: -2.7 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
   storiesGap: { marginBottom: 19.2 },

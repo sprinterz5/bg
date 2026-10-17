@@ -9,7 +9,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { socialSignIn } from '@/lib/auth';
 import { useSession } from '@/state/session';
 import { colors, fonts } from '@/theme';
-import { AnimatedText, Text } from '@/components/text';
+import { AnimatedText, INTER_FAMILIES, Text } from '@/components/text';
 import { push } from '@/lib/nav';
 
 type Provider = 'google' | 'apple';
@@ -40,87 +40,64 @@ export default function Welcome() {
 
   return (
     <View style={styles.root}>
-      <View style={[styles.main, { paddingTop: insets.top + LOGO_TOP }]}>
-      <View style={styles.hero}>
-        <AnimatedText entering={FadeIn.duration(700)} style={styles.logo}>
-          {' Smarts '}
+      <View style={styles.main}>
+        <AnimatedText entering={FadeIn.duration(700)} style={[styles.logo, { top: insets.top + 228.1 }]}>
+          {' Thoughts '}
         </AnimatedText>
-        <AnimatedText entering={FadeInDown.delay(180).duration(500)} style={styles.tagline}>
-          The world`s first healthy social media
-        </AnimatedText>
+
+        <Animated.View collapsable={false} entering={FadeInDown.delay(250).duration(500)} style={[styles.auth, { top: insets.top + 504.9 }]}>
+          <Text style={styles.authLabel}>Log in/ Create an account:</Text>
+          <View style={styles.socialRow}>
+            {(['google', 'apple'] as const).map((p) => (
+              <PressableScale
+                key={p}
+                haptic
+                scaleTo={0.9}
+                onPress={() => onSocial(p)}
+                accessibilityRole="button"
+                accessibilityLabel={p === 'google' ? 'Continue with Google' : 'Continue with Apple'}
+                style={styles.social}>
+                <Icon name="socialCircle" width={61} style={StyleSheet.absoluteFill} />
+                {pending === p ? (
+                  <ActivityIndicator color={colors.text} />
+                ) : (
+                  <Icon name={p} width={28} style={p === 'apple' ? styles.appleNudge : undefined} />
+                )}
+              </PressableScale>
+            ))}
+          </View>
+        </Animated.View>
       </View>
 
-      <Animated.View collapsable={false} entering={FadeInDown.delay(360).duration(500)} style={styles.auth}>
-        <Text style={styles.authLabel}>Log in/ Create an account:</Text>
-        <View style={styles.socialRow}>
-          {(['google', 'apple'] as const).map((p) => (
-            <PressableScale
-              key={p}
-              haptic
-              scaleTo={0.9}
-              onPress={() => onSocial(p)}
-              accessibilityRole="button"
-              accessibilityLabel={p === 'google' ? 'Continue with Google' : 'Continue with Apple'}
-              style={styles.social}>
-              <Icon name="socialCircle" width={61} style={StyleSheet.absoluteFill} />
-              {pending === p ? (
-                <ActivityIndicator color={colors.text} />
-              ) : (
-                <Icon name={p} width={28} style={p === 'apple' ? styles.appleNudge : undefined} />
-              )}
-            </PressableScale>
-          ))}
-        </View>
-      </Animated.View>
-      </View>
-
-      <Animated.View collapsable={false} entering={FadeIn.delay(500).duration(500)} style={[styles.bottom, { paddingBottom: insets.bottom + 18 }]}>
+      <Animated.View collapsable={false} entering={FadeIn.delay(400).duration(500)} style={[styles.bottom, { paddingBottom: insets.bottom + 13.7 }]}>
         <PressableScale onPress={() => push('/login')} style={styles.usernameLink} accessibilityRole="button">
           <Text style={styles.at}>@</Text>
           <Text style={styles.usernameText}>Log in by username</Text>
-          <Icon name="chevronRight" width={7} height={12} tintColor={colors.textGray} />
+          <Icon name="chevronRight" width={8.6} height={14.85} tintColor={GRAY} style={styles.chevron} />
         </PressableScale>
       </Animated.View>
     </View>
   );
 }
 
-// From Figma frame 3086:387 (status bar 47): logo glyph center y≈271, label y=578, buttons y=622.
-const LOGO_TOP = 176;
+// Auto_layouted (white, y − 47 under the status bar): "Thoughts" Caveat 83.7, line box at 228.1 (ink 302–378);
+// "Log in/ Create an account:" Inter 14.5 semibold at 504.9 centred on x 188; the 61px circles at 550.1 centred on
+// x 185 (62 apart); a #F5F5F5 bar 84.9 tall at the bottom with "@ Log in by username ›" (#999, Inter 15.9 semibold).
+const GRAY = '#999999';
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
+  root: { flex: 1, backgroundColor: '#FFFFFF' },
   main: { flex: 1 },
-  hero: { alignItems: 'center', paddingHorizontal: 40 },
-  logo: {
-    fontFamily: fonts.logo,
-    fontSize: 82,
-    // Caveat is 1.26em tall with its descenders; on Android (RN 0.78+) a shorter lineHeight clips top and bottom.
-    // 108 instead of 96, with the extra 12 taken back by negative margins so the logo stays put.
-    lineHeight: 108,
-    marginVertical: -6,
-    color: colors.text,
-    letterSpacing: -2.4,
-    // Script glyphs overhang their box (and negative spacing shrinks it): room so Android doesn't clip the last letter.
-    paddingHorizontal: 14,
-    transform: [{ rotate: '-1deg' }],
-  },
-  tagline: {
-    marginTop: 14,
-    fontSize: 27,
-    lineHeight: 32,
-    fontWeight: '900',
-    color: colors.primary,
-    textAlign: 'center',
-    letterSpacing: -0.7,
-  },
-  auth: { alignItems: 'center', gap: 27, marginTop: 181 },
-  authLabel: { fontSize: 14.5, fontWeight: '600', color: colors.text },
-  socialRow: { flexDirection: 'row', gap: 62, marginRight: 12 },
+  // lineHeight ≥ 1.26em (Caveat with descenders) so Android doesn't clip; NBSPs keep the overhanging glyphs inside.
+  logo: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontFamily: fonts.logo, fontSize: 83.7, lineHeight: 108, color: colors.text },
+  auth: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  authLabel: { transform: [{ translateX: -7 }], fontFamily: INTER_FAMILIES['600'], fontSize: 14.5, lineHeight: 18, color: '#000000' },
+  socialRow: { marginTop: 27.28, flexDirection: 'row', gap: 62, marginRight: 20 },
   social: { width: 61, height: 61, alignItems: 'center', justifyContent: 'center' },
   appleNudge: { marginTop: -2 },
-  bottom: { backgroundColor: colors.surface, paddingTop: 18, alignItems: 'center' },
-  usernameLink: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
-  at: { fontSize: 17, fontWeight: '700', color: colors.textGray },
-  usernameText: { fontSize: 16, fontWeight: '600', color: colors.textGray },
+  bottom: { backgroundColor: '#F5F5F5', paddingTop: 17.14, alignItems: 'center' },
+  usernameLink: { flexDirection: 'row', alignItems: 'center', transform: [{ translateX: -2.7 }] },
+  at: { fontFamily: INTER_FAMILIES['600'], fontSize: 15.3, lineHeight: 20, color: GRAY },
+  usernameText: { marginLeft: 7.5, fontFamily: INTER_FAMILIES['600'], fontSize: 15.9, lineHeight: 20, color: GRAY },
+  chevron: { marginLeft: 8.8 },
 });

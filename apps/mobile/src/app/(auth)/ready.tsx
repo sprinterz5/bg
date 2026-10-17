@@ -42,18 +42,20 @@ export default function Ready() {
 
   const logoStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
-    transform: [{ scale: 0.92 + 0.08 * progress.value }, { rotate: '-1deg' }],
+    transform: [{ scale: 0.92 + 0.08 * progress.value }],
   }));
 
   return (
     <View style={styles.root}>
-      <AnimatedText style={[styles.logo, logoStyle]}>{' Smarts '}</AnimatedText>
+      <AnimatedText style={[styles.logo, logoStyle]}>{' Thoughts '}</AnimatedText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  // lineHeight ≥ 1.26em (Caveat with descenders) so Android doesn't clip; +8 taken back by the margins.
-  logo: { fontFamily: fonts.logo, fontSize: 64, lineHeight: 84, marginVertical: -4, color: colors.text, letterSpacing: -1.5, paddingHorizontal: 12 },
+  // "No Layout" splash: white, "Thoughts" Caveat 74.5 with its ink from y 351 — the line box sits 46.8 above the
+  // screen centre.
+  root: { flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  // lineHeight ≥ 1.26em (Caveat with descenders) so Android doesn't clip.
+  logo: { marginBottom: 93.7, fontFamily: fonts.logo, fontSize: 74.5, lineHeight: 96, color: colors.text, paddingHorizontal: 12 },
 });
