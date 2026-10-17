@@ -110,7 +110,7 @@ export function ProfileButton({
   useEffect(() => {
     on.set(withTiming(primary ? 1 : 0, EASE));
   }, [primary, on]);
-  const off = large ? '#F0F0F0' : GRAY;
+  const off = large ? '#F2F2F2' : GRAY;
   const accent = large ? colors.text : colors.primary;
   const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [off, accent]) }));
   const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.text, '#FFFFFF']) }));
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   username: { marginTop: 8.55, marginLeft: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 17, color: SUBTLE },
   stats: { flexDirection: 'row', marginTop: 15.67, marginLeft: 2 },
   statValue: { fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 18, color: colors.text },
-  statLabel: { marginTop: 2.55, fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 15, color: SUBTLE },
+  statLabel: { marginTop: 2.55, fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 15, color: colors.text },
   bio: { marginTop: 20.9, paddingLeft: 15, paddingRight: 17 },
   bioText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 17.5, color: colors.text },
 
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
 
   tabs: { height: 26.63 },
   tab: { position: 'absolute', top: 0, width: TAB_W, height: 22, alignItems: 'center' },
-  hairline: { position: 'absolute', left: 0, right: 0, top: 25.88, height: 0.75, backgroundColor: '#E8E8E8' },
+  hairline: { position: 'absolute', left: 0, right: 0, top: 25.88, height: 0.75, backgroundColor: '#E9E9E9' },
   underline: { position: 'absolute', left: 0, top: 24.88, width: UNDERLINE_W, height: 1.5, backgroundColor: '#000000' },
 
   post: { flexDirection: 'row', paddingLeft: 14.5, marginBottom: 18 },
