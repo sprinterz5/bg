@@ -193,14 +193,10 @@ function Reader({ article }: { article: Article }) {
     });
     return () => sub.remove();
   }, [close]);
-  // Swipe right on the preview closes the reader: everything follows the finger (the list shows through as the
-  // backdrop fades), and past a quarter of the screen, or on a quick flick, it slides away; otherwise it springs back.
-  // A swipe left still turns to the text (the pan fails on leftward moves and leaves them to the pages list).
-  // Swipe down on any page also closes it: the reader shrinks into a rounded card that follows the finger; let go
-  // far enough (or flick) and from the preview the cover flies back into its picture in the list, from a text page
-  // the card drops away.
-  const dragX = useSharedValue(0);
-  const armed = useSharedValue(false);
+  // Swipe down on any page closes the reader: it shrinks into a rounded card that follows the finger; let go far
+  // enough (or flick) and from the preview the cover flies back into its picture in the list, from a text page the
+  // card drops away; otherwise it springs back. The pages list's own (horizontal) gesture runs alongside it.
+  const pagesGesture = Gesture.Native();
   const vArmed = useSharedValue(false);
   const dragY = useSharedValue(0);
   const dragVX = useSharedValue(0);
@@ -225,72 +221,51 @@ function Reader({ article }: { article: Article }) {
       }
     })();
   }, [article.id, scrollX, W, H, flying, dragY, dragVX, t]);
-  const swipedAway = useCallback(() => backWhenReady(), []);
-  const markClosing = useCallback(() => {
-    closing.current = true;
-  }, []);
-  // Activated by hand so it never takes a touch the pages list needs (back from page 2, or any leftward swipe):
-  // only a rightward, mostly horizontal move on the preview, once the reader is fully open.
+  // Activated by hand on a mostly downward move, so horizontal swipes stay with the pages list.
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
-  const swipeBack = Gesture.Pan()
+  const swipeDown = Gesture.Pan()
     .manualActivation(true)
+    .simultaneousWithExternalGesture(pagesGesture)
     .onTouchesDown((e) => {
       startX.set(e.allTouches[0]?.absoluteX ?? 0);
       startY.set(e.allTouches[0]?.absoluteY ?? 0);
     })
     .onTouchesMove((e, manager) => {
       const touch = e.allTouches[0];
-      if (!touch) return;
+      if (!touch || vArmed.get()) return;
       const dx = touch.absoluteX - startX.get();
       const dy = touch.absoluteY - startY.get();
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-      if (armed.get() || vArmed.get()) return;
-      if (dx > 10 && Math.abs(dy) < dx * 0.7 && scrollX.get() < 1 && t.get() === 1) {
-        armed.set(true);
-        manager.activate();
-      } else if (dy > 10 && Math.abs(dx) < dy * 0.8 && t.get() === 1) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (dy > 8 && Math.abs(dx) < dy * 0.8 && t.get() > 0.99) {
         vArmed.set(true);
         manager.activate();
       } else manager.fail();
     })
     .onUpdate((e) => {
-      if (vArmed.get()) {
-        // A little resistance upwards, free downwards; sideways at half speed.
-        dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
-        dragVX.set(e.translationX * 0.5);
-      } else dragX.set(Math.max(0, e.translationX));
+      if (!vArmed.get()) return;
+      // A little resistance upwards, free downwards; sideways at half speed.
+      dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
+      dragVX.set(e.translationX * 0.5);
     })
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
-      if (vArmed.get()) {
-        vArmed.set(false);
-        if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
-        else {
-          dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
-          dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
-        }
-        return;
+      if (!vArmed.get()) return;
+      vArmed.set(false);
+      if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
+      else {
+        dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
+        dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
       }
-      if (!armed.get()) return;
-      armed.set(false);
-      if (dragX.get() > W * 0.25 || e.velocityX > 700) {
-        runOnJS(markClosing)();
-        const left = Math.max(0, W - dragX.get());
-        dragX.set(withTiming(W, { duration: Math.min(260, Math.max(140, (left / Math.max(e.velocityX, 1)) * 1000)), easing: Easing.out(Easing.quad) }, (fin) => {
-          if (fin) runOnJS(swipedAway)();
-        }));
-      } else dragX.set(withSpring(0, { damping: 22, stiffness: 260 }));
     })
     .onFinalize(() => {
-      armed.set(false);
       vArmed.set(false);
     });
   const slideStyle = useAnimatedStyle(() => {
     const d = Math.max(0, dragY.get());
     return {
       borderRadius: Math.min(32, d * 0.3),
-      transform: [{ translateX: dragX.get() + dragVX.get() }, { translateY: dragY.get() }, { scale: 1 - 0.2 * Math.min(1, d / (H * 0.6)) }],
+      transform: [{ translateX: dragVX.get() }, { translateY: dragY.get() }, { scale: 1 - 0.2 * Math.min(1, d / (H * 0.6)) }],
     };
   });
   // White early in the flight, so the picture left behind in the list doesn't show through while the copy flies.
@@ -299,7 +274,6 @@ function Reader({ article }: { article: Article }) {
   const backdropStyle = useAnimatedStyle(() => ({
     opacity:
       interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) *
-      interpolate(dragX.get(), [0, W], [1, 0], Extrapolation.CLAMP) *
       interpolate(dragY.get(), [0, H * 0.45], [1, 0], Extrapolation.CLAMP),
   }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
@@ -315,7 +289,7 @@ function Reader({ article }: { article: Article }) {
   return (
     <View style={styles.root}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
-      <GestureDetector gesture={swipeBack}>
+      <GestureDetector gesture={swipeDown}>
       <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, styles.slide, slideStyle]}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, paper]} />
       <View pointerEvents="none" style={styles.measure}>
@@ -337,7 +311,7 @@ function Reader({ article }: { article: Article }) {
           is empty: the preview above it slides with the scroll. */}
       {pages && opened ? (
         <Animated.View collapsable={false} entering={FadeIn.duration(220)} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        <GestureDetector gesture={doubleTap}>
+        <GestureDetector gesture={Gesture.Simultaneous(pagesGesture, doubleTap)}>
         <Animated.FlatList
           data={['', ...pages]}
           keyExtractor={(_, i) => String(i)}
