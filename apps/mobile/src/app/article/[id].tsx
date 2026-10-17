@@ -14,7 +14,6 @@ import Animated, {
   runOnJS,
   runOnUI,
   useAnimatedStyle,
-  useDerivedValue,
   useSharedValue,
   withDelay,
   withSequence,
@@ -103,36 +102,36 @@ function Reader({ article }: { article: Article }) {
     return paginateLines(lines, LINE_HEIGHT, { first: room, rest: room });
   }, [lines, H, BAR_H, top]);
 
-  // Which page is showing (0 = preview): the preview's buttons only take touches while it is. `scrollX` is the pages'
-  // horizontal offset, driven by the reader's own pan (no native scroll view, so paging and swipe-down never fight).
+  // Which page is showing (0 = preview, 1.. text pages): the preview's buttons only take touches while it is.
+  // `rise` goes 0 → 1 as the text comes up over the preview (pulled up from the bottom); `scrollX` is the horizontal
+  // offset among the text pages. Both are driven by the reader's own pan.
   const [page, setPage] = useState(0);
-  const pageCount = pages ? pages.length + 1 : 1;
-  // Preview → text (not in the design): the preview drifts a third of the way left, shrinks a little and fades while
-  // the text pages and their chrome come in over it with the finger.
+  const rise = useSharedValue(0);
+  const textCount = pages ? pages.length : 0;
+  // Preview → text (not in the design): the preview drifts up a quarter screen, shrinks a little and fades while the
+  // text pages and their chrome rise from the bottom with the finger.
   const previewOut = useAnimatedStyle(() => {
-    const p = Math.min(1, scrollX.get() / W);
-    return { opacity: 1 - p, transform: [{ translateX: -W * 0.35 * p }, { scale: 1 - 0.06 * p }] };
+    const p = rise.get();
+    return { opacity: 1 - p, transform: [{ translateY: -H * 0.25 * p }, { scale: 1 - 0.06 * p }] };
   });
-  const chromeIn = useAnimatedStyle(() => ({ transform: [{ translateX: Math.max(0, W - scrollX.get()) }] }));
-  // The dots count text pages only (page 1 of the text is list page 1).
-  const textX = useDerivedValue(() => Math.max(0, scrollX.get() - W));
+  const chromeIn = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * H }] }));
 
   // Double tap on the text likes the article (never unlikes) and pops a big heart where the finger was.
   const [hearts, setHearts] = useState<{ id: number; x: number; y: number; tilt: number }[]>([]);
   const heartId = useRef(0);
-  const onDoubleTap = useCallback((x: number, y: number) => {
+  const onDoubleTap = (x: number, y: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLiked(true);
     const id = ++heartId.current;
     setHearts((h) => [...h, { id, x, y, tilt: Math.random() * 24 - 12 }]);
-  }, []);
+  };
   const dropHeart = useCallback((id: number) => setHearts((h) => h.filter((v) => v.id !== id)), []);
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
     .maxDelay(260)
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e, ok) => {
-      if (ok && scrollX.get() > W / 2) runOnJS(onDoubleTap)(e.absoluteX, e.absoluteY);
+      if (ok && rise.get() > 0.5) runOnJS(onDoubleTap)(e.absoluteX, e.absoluteY);
     });
 
   const toggleFollow = () => {
@@ -176,7 +175,7 @@ function Reader({ article }: { article: Article }) {
     if (closing.current) return;
     closing.current = true;
     // Back into the list picture from the preview; from a text page the reader just fades.
-    const fly = !!articleOrigin(article.id) && scrollX.get() < W / 2;
+    const fly = !!articleOrigin(article.id) && rise.get() < 0.5;
     runOnUI(() => {
       'worklet';
       if (fly) flying.set(1);
@@ -184,7 +183,7 @@ function Reader({ article }: { article: Article }) {
         if (fin) runOnJS(backWhenReady)();
       }));
     })();
-  }, [article.id, flying, t, scrollX, W]);
+  }, [article.id, flying, t, rise]);
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       close();
@@ -192,45 +191,30 @@ function Reader({ article }: { article: Article }) {
     });
     return () => sub.remove();
   }, [close]);
-  // Sideways turns pages (follows the finger, snaps to the nearest page or the next one on a flick); downwards closes
-  // the reader — it shrinks into a rounded card that follows the finger; let go far
-  // enough (or flick) and from the preview the cover flies back into its picture in the list, from a text page the
-  // card drops away; otherwise it springs back.
-  const axis = useSharedValue(0); // 0 undecided, 1 pages, 2 closing
+  // One pan, activated by hand once the finger has moved 10pt, the direction taken from the touch positions and their
+  // ratio (Android reports no translation in onStart; a thumb swipe on an iPhone drifts sideways at once):
+  //  - on the preview, pulling up from the bottom brings the text up over it;
+  //  - on the first text page, pulling down takes it back to the preview;
+  //  - on the text, sideways turns the pages (follows the finger, snaps to the nearest or the next page on a flick);
+  //  - left to right on the preview or the first text page closes the article (it follows the finger; past a quarter
+  //    of the screen or on a flick it slides away, otherwise it springs back), like the back button.
+  const axis = useSharedValue(0); // 0 undecided, 1 text pages, 2 up to the text, 3 down to the preview, 4 close (right)
+  const dragX = useSharedValue(0);
+  const swipedAway = useCallback(() => {
+    closing.current = true;
+    backWhenReady();
+  }, []);
   const startPage = useSharedValue(0);
   const lastPage = useSharedValue(0);
   useEffect(() => {
-    lastPage.set(pageCount - 1);
-  }, [pageCount, lastPage]);
-  const dragY = useSharedValue(0);
-  const dragVX = useSharedValue(0);
-  const dropAway = useCallback((up = false) => {
-    closing.current = true;
-    const fly = !up && !!articleOrigin(article.id) && scrollX.get() < W / 2;
-    runOnUI(() => {
-      'worklet';
-      if (fly) {
-        flying.set(1);
-        const back = { duration: CLOSE_MS, easing: CLOSE_EASING };
-        dragY.set(withTiming(0, back));
-        dragVX.set(withTiming(0, back));
-        t.set(withTiming(0, back, (fin) => {
-          if (fin) runOnJS(backWhenReady)();
-        }));
-      } else {
-        dragY.set(withTiming(up ? -H : H, { duration: 260, easing: Easing.in(Easing.quad) }));
-        t.set(withTiming(0, { duration: 260 }, (fin) => {
-          if (fin) runOnJS(backWhenReady)();
-        }));
-      }
-    })();
-  }, [article.id, scrollX, W, H, flying, dragY, dragVX, t]);
+    lastPage.set(Math.max(0, textCount - 1));
+  }, [textCount, lastPage]);
+  const hasText = useSharedValue(false);
+  useEffect(() => {
+    hasText.set(textCount > 0);
+  }, [textCount, hasText]);
   const PAGE_SPRING = { damping: 26, stiffness: 260, mass: 0.9, overshootClamping: true };
-  // One pan, activated by hand once the finger has moved 10pt: more sideways than vertical → pages, vertical (up or
-  // down) → close: the card follows the finger and, let go far enough or flicked, flies back into its picture (down,
-  // from the preview) or away off the screen. The direction comes from the touch positions (Android reports no translation in onStart) and from their
-  // ratio, not from fixed fail offsets: a thumb swipe down on an iPhone drifts sideways by more than 14pt at once,
-  // which made both offset-based pans fail.
+  const RISE_SPRING = { damping: 28, stiffness: 220, mass: 0.9, overshootClamping: true };
   const touchX = useSharedValue(0);
   const touchY = useSharedValue(0);
   const pan = Gesture.Pan()
@@ -248,59 +232,69 @@ function Reader({ article }: { article: Article }) {
       const dy = touch.absoluteY - touchY.get();
       if (dx * dx + dy * dy < 100) return;
       if (t.get() < 0.99) return manager.fail();
+      const onText = rise.get() > 0.5;
       if (Math.abs(dx) > Math.abs(dy)) {
-        axis.set(1);
-        startPage.set(Math.round(scrollX.get() / W));
-      } else axis.set(2);
+        // Left to right with nothing to go back to (preview, first text page) closes; otherwise sideways pages.
+        if (dx > 0 && (!onText || scrollX.get() < 1)) axis.set(4);
+        else if (!onText || !hasText.get()) return manager.fail();
+        else {
+          axis.set(1);
+          startPage.set(Math.round(scrollX.get() / W));
+        }
+      } else if (!onText && dy < 0 && hasText.get()) axis.set(2);
+      else if (onText && dy > 0 && scrollX.get() < 1) axis.set(3);
+      else return manager.fail();
+      // TEMP debug (reader swipes on iPhone): remove once confirmed.
+      console.log('[reader-debug] axis=' + axis.get() + ' dx=' + dx.toFixed(0) + ' dy=' + dy.toFixed(0));
       manager.activate();
     })
     .onUpdate((e) => {
-      if (axis.get() === 1) {
-        // No rubber band: nothing to the right of the preview, nothing past the last page.
+      const a = axis.get();
+      if (a === 1) {
         scrollX.set(Math.max(0, Math.min(lastPage.get() * W, startPage.get() * W - e.translationX)));
-      } else if (axis.get() === 2) {
-        // Up or down, the card follows the finger; sideways at half speed.
-        dragY.set(e.translationY);
-        dragVX.set(e.translationX * 0.5);
+      } else if (a === 2) {
+        rise.set(Math.max(0, Math.min(1, -e.translationY / (H * 0.55))));
+      } else if (a === 3) {
+        rise.set(Math.max(0, Math.min(1, 1 - e.translationY / (H * 0.55))));
+      } else if (a === 4) {
+        dragX.set(Math.max(0, e.translationX));
       }
     })
+     
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
-      if (axis.get() === 1) {
+      const a = axis.get();
+      if (a === 1) {
         const from = startPage.get();
         let to = Math.round((scrollX.get() - e.velocityX * 0.12) / W);
         to = Math.max(0, Math.min(lastPage.get(), Math.max(from - 1, Math.min(from + 1, to))));
         scrollX.set(withSpring(to * W, { ...PAGE_SPRING, velocity: -e.velocityX }));
-        runOnJS(setPage)(to);
-      } else if (axis.get() === 2) {
-        const up = dragY.get() < 0;
-        if (Math.abs(dragY.get()) > 110 || Math.abs(e.velocityY) > 800) runOnJS(dropAway)(up || (Math.abs(dragY.get()) < 20 && e.velocityY < 0));
-        else {
-          dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
-          dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
-        }
+        runOnJS(setPage)(to + 1);
+      } else if (a === 2 || a === 3) {
+        const open = a === 2 ? rise.get() > 0.25 || e.velocityY < -600 : !(rise.get() < 0.75 || e.velocityY > 600);
+        rise.set(withSpring(open ? 1 : 0, { ...RISE_SPRING, velocity: -e.velocityY / (H * 0.55) }));
+        runOnJS(setPage)(open ? 1 : 0);
+      } else if (a === 4) {
+        if (dragX.get() > W * 0.25 || e.velocityX > 700) {
+          const left = Math.max(0, W - dragX.get());
+          dragX.set(withTiming(W, { duration: Math.min(260, Math.max(140, (left / Math.max(e.velocityX, 1)) * 1000)), easing: Easing.out(Easing.quad) }, (fin) => {
+            if (fin) runOnJS(swipedAway)();
+          }));
+        } else dragX.set(withSpring(0, { damping: 22, stiffness: 260 }));
       }
     })
     .onFinalize(() => {
       axis.set(0);
     });
   const readerGestures = Gesture.Simultaneous(pan, doubleTap);
-  const pagesRow = useAnimatedStyle(() => ({ transform: [{ translateX: -scrollX.get() }] }));
-  const slideStyle = useAnimatedStyle(() => {
-    const d = Math.abs(dragY.get());
-    return {
-      borderRadius: Math.min(32, d * 0.3),
-      transform: [{ translateX: dragVX.get() }, { translateY: dragY.get() }, { scale: 1 - 0.2 * Math.min(1, d / (H * 0.6)) }],
-    };
-  });
+  const pagesRow = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * H }, { translateX: -scrollX.get() }] }));
   // White early in the flight, so the picture left behind in the list doesn't show through while the copy flies.
   const paper = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) }));
-  // Behind the reader: fades as it is dragged away, so the list shows around the shrinking card.
+  // Behind the reader: fades as it is pulled away to the right, so the list shows through.
   const backdropStyle = useAnimatedStyle(() => ({
-    opacity:
-      interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) *
-      interpolate(Math.abs(dragY.get()), [0, H * 0.45], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) * interpolate(dragX.get(), [0, W], [1, 0], Extrapolation.CLAMP),
   }));
+  const slideStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX.get() }] }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
   const pictureVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.get() : t.get() }));
 
@@ -338,7 +332,7 @@ function Reader({ article }: { article: Article }) {
         <Animated.View collapsable={false} entering={FadeIn.duration(220)} pointerEvents="none" style={StyleSheet.absoluteFill}>
           <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, pagesRow]}>
             {pages.map((text, i) => (
-              <ReaderPage key={i} text={text} width={W} left={(i + 1) * W} textWidth={textWidth} top={top + TEXT_TOP} />
+              <ReaderPage key={i} text={text} width={W} left={i * W} textWidth={textWidth} top={top + TEXT_TOP} />
             ))}
           </Animated.View>
         </Animated.View>
@@ -355,7 +349,7 @@ function Reader({ article }: { article: Article }) {
                 <Text style={styles.authorSub}>{following ? 'You Follow' : 'Suggested'}</Text>
               </View>
             </Pressable>
-            {pages && pages.length > 1 ? <PageDots count={pages.length} width={W} scrollX={textX} /> : null}
+            {pages && pages.length > 1 ? <PageDots count={pages.length} width={W} scrollX={scrollX} /> : null}
             <View style={styles.followAt}>
               <FollowPill following={following} onPress={toggleFollow} />
             </View>
