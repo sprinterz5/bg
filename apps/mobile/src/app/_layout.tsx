@@ -1,5 +1,6 @@
 import { Caveat_400Regular } from '@expo-google-fonts/caveat/400Regular';
 import { Caveat_500Medium } from '@expo-google-fonts/caveat/500Medium';
+import { Caveat_600SemiBold } from '@expo-google-fonts/caveat/600SemiBold';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
@@ -29,6 +30,7 @@ SplashScreen.preventAutoHideAsync();
 const FONTS = {
   Caveat_400Regular,
   Caveat_500Medium,
+  Caveat_600SemiBold,
   Sen_800ExtraBold,
   SourceSerif4_700Bold,
   Inter_400Regular,

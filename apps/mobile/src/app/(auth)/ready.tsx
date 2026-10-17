@@ -53,9 +53,9 @@ export default function Ready() {
 }
 
 const styles = StyleSheet.create({
-  // "No Layout" splash: white, "Thoughts" Caveat 74.5 with its ink from y 351 — the line box sits 46.8 above the
+  // "No Layout" splash: white, "Thoughts" Caveat SemiBold 73.6 with its ink from y 351, centred on x 190.9 — the line box sits 46.8 above the
   // screen centre.
   root: { flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   // lineHeight ≥ 1.26em (Caveat with descenders) so Android doesn't clip.
-  logo: { marginBottom: 93.7, fontFamily: fonts.logo, fontSize: 74.5, lineHeight: 96, color: colors.text, paddingHorizontal: 12 },
+  logo: { marginBottom: 93.7, fontFamily: fonts.logoSemi, fontSize: 73.6, lineHeight: 96, color: colors.text, paddingHorizontal: 12, marginLeft: -26.9 },
 });

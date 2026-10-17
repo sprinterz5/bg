@@ -192,14 +192,14 @@ const Separator = () => <View style={styles.separator} />;
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   list: { flex: 1 },
-  // AutoLayouted-12: "Thoughts" (Caveat 37.2) centred 2.7px left of the screen centre, ink top at y 62.4; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
+  // AutoLayouted-12: "Thoughts" (Caveat 37.2) ink centred on x 192.3 (Caveat's ink sits 4.7 right of its advance), ink top at y 62.4; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
   // first avatar at 240.5.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   header: { height: HEADER_H, alignItems: 'center' },
   plus: { position: 'absolute', left: 21, top: 18 },
   bell: { position: 'absolute', left: 341.98, top: 16.77 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
-  logo: { marginTop: 2.54, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 37.2, lineHeight: 50, color: colors.text, transform: [{ translateX: -2.7 }] },
+  logo: { marginTop: 2.54, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 37.2, lineHeight: 50, color: colors.text, transform: [{ translateX: -7.35 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
   storiesGap: { marginBottom: 19.2 },

@@ -20,6 +20,8 @@ export const fonts = {
   logo: 'Caveat_400Regular',
   // Home header: the frame's logo has a thin stroke, one weight up stands in for it.
   logoMedium: 'Caveat_500Medium',
+  // Splash and sign-in: the heavier logo of the new layout.
+  logoSemi: 'Caveat_600SemiBold',
   display: 'Sen_800ExtraBold',
   // Home card titles: the design's Sentinel Bold is licence-only (annual app licence), Source Serif 4 Bold is the free match.
   headline: 'SourceSerif4_700Bold',

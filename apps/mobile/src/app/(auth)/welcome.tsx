@@ -41,7 +41,7 @@ export default function Welcome() {
   return (
     <View style={styles.root}>
       <View style={styles.main}>
-        <AnimatedText entering={FadeIn.duration(700)} style={[styles.logo, { top: insets.top + 228.1 }]}>
+        <AnimatedText entering={FadeIn.duration(700)} style={[styles.logo, { top: insets.top + 228.2 }]}>
           {' Thoughts '}
         </AnimatedText>
 
@@ -80,7 +80,7 @@ export default function Welcome() {
   );
 }
 
-// Auto_layouted (white, y − 47 under the status bar): "Thoughts" Caveat 83.7, line box at 228.1 (ink 302–378);
+// Auto_layouted (white, y − 47 under the status bar): "Thoughts" Caveat SemiBold 82.75, line box at 228.2 (ink 302–378, centred on x 194.4);
 // "Log in/ Create an account:" Inter 14.5 semibold at 504.9 centred on x 188; the 61px circles at 550.1 centred on
 // x 185 (62 apart); a #F5F5F5 bar 84.9 tall at the bottom with "@ Log in by username ›" (#999, Inter 15.9 semibold).
 const GRAY = '#999999';
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
   main: { flex: 1 },
   // lineHeight ≥ 1.26em (Caveat with descenders) so Android doesn't clip; NBSPs keep the overhanging glyphs inside.
-  logo: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontFamily: fonts.logo, fontSize: 83.7, lineHeight: 108, color: colors.text },
+  logo: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontFamily: fonts.logoSemi, fontSize: 82.75, lineHeight: 108, color: colors.text, transform: [{ translateX: -11.1 }] },
   auth: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   authLabel: { transform: [{ translateX: -7 }], fontFamily: INTER_FAMILIES['600'], fontSize: 14.5, lineHeight: 18, color: '#000000' },
   socialRow: { marginTop: 27.28, flexDirection: 'row', gap: 62, marginRight: 20 },
