@@ -84,6 +84,7 @@ const icons = {
   readerBookmark: require('@/assets/icons/reader-bookmark.svg'),
   editorPickerBg: require('@/assets/icons/editor-image-picker-bg.svg'),
   editorPickerIcon: require('@/assets/icons/editor-image-picker-icon.svg'),
+  editorPickerPlus: require('@/assets/icons/editor-picker-plus.svg'),
   editorPlaceholder: require('@/assets/icons/editor-image-placeholder-icon.svg'),
   pickerClose: require('@/assets/icons/picker-close-x.svg'),
   pickerChevron: require('@/assets/icons/picker-recents-chevron.svg'),

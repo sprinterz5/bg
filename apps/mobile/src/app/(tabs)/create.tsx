@@ -13,9 +13,10 @@ import { colors, fonts } from '@/theme';
 import { Text, TextInput } from '@/components/text';
 import { push } from '@/lib/nav';
 
-// Figma 3114:465 (empty) and 3116:1136 (cover + text). Design status bar = 47.
-const COVER_BOTTOM = 161; // y 208 - 47
-const PICKER = 40;
+// AutoLayouted 20 (empty) and 3116:1136 (cover + text). Design status bar = 47.
+const COVER_BOTTOM = 173; // y 220 - 47
+// Black 33px circle with a white + (AutoLayouts BG(1)), centred 1.5 above the cover's bottom edge at x 23.
+const PICKER = 33;
 
 export default function CreateArticle() {
   const insets = useSafeAreaInsets();
@@ -58,9 +59,8 @@ export default function CreateArticle() {
           scaleTo={0.9}
           onPress={onPick}
           accessibilityLabel="Choose a cover"
-          style={[styles.pickerBtn, { top: coverH - PICKER / 2 }]}>
-          <Icon name="editorPickerBg" width={PICKER} style={StyleSheet.absoluteFill} />
-          <Icon name="editorPickerIcon" width={22.33} />
+          style={[styles.pickerBtn, { top: coverH - 1.5 - PICKER / 2 }]}>
+          <Icon name="editorPickerPlus" width={PICKER} height={PICKER} />
         </PressableScale>
 
         <View style={[styles.textBox, showBox && styles.textBoxActive]}>
@@ -71,7 +71,7 @@ export default function CreateArticle() {
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             placeholder="Start writing..."
-            placeholderTextColor="#737373"
+            placeholderTextColor="#999999"
             multiline
             scrollEnabled={false}
             textAlignVertical="top"
@@ -89,7 +89,7 @@ export default function CreateArticle() {
         scaleTo={0.94}
         accessibilityRole="button"
         accessibilityState={{ disabled: !canPost }}
-        style={[styles.post, { top: insets.top + 5 }]}>
+        style={[styles.post, { top: insets.top + 4.5 }]}>
         <Text style={[styles.postText, canPost && styles.postTextActive]}>Post</Text>
       </PressableScale>
     </View>
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   placeholder: { position: 'absolute', left: 61, flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   bars: { paddingTop: 37, gap: 13 },
   bar: { width: 125, height: 11, borderRadius: 5, backgroundColor: '#B7B7B7' },
-  pickerBtn: { position: 'absolute', left: 22, width: PICKER, height: PICKER, alignItems: 'center', justifyContent: 'center' },
+  pickerBtn: { position: 'absolute', left: 23, width: PICKER, height: PICKER },
   textBox: {
     marginTop: 34,
     marginLeft: 32,
@@ -128,10 +128,10 @@ const styles = StyleSheet.create({
   },
   post: {
     position: 'absolute',
-    right: 24,
-    width: 80,
-    height: 35,
-    borderRadius: 60,
+    right: 18.5,
+    width: 76,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.7)',
@@ -143,6 +143,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
-  postText: { fontSize: 15, fontWeight: '700', color: '#737373' },
+  postText: { fontSize: 15, fontWeight: '700', color: '#999999' },
   postTextActive: { color: colors.text },
 });
