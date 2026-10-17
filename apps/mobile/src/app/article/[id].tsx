@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
+import { Alert, BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -157,6 +157,12 @@ function Reader({ article }: { article: Article }) {
     const timer = setTimeout(() => setCoverReady(true), 250);
     return () => clearTimeout(timer);
   }, [coverReady]);
+  // Never stay invisible: without a layout in 400ms the reader opens anyway (the cover flies to the design's slot).
+  useEffect(() => {
+    if (picture) return;
+    const timer = setTimeout(() => setPicture((p) => p ?? { x: 15, y: top + 376, w: pictureW, h: pictureH }), 400);
+    return () => clearTimeout(timer);
+  }, [picture, top, pictureW, pictureH]);
   useEffect(() => {
     if (!coverReady || !picture) return;
     t.set(withTiming(1, { duration: origin ? OPEN_MS : 220, easing: OPEN_EASING }, (fin) => {
@@ -299,12 +305,12 @@ function Reader({ article }: { article: Article }) {
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
   const pictureVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.get() : t.get() }));
 
-  const pictureRef = useRef<View>(null);
-  const measurePicture = () => {
-    pictureRef.current?.measureInWindow((x, y, w, h) => {
-      if (w > 0) setPicture((p) => p ?? { x, y, w, h });
-    });
+  // The preview layer starts at the window's top-left, so the picture's layout box is its window rect.
+  const measurePicture = (e: LayoutChangeEvent) => {
+    const { x, y, width: w, height: h } = e.nativeEvent.layout;
+    if (w > 0) setPicture((p) => p ?? { x, y, w, h });
   };
+
 
   return (
     <View style={styles.root}>
@@ -420,7 +426,6 @@ function Reader({ article }: { article: Article }) {
           {article.subtitle ? <Text style={styles.previewSubtitle}>{article.subtitle}</Text> : null}
         </Animated.View>
         <Animated.View
-          ref={pictureRef}
           collapsable={false}
           pointerEvents="none"
           onLayout={measurePicture}
