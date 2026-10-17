@@ -204,9 +204,9 @@ function Reader({ article }: { article: Article }) {
   }, [pageCount, lastPage]);
   const dragY = useSharedValue(0);
   const dragVX = useSharedValue(0);
-  const dropAway = useCallback(() => {
+  const dropAway = useCallback((up = false) => {
     closing.current = true;
-    const fly = !!articleOrigin(article.id) && scrollX.get() < W / 2;
+    const fly = !up && !!articleOrigin(article.id) && scrollX.get() < W / 2;
     runOnUI(() => {
       'worklet';
       if (fly) {
@@ -218,7 +218,7 @@ function Reader({ article }: { article: Article }) {
           if (fin) runOnJS(backWhenReady)();
         }));
       } else {
-        dragY.set(withTiming(H, { duration: 260, easing: Easing.in(Easing.quad) }));
+        dragY.set(withTiming(up ? -H : H, { duration: 260, easing: Easing.in(Easing.quad) }));
         t.set(withTiming(0, { duration: 260 }, (fin) => {
           if (fin) runOnJS(backWhenReady)();
         }));
@@ -226,8 +226,9 @@ function Reader({ article }: { article: Article }) {
     })();
   }, [article.id, scrollX, W, H, flying, dragY, dragVX, t]);
   const PAGE_SPRING = { damping: 26, stiffness: 260, mass: 0.9, overshootClamping: true };
-  // One pan, activated by hand once the finger has moved 10pt: more sideways than down → pages, down → close, up →
-  // nothing. The direction comes from the touch positions (Android reports no translation in onStart) and from their
+  // One pan, activated by hand once the finger has moved 10pt: more sideways than vertical → pages, vertical (up or
+  // down) → close: the card follows the finger and, let go far enough or flicked, flies back into its picture (down,
+  // from the preview) or away off the screen. The direction comes from the touch positions (Android reports no translation in onStart) and from their
   // ratio, not from fixed fail offsets: a thumb swipe down on an iPhone drifts sideways by more than 14pt at once,
   // which made both offset-based pans fail.
   const touchX = useSharedValue(0);
@@ -247,30 +248,24 @@ function Reader({ article }: { article: Article }) {
       const dy = touch.absoluteY - touchY.get();
       if (dx * dx + dy * dy < 100) return;
       if (t.get() < 0.99) return manager.fail();
-      // TEMP debug (swipes on iPhone): remove once confirmed.
-      console.log('[reader-debug] decide dx=' + dx.toFixed(0) + ' dy=' + dy.toFixed(0));
       if (Math.abs(dx) > Math.abs(dy)) {
         axis.set(1);
         startPage.set(Math.round(scrollX.get() / W));
-        manager.activate();
-      } else if (dy > 0) {
-        axis.set(2);
-        manager.activate();
-      } else manager.fail();
+      } else axis.set(2);
+      manager.activate();
     })
     .onUpdate((e) => {
       if (axis.get() === 1) {
         // No rubber band: nothing to the right of the preview, nothing past the last page.
         scrollX.set(Math.max(0, Math.min(lastPage.get() * W, startPage.get() * W - e.translationX)));
       } else if (axis.get() === 2) {
-        // A little resistance upwards, free downwards; sideways at half speed.
-        dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
+        // Up or down, the card follows the finger; sideways at half speed.
+        dragY.set(e.translationY);
         dragVX.set(e.translationX * 0.5);
       }
     })
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
-      console.log('[reader-debug] end axis=' + axis.get() + ' dragY=' + dragY.get().toFixed(0));
       if (axis.get() === 1) {
         const from = startPage.get();
         let to = Math.round((scrollX.get() - e.velocityX * 0.12) / W);
@@ -278,7 +273,8 @@ function Reader({ article }: { article: Article }) {
         scrollX.set(withSpring(to * W, { ...PAGE_SPRING, velocity: -e.velocityX }));
         runOnJS(setPage)(to);
       } else if (axis.get() === 2) {
-        if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
+        const up = dragY.get() < 0;
+        if (Math.abs(dragY.get()) > 110 || Math.abs(e.velocityY) > 800) runOnJS(dropAway)(up || (Math.abs(dragY.get()) < 20 && e.velocityY < 0));
         else {
           dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
           dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
@@ -291,7 +287,7 @@ function Reader({ article }: { article: Article }) {
   const readerGestures = Gesture.Simultaneous(pan, doubleTap);
   const pagesRow = useAnimatedStyle(() => ({ transform: [{ translateX: -scrollX.get() }] }));
   const slideStyle = useAnimatedStyle(() => {
-    const d = Math.max(0, dragY.get());
+    const d = Math.abs(dragY.get());
     return {
       borderRadius: Math.min(32, d * 0.3),
       transform: [{ translateX: dragVX.get() }, { translateY: dragY.get() }, { scale: 1 - 0.2 * Math.min(1, d / (H * 0.6)) }],
@@ -303,7 +299,7 @@ function Reader({ article }: { article: Article }) {
   const backdropStyle = useAnimatedStyle(() => ({
     opacity:
       interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) *
-      interpolate(dragY.get(), [0, H * 0.45], [1, 0], Extrapolation.CLAMP),
+      interpolate(Math.abs(dragY.get()), [0, H * 0.45], [1, 0], Extrapolation.CLAMP),
   }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
   const pictureVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.get() : t.get() }));
