@@ -56,9 +56,9 @@ export function PostActions({ visible, actions, onClose }: { visible: boolean; a
 const styles = StyleSheet.create({
   backdrop: { backgroundColor: '#000000' },
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingTop: 8, borderTopLeftRadius: 16, borderTopRightRadius: 16, backgroundColor: '#FFFFFF' },
-  handle: { alignSelf: 'center', width: 36, height: 4, borderRadius: 2, marginBottom: 6, backgroundColor: '#E1E4E8' },
+  handle: { alignSelf: 'center', width: 36, height: 4, borderRadius: 2, marginBottom: 6, backgroundColor: '#E5E5E5' },
   row: { height: 52, justifyContent: 'center', paddingHorizontal: 20 },
-  rowPressed: { backgroundColor: '#F4F6F8' },
+  rowPressed: { backgroundColor: '#F5F5F5' },
   label: { fontSize: 16, lineHeight: 20, color: colors.text },
   destructive: { color: colors.danger },
 });

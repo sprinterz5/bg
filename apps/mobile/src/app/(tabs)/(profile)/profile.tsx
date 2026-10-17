@@ -76,7 +76,7 @@ export default function Profile() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <PressableScale onPress={() => router.navigate('/create')} hitSlop={8} scaleTo={0.88} accessibilityLabel="New article" style={styles.plus}>
-          <Icon name="homePlus" width={21} height={21} />
+          <Icon name="profilePlus" width={21} height={21} />
         </PressableScale>
         <PressableScale onPress={() => setSettings(true)} hitSlop={10} scaleTo={0.88} accessibilityLabel="Settings" style={styles.settings}>
           <Icon name="profileSettings" width={21.6} height={21.67} />

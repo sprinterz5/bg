@@ -48,7 +48,9 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </View>
         </Pressable>
         <PressableScale onPress={() => setMenu(true)} hitSlop={12} accessibilityLabel="More" style={styles.menu}>
-          <Icon name="postMenu" width={20} height={10.5} />
+          <View style={styles.dot} />
+          <View style={styles.dot} />
+          <View style={styles.dot} />
         </PressableScale>
       </View>
 
@@ -97,13 +99,15 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
 
 const styles = StyleSheet.create({
   // avatar 31 at x 11; username (Inter SemiBold 12.6) at x 52 from +0.5, "Recommended for you" (Inter 11) from +16.5;
-  // menu (two bars, 20x10.5) at x 358, +9.5
+  // menu: three dots at x 358.5, +13.5
   head: { height: 31, flexDirection: 'row', paddingLeft: 10 },
   author: { flexDirection: 'row', maxWidth: 300 },
   names: { marginLeft: 10, marginTop: 0.5 },
   name: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.7, lineHeight: 16.5, letterSpacing: 13.7 * 0.035, color: colors.text },
   sub: { marginTop: 0.75, fontFamily: INTER_FAMILIES['400'], fontSize: 11.6, lineHeight: 14, letterSpacing: 11.6 * 0.02, color: colors.text },
-  menu: { position: 'absolute', left: 358, top: 10 },
+  // ⋯ (AutoLayouts BG(1)): three 3.33 dots from x 358.5, 13.5 under the avatar top.
+  menu: { position: 'absolute', left: 358.5, top: 13.47, flexDirection: 'row', gap: 3 },
+  dot: { width: 3.33, height: 3.33, borderRadius: 1.67, backgroundColor: '#000000' },
   media: { height: 265, marginTop: 7, backgroundColor: colors.surfaceSoft, overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
   // Sentinel Bold 20/27 in the design; Source Serif 4 Bold in the app (see fonts.headline).
@@ -118,5 +122,5 @@ const styles = StyleSheet.create({
   count: { position: 'absolute', top: 0, fontSize: 13.8, lineHeight: 17, fontWeight: '600', color: colors.text },
   viewsCount: { left: 50 },
   sendCount: { left: 133 },
-  time: { marginTop: 9, marginLeft: 17.5, fontFamily: INTER_FAMILIES['400'], fontSize: 11.75, lineHeight: 16, color: '#788690' },
+  time: { marginTop: 9, marginLeft: 17.5, fontFamily: INTER_FAMILIES['400'], fontSize: 11.75, lineHeight: 16, color: '#999999' },
 });

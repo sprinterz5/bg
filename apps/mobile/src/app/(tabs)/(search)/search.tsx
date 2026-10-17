@@ -45,8 +45,8 @@ const SEG_TOP = 61;
 const SEG_SIDE_L = 14;
 const SEG_SIDE_R = 20;
 const SEG_GAP = 4;
-const MUTED = '#6F6F71';
-const PRESSED = '#F7F9F9';
+const MUTED = '#999999';
+const PRESSED = '#F5F5F5';
 const EASE = { duration: motion.base, easing: Easing.out(Easing.cubic) };
 // Field changing shape between modes: quick start, long soft landing, no overshoot.
 const FIELD_EASE = { duration: 320, easing: Easing.bezier(0.2, 0, 0, 1) };
@@ -421,8 +421,9 @@ const styles = StyleSheet.create({
 
   // Frame 1198 typing: Articles / Profiles 176x28 (radius 7) at x 14 and 194, y 62.
   segmented: { height: 28, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },
-  segment: { height: 28, borderRadius: 7, backgroundColor: FIELD_BG },
-  segIndicator: { position: 'absolute', left: 0, top: 0, backgroundColor: colors.primary },
+  // Inactive segment: white with a #D9D9D9 border, #999 text; the active one black (AutoLayouts BG(1)).
+  segment: { height: 28, borderRadius: 7, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D9D9D9' },
+  segIndicator: { position: 'absolute', left: 0, top: 0, backgroundColor: '#000000', borderColor: '#000000' },
   segHit: { position: 'absolute', top: 0, left: 0, height: 28, alignItems: 'center', justifyContent: 'center' },
   segText: { fontSize: 13, lineHeight: 16, fontWeight: '600' },
 

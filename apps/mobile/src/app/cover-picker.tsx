@@ -21,7 +21,7 @@ const TILE_W = 129;
 const TILE_H = 230;
 const GAP = 1.5;
 const PAGE = 60;
-const BLUE = '#455DFF';
+const BLUE = '#000000'; // the check is black in NOLayout
 
 type Album = { id: string | null; title: string };
 const RECENTS: Album = { id: null, title: 'Recents' };

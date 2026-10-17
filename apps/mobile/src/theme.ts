@@ -2,12 +2,13 @@ import { Platform } from 'react-native';
 
 export const colors = {
   bg: '#FAFAFA',
-  text: '#0F1419',
+  text: '#000000',
   textMuted: '#8C8C8C',
-  textSubtle: '#788690',
+  textSubtle: '#999999',
   textGray: '#6F6F71',
-  primary: '#455DFF',
-  primaryPressed: '#3A50E6',
+  // The new layouts have no blue: buttons, cursor, indicators and saved bookmarks are black.
+  primary: '#000000',
+  primaryPressed: '#2A2A2A',
   disabled: '#DDDDDD',
   surface: '#F2F2F2',
   surfaceSoft: '#F7F7F7',

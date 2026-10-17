@@ -18,7 +18,7 @@ import { usePathname, type Href } from 'expo-router';
 // The header row (back or "+" · gear) is 36 tall (design y 47–83); everything below is laid out from y 83.
 export const PROFILE_HEADER_H = 36;
 const GRAY = '#EFF3F4';
-const SUBTLE = '#858585';
+const SUBTLE = '#999999';
 const EASE = { duration: motion.base, easing: Easing.out(Easing.cubic) };
 
 type SummaryProps = {

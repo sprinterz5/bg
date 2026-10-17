@@ -4,7 +4,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTim
 
 // Loading placeholders (not in the design): grey blocks shaped like the content, pulsing softly. Blocks that mount
 // together pulse together. Sizes follow the real components (profile.tsx, connections-screen.tsx).
-const FILL = '#EEF1F3';
+const FILL = '#EFEFEF';
 
 export function Skeleton({ width, height, radius = 4, style }: { width?: number | `${number}%`; height: number; radius?: number; style?: StyleProp<ViewStyle> }) {
   const o = useSharedValue(1);

@@ -41,6 +41,7 @@ const icons = {
   // Home + story viewer (Frame 1049)
   homePlus: require('@/assets/icons/home-plus.svg'),
   homeBell: require('@/assets/icons/home-bell.svg'),
+  profilePlus: require('@/assets/icons/profile-plus.svg'),
   postViews: require('@/assets/icons/post-views.svg'),
   postSend: require('@/assets/icons/post-send.svg'),
   postBookmark2: require('@/assets/icons/post-bookmark-2.svg'),

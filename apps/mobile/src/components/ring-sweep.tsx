@@ -2,12 +2,12 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-// Story rings, drawn as bordered circles (AutoLayouted-12: 97 wide, stroke 3 inside the edge; black, #A6A6A6 once
+// Story rings, drawn as bordered circles (AutoLayouted-12: 97 wide, stroke 3 inside the edge; black, #999 once
 // watched). Not SVGs: as an image inside the half-clips below it rasterized at a different size on Android, so the
 // sweeping band didn't match the ring.
 const SEEN_STROKE = 3;
 const SEEN_BASE = 97;
-const SEEN_COLOR = '#A6A6A6';
+const SEEN_COLOR = '#999999';
 const RING_COLOR = '#000000';
 
 export function SeenRing({ size, color = SEEN_COLOR }: { size: number; color?: string }) {

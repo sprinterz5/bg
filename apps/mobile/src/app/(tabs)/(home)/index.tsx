@@ -157,12 +157,12 @@ export default function Home() {
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: headerTop }, headerStyle]}>
             <View style={styles.header}>
               <PressableScale haptic onPress={pickStoryPhoto} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
-                <Icon name="homePlus" width={21} />
+                <Icon name="homePlus" width={21.45} height={21.45} />
               </PressableScale>
               {/* NBSPs on both sides: Android clips script glyphs at the line's advance width; symmetric keeps it centred. */}
               <Text style={styles.logo}>{' Thoughts '}</Text>
               <PressableScale haptic onPress={() => push('/notifications')} hitSlop={10} accessibilityLabel="Notifications" style={styles.bell}>
-                <Icon name="homeBell" width={20} height={23} />
+                <Icon name="homeBell" width={20.3} height={23.3} />
               </PressableScale>
             </View>
       </Animated.View>
@@ -196,8 +196,8 @@ const styles = StyleSheet.create({
   // first avatar at 240.5.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   header: { height: HEADER_H, alignItems: 'center' },
-  plus: { position: 'absolute', left: 21, top: 18 },
-  bell: { position: 'absolute', left: 341.98, top: 16.77 },
+  plus: { position: 'absolute', left: 20.78, top: 17.78 },
+  bell: { position: 'absolute', left: 341.85, top: 16.63 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
   logo: { marginTop: 2.54, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 37.2, lineHeight: 50, color: colors.text, transform: [{ translateX: -7.35 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
