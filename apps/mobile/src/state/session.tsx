@@ -44,6 +44,8 @@ type SessionContextValue = {
   updateDraft: (patch: Partial<SignupDraft>) => void;
   resetDraft: (patch?: Partial<SignupDraft>) => void;
   signIn: (user: SessionUser) => void;
+  /** Applies profile edits (name, avatar) to the signed-in user. */
+  updateUser: (patch: Partial<SessionUser>) => void;
   signOut: () => void;
 };
 
@@ -73,6 +75,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const updateDraft = useCallback((patch: Partial<SignupDraft>) => setDraft((d) => ({ ...d, ...patch })), []);
   const resetDraft = useCallback((patch?: Partial<SignupDraft>) => setDraft({ ...emptyDraft, ...patch }), []);
   const signIn = useCallback((u: SessionUser) => setUser(u), []);
+  const updateUser = useCallback((patch: Partial<SessionUser>) => setUser((u) => (u ? { ...u, ...patch } : u)), []);
   const signOut = useCallback(() => {
     setUser(null);
     closeChatSocket();
@@ -80,8 +83,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, ready, draft, updateDraft, resetDraft, signIn, signOut }),
-    [user, ready, draft, updateDraft, resetDraft, signIn, signOut],
+    () => ({ user, ready, draft, updateDraft, resetDraft, signIn, updateUser, signOut }),
+    [user, ready, draft, updateDraft, resetDraft, signIn, updateUser, signOut],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

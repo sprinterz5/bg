@@ -18,6 +18,22 @@ export const fetchConnections = (username: string, kind: 'followers' | 'followin
 export const setFollow = (userId: string, follow: boolean) =>
   api(`/users/${userId}/follow`, { method: follow ? 'POST' : 'DELETE', auth: true });
 
+/** PATCH /users/me: own name / bio. */
+export const updateMe = (body: { displayName?: string; bio?: string }) =>
+  api<unknown>('/users/me', { method: 'PATCH', body, auth: true });
+
+// The Bio screen saves on the way back; Edit profile shows the new text at once instead of waiting for its refetch.
+let savedBio: string | null = null;
+export function saveBio(bio: string) {
+  savedBio = bio;
+  return updateMe({ bio });
+}
+export const takeSavedBio = () => {
+  const b = savedBio;
+  savedBio = null;
+  return b;
+};
+
 export const deleteAccount = () => api('/users/me', { method: 'DELETE', auth: true });
 
 /** Everything the account owns (GDPR export), as the backend's JSON. */

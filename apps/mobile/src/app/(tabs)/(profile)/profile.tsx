@@ -10,6 +10,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileBio, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
 import { Text } from '@/components/text';
+import { push } from '@/lib/nav';
 import { deleteAccount, exportMyData, loadProfile } from '@/lib/users';
 import type { Profile as ProfileData } from '@/mock/data';
 import { useSession } from '@/state/session';
@@ -107,7 +108,7 @@ export default function Profile() {
         />
         <ProfileButtons>
           <ProfileButton large label="Share" />
-          <ProfileButton large label="Edit profile" />
+          <ProfileButton large label="Edit profile" onPress={() => push('/edit-profile')} />
         </ProfileButtons>
         <ProfileBio bio={data?.bio ?? []} />
         <ProfileTabs tab={tab} onChange={setTab} marginTop={TABS_GAP} />
@@ -120,7 +121,7 @@ export default function Profile() {
           </View>
         ) : tab === 'posts' ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cards} style={styles.cardsScroll}>
-            <EmptyCard icon="profileEmptyBio" text={'Dare to tell people about\nyourself a bit'} action="Add bio" />
+            <EmptyCard icon="profileEmptyBio" text={'Dare to tell people about\nyourself a bit'} action="Add bio" onPress={() => push('/edit-bio')} />
             <EmptyCard icon="profileEmptyWrite" text={'Write your first article\non your favourite topic'} action="Write it" onPress={() => router.navigate('/create')} />
           </ScrollView>
         ) : null}
