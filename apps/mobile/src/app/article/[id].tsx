@@ -118,10 +118,12 @@ function Reader({ article }: { article: Article }) {
     return { opacity: interpolate(p, [0, 0.6], [1, 0], Extrapolation.CLAMP), transform: [{ translateY: -H * 0.18 * p }] };
   });
   const stripIn = useAnimatedStyle(() => ({ opacity: rise.get() > 0.995 ? 1 : 0 }));
-  const cardIn = useAnimatedStyle(() => ({
-    opacity: interpolate(rise.get(), [0.55, 1], [0, 1], Extrapolation.CLAMP),
-    transform: [{ translateY: -24 * (1 - rise.get()) }],
-  }));
+  // The author card slides down from above the screen (no fading: its blur jumps in on iOS when faded); ✕ comes with it.
+  const cardIn = useAnimatedStyle(() => {
+    const p = interpolate(rise.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP);
+    const eased = 1 - (1 - p) * (1 - p) * (1 - p);
+    return { transform: [{ translateY: -(top + 90) * (1 - eased) }] };
+  });
   const barIn = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * (BAR_H + 20) }] }));
   const morphing = useDerivedValue<number>(() => (rise.get() > 0.001 && rise.get() < 0.995 ? 1 : 0));
 
@@ -156,6 +158,8 @@ function Reader({ article }: { article: Article }) {
   const [opened, setOpened] = useState(false);
   // Where the preview's picture is (window coordinates), known after its first layout.
   const [picture, setPicture] = useState<Rect | null>(null);
+  // The cover's own width / height: the preview → text morph crops it exactly like both pictures it joins.
+  const [coverAspect, setCoverAspect] = useState<number | null>(null);
   // The copy of the cover is a new image view: start flying once it is on screen (it sits exactly over the
   // picture in the list until then), or after a short wait if it never says so.
   const [coverReady, setCoverReady] = useState(!origin);
@@ -338,6 +342,18 @@ function Reader({ article }: { article: Article }) {
         </BlurTargetView>
       </Animated.View>
 
+      {/* The preview's picture on its way to the strip (under the author card, so the card's glass blurs it). */}
+      {picture ? (
+        <FlyingCover
+          origin={{ ...picture, radius: 1, aspect: coverAspect }}
+          source={article.cover}
+          t={rise}
+          flying={morphing}
+          target={{ x: 0, y: 0, w: W, h: top + STRIP_H }}
+          onShown={noop}
+        />
+      ) : null}
+
       {/* Mounted once the cover has landed: building the pages during the flight cost frames. Text page i sits at
           (i + 1) screens; the preview above them slides with the same offset. */}
       {pages && opened ? (
@@ -423,7 +439,7 @@ function Reader({ article }: { article: Article }) {
           pointerEvents="none"
           onLayout={measurePicture}
           style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 24.96 : 30.7 }, pictureVisible]}>
-          <Image source={article.cover} style={styles.fill} contentFit="cover" />
+          <Image source={article.cover} style={styles.fill} contentFit="cover" onLoad={(e) => e.source.width && e.source.height && setCoverAspect(e.source.width / e.source.height)} />
         </Animated.View>
         <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 50 }, chromeStyle]}>
           <PressableScale onPress={() => setSharing(true)} hitSlop={8} accessibilityLabel="Share" style={styles.previewShare}>
@@ -437,16 +453,7 @@ function Reader({ article }: { article: Article }) {
       </Animated.View>
 
       {origin && picture ? <FlyingCover origin={origin} source={article.cover} t={t} flying={flying} target={picture} onShown={onCoverShown} /> : null}
-      {picture ? (
-        <FlyingCover
-          origin={{ ...picture, radius: 1, aspect: null }}
-          source={article.cover}
-          t={rise}
-          flying={morphing}
-          target={{ x: 0, y: 0, w: W, h: top + STRIP_H }}
-          onShown={noop}
-        />
-      ) : null}
+
 
       {hearts.map((h) => (
         <BigHeart key={h.id} id={h.id} x={h.x} y={h.y} tilt={h.tilt} onDone={dropHeart} />
