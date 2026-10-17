@@ -76,6 +76,10 @@ export default function ArticleScreen() {
 type Rect = { x: number; y: number; w: number; h: number };
 
 function Reader({ article }: { article: Article }) {
+  // TEMP debug (swipes on iPhone).
+  useEffect(() => {
+    console.log('[reader-debug] mounted 2849+debug');
+  }, []);
   const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const targetRef = useRef<View>(null);
@@ -231,7 +235,15 @@ function Reader({ article }: { article: Article }) {
   const pager = Gesture.Pan()
     .activeOffsetX([-12, 12])
     .failOffsetY([-16, 16])
+    // TEMP debug (swipes on iPhone): remove once confirmed.
+    .onBegin(() => {
+      console.log('[reader-debug] pager begin t=' + t.get().toFixed(2));
+    })
+    .onFinalize((_e, ok) => {
+      console.log('[reader-debug] pager finalize ok=' + ok);
+    })
     .onStart(() => {
+      console.log('[reader-debug] pager start');
       startPage.set(Math.round(scrollX.get() / W));
       axis.set(t.get() > 0.99 ? 1 : 0);
     })
@@ -252,7 +264,14 @@ function Reader({ article }: { article: Article }) {
   const dismiss = Gesture.Pan()
     .activeOffsetY(14)
     .failOffsetX([-14, 14])
+    .onBegin(() => {
+      console.log('[reader-debug] dismiss begin');
+    })
+    .onFinalize((_e, ok) => {
+      console.log('[reader-debug] dismiss finalize ok=' + ok);
+    })
     .onStart(() => {
+      console.log('[reader-debug] dismiss start t=' + t.get().toFixed(2));
       axis.set(t.get() > 0.99 ? 2 : 0);
     })
     .onUpdate((e) => {
