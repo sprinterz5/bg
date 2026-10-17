@@ -17,29 +17,31 @@ import { push } from '@/lib/nav';
 
 // Frame 1198. Explore: a search field (16.5..373.5, 40 tall) over topic tabs with an underline and a list of
 // article rows. Typing: the field narrows to 14..324 (38 tall) with "Exit", Articles / Profiles under it.
-// Results: back chevron, the field at 27.5..351.5, "Exit", tabs Related / Detailed / Quick over the rows
+// Results: back chevron, the field at 44.5..328.5, "Exit", tabs Related / Detailed / Quick over the rows
 // (Quick shows the big picture cards). All y here are from the bottom of the status bar (design y - 47).
 type Mode = 'explore' | 'typing' | 'results';
 type SegTab = 'articles' | 'profiles';
 
 const MODE_VALUE: Record<Mode, number> = { explore: 0, typing: 1, results: 2 };
 // Field per mode: [explore, typing, results].
-const FIELD_L = [16.5, 14, 27.5];
-const FIELD_R = [373.5, 324, 351.5];
-const FIELD_TOP = [3, 7, 3];
+const FIELD_L = [16.5, 14, 44.5];
+const FIELD_R = [373.5, 324, 328.5];
+const FIELD_TOP = [5, 6, 5];
 const FIELD_H = [40, 38, 40];
 const ICON_L = [11.1, 9.6, 11.1]; // magnifier box (13.8 with its stroke) from the field's left edge
 const TEXT_L = [39, 39, 36.1]; // text from the field's left edge
-const FIELD_BG = '#F2F2F2';
+const FIELD_BG = '#F5F5F5';
 const GRAY = '#6B6B6B';
-// Tabs: Inter Medium 14/16, line top 62.9; a 0.75 hairline at 95 with a 36-wide underline under the active tab.
-const TABS_TOP = 62.9;
-const LINE_TOP = 95;
+// Tabs: Inter Medium 14/16, line top 64.9; a 0.75 hairline at 97 with a 36-wide underline under the active tab
+// (AutoLayouted-15). On results (AutoLayouted-16) tabs, line and list sit 2 lower.
+const TABS_TOP = 64.9;
+const LINE_TOP = 97;
+const RESULTS_SHIFT = 2;
 const LIST_TOP = LINE_TOP + 0.75;
-const EXPLORE_TAB_X = [22.4, 103.4, 174.4, 246.1];
-const RESULT_TAB_X = [22.4, 100.9, 186.1];
+const EXPLORE_TAB_X = [22.4, 103.4, 175.1, 249.2];
+const RESULT_TAB_X = [22.4, 104.6, 196.2];
 const UNDERLINE_W = 36;
-const SEG_TOP = 62;
+const SEG_TOP = 61;
 const SEG_SIDE_L = 14;
 const SEG_SIDE_R = 20;
 const SEG_GAP = 4;
@@ -89,10 +91,10 @@ export default function Search() {
   });
   const fieldIconStyle = useAnimatedStyle(() => ({ transform: [{ translateX: pick(ICON_L, m.value) }] }));
   const inputStyle = useAnimatedStyle(() => ({ left: pick(TEXT_L, m.value) }));
-  // "Exit": hidden on Explore; at x 340.9 while typing, 358.9 on results.
+  // "Exit": hidden on Explore; at x 340.8 while typing, 341.8 on results.
   const exitStyle = useAnimatedStyle(() => ({
     opacity: interpolate(m.value, [0, 1], [0, 1], 'clamp'),
-    transform: [{ translateX: interpolate(m.value, [0, 1, 2], [10, 0, 18]) }],
+    transform: [{ translateX: interpolate(m.value, [0, 1, 2], [10, 0, 1]) }, { translateY: interpolate(m.value, [1, 2], [0, 1], 'clamp') }],
   }));
   const backStyle = useAnimatedStyle(() => ({
     opacity: interpolate(m.value, [1, 2], [0, 1], 'clamp'),
@@ -227,7 +229,7 @@ export default function Search() {
         ) : null}
 
         {mode === 'results' ? (
-          <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={StyleSheet.absoluteFill}>
+          <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={[StyleSheet.absoluteFill, { top: RESULTS_SHIFT }]}>
             <View style={styles.listLayer}>
               {RESULT_TABS[resultTab] === 'Quick' ? (
                 <FlatList key="quick" data={QUICK_RESULTS} keyExtractor={(p) => p.id} renderItem={renderCard} contentContainerStyle={styles.cardsContent} showsVerticalScrollIndicator={false} />
@@ -242,7 +244,7 @@ export default function Search() {
         {/* Field, back and Exit sit over every mode and change shape between them. */}
         <Animated.View collapsable={false} pointerEvents={mode === 'results' ? 'auto' : 'none'} style={[styles.back, backStyle]}>
           <PressableScale onPress={backToTyping} hitSlop={14} scaleTo={0.85} accessibilityLabel="Back">
-            <Icon name="searchBack" width={10} height={20} />
+            <Icon name="searchBack" width={13} height={23} />
           </PressableScale>
         </Animated.View>
 
@@ -275,7 +277,7 @@ export default function Search() {
             <Pressable onPress={openSearch} style={StyleSheet.absoluteFill} accessibilityRole="search" accessibilityLabel="Search" />
           ) : null}
           {query && mode !== 'explore' ? (
-            <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={styles.clear}>
+            <Animated.View collapsable={false} entering={FADE_IN} exiting={FADE_OUT} style={[styles.clear, mode === 'results' && styles.clearResults]}>
               <PressableScale
                 onPress={() => {
                   setQuery('');
@@ -405,7 +407,8 @@ const styles = StyleSheet.create({
   input: { fontFamily: INTER_FAMILIES['400'], fontSize: 15, lineHeight: 20, letterSpacing: 15 * -0.01, color: colors.text, padding: 0, height: 38 },
   placeholder: { position: 'absolute', left: 0, fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 23, letterSpacing: 14 * -0.01, color: GRAY },
   clear: { position: 'absolute', right: 7, top: 0, bottom: 0, justifyContent: 'center' },
-  back: { position: 'absolute', left: 11.5, top: 13 },
+  clearResults: { right: 9 },
+  back: { position: 'absolute', left: 16, top: 14 },
   exit: { position: 'absolute', left: 340.2, top: 12.4 },
   exitText: { fontSize: 15.5, lineHeight: 23, letterSpacing: 15.5 * -0.02, color: colors.text },
 
@@ -423,16 +426,18 @@ const styles = StyleSheet.create({
   segHit: { position: 'absolute', top: 0, left: 0, height: 28, alignItems: 'center', justifyContent: 'center' },
   segText: { fontSize: 13, lineHeight: 16, fontWeight: '600' },
 
-  suggestionsList: { paddingTop: 14 },
-  suggestion: { height: 55, flexDirection: 'row', alignItems: 'center', paddingLeft: 18 },
-  suggestionIcon: { marginRight: 25 },
+  // AutoLayouted-7: the 30px icon box at x 14, rows 57 apart from y 148.5, text at 68.1.
+  suggestionsList: { paddingTop: 12.5 },
+  suggestion: { height: 57, flexDirection: 'row', alignItems: 'center', paddingLeft: 14 },
+  suggestionIcon: { marginRight: 24.1 },
   suggestionText: { flex: 1, fontSize: 14, lineHeight: 18, color: colors.text, paddingRight: 16 },
   suggestionBold: { fontWeight: '700' },
   pressed: { backgroundColor: PRESSED },
 
   profilesList: { paddingTop: 16 },
-  profile: { height: 64, flexDirection: 'row', alignItems: 'center', paddingLeft: 15, gap: 13 },
+  // AutoLayouted-8: avatar 46 at x 14, names Inter 13.25 semibold / 12.3.
+  profile: { height: 64, flexDirection: 'row', alignItems: 'center', paddingLeft: 14, gap: 13 },
   profileAvatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.surfaceSoft },
-  profileName: { fontSize: 13, lineHeight: 16, fontWeight: '700', color: colors.text },
-  profileSub: { fontSize: 12, lineHeight: 15, color: MUTED },
+  profileName: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.25, lineHeight: 16, color: colors.text },
+  profileSub: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.3, lineHeight: 15, color: MUTED },
 });
