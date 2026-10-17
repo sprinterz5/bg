@@ -13,7 +13,7 @@ import { PostActions } from './post-actions';
 import { PressableScale } from './pressable-scale';
 import { INTER_FAMILIES, Text } from './text';
 
-const GRAY = '#6B6B6B';
+const GRAY = '#999999';
 
 function formatCount(n: number) {
   return n >= 1000 ? `${Math.round(n / 100) / 10}K`.replace('.0K', 'K') : String(n);
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   meta: { marginLeft: 8.1, marginTop: 1.6, fontFamily: INTER_FAMILIES['400'], fontSize: 11.75, lineHeight: 14.2, letterSpacing: 11.75 * -0.005, color: GRAY },
   author: { color: colors.text },
   title: { marginTop: 16.9, marginLeft: 22, width: 238, fontFamily: INTER_FAMILIES['800'], fontSize: 19.75, lineHeight: 26, letterSpacing: 19.75 * -0.0125, color: colors.text },
-  excerpt: { marginTop: 11.1, marginLeft: 22.5, width: 238, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 18.5, letterSpacing: 13.75 * 0.015, color: GRAY },
+  excerpt: { marginTop: 11.1, marginLeft: 22.5, width: 238, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 18.5, letterSpacing: 13.75 * 0.015, color: '#000000' },
   thumb: { position: 'absolute', left: 276.5, top: 35, width: 91, height: 59, borderRadius: 2, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   // counters (Inter Medium 11.25/16): heart at x 26.8, "520" at x 47.5, share at x 101.1, its count at x 123.9,
   // bookmark at x 300.9, ••• at x 343.8

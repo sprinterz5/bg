@@ -21,7 +21,7 @@ import { useSeenStories } from '@/state/feed';
 // Autolayouted (design status bar 47, home indicator 34). Photo centred on design y 390, up to 540 tall; author
 // row 92 and caption 46 above the bottom bar; bar 50 + indicator, #0D1015.
 const BAR = '#0D1015';
-const MUTED = '#8E8E93';
+const MUTED = '#999999';
 const MAX_H = 540;
 
 /** The viewer's photo box: full width, up to MAX_H tall, centred on design y 390 (cover-cropped when taller). */

@@ -31,7 +31,7 @@ const FIELD_H = [40, 38, 40];
 const ICON_L = [11.1, 9.6, 11.1]; // magnifier box (13.8 with its stroke) from the field's left edge
 const TEXT_L = [39, 39, 36.1]; // text from the field's left edge
 const FIELD_BG = '#F5F5F5';
-const GRAY = '#6B6B6B';
+const GRAY = '#999999';
 // Tabs: Inter Medium 14/16, line top 64.9; a 0.75 hairline at 97 with a 36-wide underline under the active tab
 // (AutoLayouted-15). On results (AutoLayouted-16) tabs, line and list sit 2 lower.
 const TABS_TOP = 64.9;
@@ -250,7 +250,7 @@ export default function Search() {
 
         <Animated.View collapsable={false} style={[styles.field, fieldStyle]}>
           <Animated.View collapsable={false} style={[styles.fieldIcon, fieldIconStyle]}>
-            <Icon name="exploreFieldSearch" width={13.76} height={13.74} />
+            <Icon name="exploreFieldSearch" width={13.76} height={13.74} tintColor={mode === 'explore' ? '#999999' : '#6B6B6B'} />
           </Animated.View>
           <Animated.View collapsable={false} style={[styles.inputBox, inputStyle]}>
             <TextInput
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   field: { position: 'absolute', borderRadius: 10, backgroundColor: FIELD_BG, overflow: 'hidden' },
   fieldIcon: { position: 'absolute', left: 0, top: 0, bottom: 0, justifyContent: 'center' },
   inputBox: { position: 'absolute', top: 0, bottom: 0, right: 30, justifyContent: 'center' },
-  // Query: Inter 15/23 (results "Steve Jobs"); Explore's placeholder: Inter 14 #6B6B6B.
+  // Query: Inter 15/23 (results "Steve Jobs"); Explore's placeholder: Inter 14 #999.
   input: { fontFamily: INTER_FAMILIES['400'], fontSize: 15, lineHeight: 20, letterSpacing: 15 * -0.01, color: colors.text, padding: 0, height: 38 },
   placeholder: { position: 'absolute', left: 0, fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 23, letterSpacing: 14 * -0.01, color: GRAY },
   clear: { position: 'absolute', right: 7, top: 0, bottom: 0, justifyContent: 'center' },
