@@ -75,6 +75,7 @@ const icons = {
   postShare: require('@/assets/icons/post-share.svg'),
   postBookmark: require('@/assets/icons/post-bookmark.svg'),
   readerClose: require('@/assets/icons/reader-close.svg'),
+  readerClose2: require('@/assets/icons/reader-close-2.svg'),
   readerComment: require('@/assets/icons/reader-comment.svg'),
   readerLike: require('@/assets/icons/reader-like.svg'),
   readerLikeFilled: require('@/assets/icons/reader-like-filled.svg'),

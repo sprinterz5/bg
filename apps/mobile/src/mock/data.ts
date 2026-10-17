@@ -62,6 +62,8 @@ export type Article = {
   author: Author;
   cover: ImageSourcePropType;
   title: string;
+  /** Shown on the reader's preview under "N pages · N min read". */
+  subtitle?: string;
   body: string[];
   likes: number;
   comments: number;
@@ -828,12 +830,13 @@ function seeded(id: string, max: number, min = 0) {
   return min + (h % (max - min));
 }
 
-function articleFrom(id: string, author: Author, cover: ImageSourcePropType, title: string, body: string[], likes?: number, comments?: number, shares?: number) {
+function articleFrom(id: string, author: Author, cover: ImageSourcePropType, title: string, body: string[], likes?: number, comments?: number, shares?: number, subtitle?: string) {
   ARTICLES[id] = {
     id,
     author,
     cover,
     title,
+    subtitle,
     body,
     likes: likes ?? seeded(id, 4000, 40),
     comments: comments ?? seeded(id + 'c', 400, 3),
@@ -930,7 +933,7 @@ const TIME_AGO: Record<string, string> = {};
 
 for (const p of FEED) {
   const id = `a-${p.id}`;
-  articleFrom(id, p.author, p.image, p.title, bodyFor(p.id), p.likes, p.comments, p.shares);
+  articleFrom(id, p.author, p.image, p.title, bodyFor(p.id), p.likes, p.comments, p.shares, p.caption);
   p.articleId = id;
   TIME_AGO[id] = p.timeAgo;
 }
