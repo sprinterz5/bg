@@ -12,19 +12,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icon';
 import { CURL_SUPPORTED, PageCurlCanvas, disposeSnapshot, snapshotView, type Snapshot } from '@/components/page-curl';
 import { PressableScale } from '@/components/pressable-scale';
-import { Text, TextInput } from '@/components/text';
+import { Text, TextInput, INTER_FAMILIES } from '@/components/text';
 import { backWhenReady } from '@/lib/nav';
 import { storiesClosing, storyOrigin } from '@/lib/story-origin';
 import { HOME_STORIES, type Story } from '@/mock/data';
 import { useSeenStories } from '@/state/feed';
 
-// Frame 1049 story viewer (design status bar 47, home indicator 34). Photo centred on design y 385,
-// up to 540 tall; author row 93 and caption 46 above the bottom bar; bar 51 + indicator, #0D1015.
+// Autolayouted (design status bar 47, home indicator 34). Photo centred on design y 390, up to 540 tall; author
+// row 92 and caption 46 above the bottom bar; bar 50 + indicator, #0D1015.
 const BAR = '#0D1015';
 const MUTED = '#8E8E93';
 const MAX_H = 540;
 
-/** The viewer's photo box: full width, up to MAX_H tall, centred on design y 385 (cover-cropped when taller). */
+/** The viewer's photo box: full width, up to MAX_H tall, centred on design y 390 (cover-cropped when taller). */
 function photoHeight(story: Story, width: number) {
   const src = Image.resolveAssetSource(story.image as number);
   return Math.min(MAX_H, src ? (width * src.height) / src.width : MAX_H);
@@ -62,7 +62,7 @@ export default function StoryViewer() {
   const story = HOME_STORIES[index];
   const prev: Story | undefined = HOME_STORIES[index - 1];
   const next: Story | undefined = HOME_STORIES[index + 1];
-  const barH = 51 + Math.max(insets.bottom, 12);
+  const barH = 50 + Math.max(insets.bottom, 12);
 
   // Open / close. `t`: 0 = the window is the story photo on Home (origin), 1 = full screen. The window clips the
   // viewer; inside it the viewer is scaled so its photo fills the circle, centred, at t 0. Swiping down drags the
@@ -145,7 +145,7 @@ export default function StoryViewer() {
     return () => sub.remove();
   }, [close]);
 
-  const photoCY = insets.top + (385 - 47);
+  const photoCY = insets.top + (390 - 47);
   // Transforms only (plus radius and opacity), so the window and the viewer inside it move in the same UI-thread
   // update: the window is a fixed full-screen box scaled to the current rect, the viewer inside is counter-scaled
   // so it stays undistorted, scaled `sc` overall, with its photo centre where it should be.
@@ -458,7 +458,7 @@ export default function StoryViewer() {
         </View>
       </GestureDetector>
 
-      <PressableScale onPress={close} hitSlop={14} accessibilityLabel="Close" style={[styles.close, { top: insets.top + 7 }]}>
+      <PressableScale onPress={close} hitSlop={14} accessibilityLabel="Close" style={[styles.close, { top: insets.top + 4 }]}>
         <Icon name="storyClose" width={24} height={24} />
       </PressableScale>
 
@@ -538,7 +538,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
   }, []);
 
   const photoH = photoHeight(story, width);
-  const photoTop = insets.top + (385 - 47) - photoH / 2;
+  const photoTop = insets.top + (390 - 47) - photoH / 2;
 
   // Snapshot for the page turn once the pictures are on screen, and again after the caption opens or closes.
   const ready = (photoReady && avatarReady) || timedOut;
@@ -644,20 +644,20 @@ const styles = StyleSheet.create({
   ringPhoto: { width: RING_BASE, height: RING_BASE },
   page: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000' },
   half: { position: 'absolute', top: 0 },
-  // Frame 1198: ✕ (22 + its 2px stroke) at x 349, y 7 under the status bar.
+  // ✕ (22 + its 2px stroke) at x 349, y 4 under the status bar.
   close: { position: 'absolute', right: 17 },
-  info: { position: 'absolute', left: 14, right: 54 },
+  info: { position: 'absolute', left: 13, right: 54 },
   // avatar 28; name 14/600 baseline +12, time 12 baseline +25.2; caption line 18.9 under the avatar
   author: { flexDirection: 'row', height: 28 },
   avatar: { width: 28, height: 28, borderRadius: 14 },
-  names: { marginLeft: 12.5, marginTop: -1.5 },
-  name: { fontSize: 14, lineHeight: 17, fontWeight: '600', color: '#FFFFFF' },
-  time: { marginTop: -1.7, marginLeft: 1.3, fontSize: 12, lineHeight: 14, color: MUTED },
-  caption: { marginTop: 18.9, marginBottom: 14.1, fontSize: 12.65, lineHeight: 15.65, color: '#FFFFFF' },
+  names: { marginLeft: 11.7, marginTop: -1.86 },
+  name: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.26, lineHeight: 17, color: '#FFFFFF' },
+  time: { marginTop: -1.16, marginLeft: 1.3, fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 14, color: MUTED },
+  caption: { marginTop: 18.9, marginBottom: 14.1, fontFamily: INTER_FAMILIES['400'], fontSize: 12.65, lineHeight: 15.65, color: '#FFFFFF' },
   measure: { position: 'absolute', left: 0, right: 0, opacity: 0 },
   // Same box as `caption`; the slack below the last line keeps descenders from being clipped while it animates.
   captionBox: { marginTop: 18.9, marginBottom: 14.1 - CAPTION_SLACK, overflow: 'hidden' },
-  captionText: { fontSize: 12.65, lineHeight: CAPTION_LH, color: '#FFFFFF' },
+  captionText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.65, lineHeight: CAPTION_LH, color: '#FFFFFF' },
   more: { color: MUTED },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: BAR },
   // Frame 1081: 286x41 #181C1F pill (no stroke) at x 14, 12 under the bar top; text at x 36.2
@@ -673,6 +673,6 @@ const styles = StyleSheet.create({
     paddingLeft: 22.2,
     paddingRight: 16,
   },
-  input: { fontSize: 13, color: '#FFFFFF', padding: 0 },
-  heart: { position: 'absolute', left: 329, top: 19.75 },
+  input: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.4, color: '#FFFFFF', padding: 0 },
+  heart: { position: 'absolute', left: 328, top: 19.75 },
 });
