@@ -76,10 +76,6 @@ export default function ArticleScreen() {
 type Rect = { x: number; y: number; w: number; h: number };
 
 function Reader({ article }: { article: Article }) {
-  // TEMP debug (swipes on iPhone).
-  useEffect(() => {
-    console.log('[reader-debug] mounted 2849+debug');
-  }, []);
   const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const targetRef = useRef<View>(null);
@@ -230,67 +226,69 @@ function Reader({ article }: { article: Article }) {
     })();
   }, [article.id, scrollX, W, H, flying, dragY, dragVX, t]);
   const PAGE_SPRING = { damping: 26, stiffness: 260, mass: 0.9, overshootClamping: true };
-  // Two pans racing, like the story viewer (Android reports no translation in onStart, so the direction has to come
-  // from the activation offsets): sideways turns pages, downwards closes. Neither works until the reader is open.
-  const pager = Gesture.Pan()
-    .activeOffsetX([-12, 12])
-    .failOffsetY([-16, 16])
-    // TEMP debug (swipes on iPhone): remove once confirmed.
-    .onBegin(() => {
-      console.log('[reader-debug] pager begin t=' + t.get().toFixed(2));
-    })
-    .onFinalize((_e, ok) => {
-      console.log('[reader-debug] pager finalize ok=' + ok);
-    })
-    .onStart(() => {
-      console.log('[reader-debug] pager start');
-      startPage.set(Math.round(scrollX.get() / W));
-      axis.set(t.get() > 0.99 ? 1 : 0);
-    })
-    .onUpdate((e) => {
-      if (axis.get() !== 1) return;
-      // No rubber band: nothing to the right of the preview, nothing past the last page.
-      scrollX.set(Math.max(0, Math.min(lastPage.get() * W, startPage.get() * W - e.translationX)));
-    })
-    .onEnd((e) => {
-      if (axis.get() !== 1) return;
+  // One pan, activated by hand once the finger has moved 10pt: more sideways than down → pages, down → close, up →
+  // nothing. The direction comes from the touch positions (Android reports no translation in onStart) and from their
+  // ratio, not from fixed fail offsets: a thumb swipe down on an iPhone drifts sideways by more than 14pt at once,
+  // which made both offset-based pans fail.
+  const touchX = useSharedValue(0);
+  const touchY = useSharedValue(0);
+  const pan = Gesture.Pan()
+    .manualActivation(true)
+    .onTouchesDown((e) => {
+      touchX.set(e.allTouches[0]?.absoluteX ?? 0);
+      touchY.set(e.allTouches[0]?.absoluteY ?? 0);
       axis.set(0);
-      const from = startPage.get();
-      let to = Math.round((scrollX.get() - e.velocityX * 0.12) / W);
-      to = Math.max(0, Math.min(lastPage.get(), Math.max(from - 1, Math.min(from + 1, to))));
-      scrollX.set(withSpring(to * W, { ...PAGE_SPRING, velocity: -e.velocityX }));
-      runOnJS(setPage)(to);
-    });
-  const dismiss = Gesture.Pan()
-    .activeOffsetY(14)
-    .failOffsetX([-14, 14])
-    .onBegin(() => {
-      console.log('[reader-debug] dismiss begin');
     })
-    .onFinalize((_e, ok) => {
-      console.log('[reader-debug] dismiss finalize ok=' + ok);
-    })
-    .onStart(() => {
-      console.log('[reader-debug] dismiss start t=' + t.get().toFixed(2));
-      axis.set(t.get() > 0.99 ? 2 : 0);
+    .onTouchesMove((e, manager) => {
+      if (axis.get() !== 0) return;
+      const touch = e.allTouches[0];
+      if (!touch) return;
+      const dx = touch.absoluteX - touchX.get();
+      const dy = touch.absoluteY - touchY.get();
+      if (dx * dx + dy * dy < 100) return;
+      if (t.get() < 0.99) return manager.fail();
+      // TEMP debug (swipes on iPhone): remove once confirmed.
+      console.log('[reader-debug] decide dx=' + dx.toFixed(0) + ' dy=' + dy.toFixed(0));
+      if (Math.abs(dx) > Math.abs(dy)) {
+        axis.set(1);
+        startPage.set(Math.round(scrollX.get() / W));
+        manager.activate();
+      } else if (dy > 0) {
+        axis.set(2);
+        manager.activate();
+      } else manager.fail();
     })
     .onUpdate((e) => {
-      if (axis.get() !== 2) return;
-      // A little resistance upwards, free downwards; sideways at half speed.
-      dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
-      dragVX.set(e.translationX * 0.5);
+      if (axis.get() === 1) {
+        // No rubber band: nothing to the right of the preview, nothing past the last page.
+        scrollX.set(Math.max(0, Math.min(lastPage.get() * W, startPage.get() * W - e.translationX)));
+      } else if (axis.get() === 2) {
+        // A little resistance upwards, free downwards; sideways at half speed.
+        dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
+        dragVX.set(e.translationX * 0.5);
+      }
     })
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
-      if (axis.get() !== 2) return;
-      axis.set(0);
-      if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
-      else {
-        dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
-        dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
+      console.log('[reader-debug] end axis=' + axis.get() + ' dragY=' + dragY.get().toFixed(0));
+      if (axis.get() === 1) {
+        const from = startPage.get();
+        let to = Math.round((scrollX.get() - e.velocityX * 0.12) / W);
+        to = Math.max(0, Math.min(lastPage.get(), Math.max(from - 1, Math.min(from + 1, to))));
+        scrollX.set(withSpring(to * W, { ...PAGE_SPRING, velocity: -e.velocityX }));
+        runOnJS(setPage)(to);
+      } else if (axis.get() === 2) {
+        if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
+        else {
+          dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
+          dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
+        }
       }
+    })
+    .onFinalize(() => {
+      axis.set(0);
     });
-  const readerGestures = Gesture.Simultaneous(Gesture.Race(pager, dismiss), doubleTap);
+  const readerGestures = Gesture.Simultaneous(pan, doubleTap);
   const pagesRow = useAnimatedStyle(() => ({ transform: [{ translateX: -scrollX.get() }] }));
   const slideStyle = useAnimatedStyle(() => {
     const d = Math.max(0, dragY.get());
