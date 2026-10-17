@@ -116,6 +116,26 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
     return asApi<ApiConversation[]>(conversations.map((c, i) => ({ ...c, unreadCount: unread[i] ?? 0 })));
   });
 
+  // Chat search: the user's own text messages containing the query (newest first), in chats with no blocked member.
+  app.get("/messages/search", { preHandler: [app.authenticate] }, async (request) => {
+    const { q } = z.object({ q: z.string().trim().min(1).max(100) }).parse(request.query);
+    const blockedIds = await getBlockedIds(app, request.user.sub);
+    const messages = await app.prisma.message.findMany({
+      where: {
+        deletedAt: null,
+        body: { contains: q, mode: "insensitive" },
+        conversation: {
+          members: { some: { userId: request.user.sub } },
+          NOT: { members: { some: { userId: { in: [...blockedIds] } } } }
+        }
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: { id: true, conversationId: true, senderId: true, body: true, createdAt: true }
+    });
+    return asApi<ApiChatMessage[]>(messages);
+  });
+
   app.post("/conversations/direct", { preHandler: [app.authenticate] }, async (request, reply) => {
     const body = directConversationSchema.parse(request.body);
     if (body.userId === request.user.sub) {
