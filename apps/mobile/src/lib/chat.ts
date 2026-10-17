@@ -1,4 +1,4 @@
-import type { ApiChatMessage, ApiConversation, ApiConversationBase, ApiUserSummary, Page } from '@api/api';
+import type { ApiChatMessage, ApiConversation, ApiConversationBase, ApiUserSearch, ApiUserSummary, Page } from '@api/api';
 import { io, type Socket } from 'socket.io-client';
 
 import { api, API_URL, getAccessToken, refreshSession } from './api';
@@ -22,6 +22,13 @@ export const fetchMessages = (conversationId: string, cursor?: string) =>
 
 export const sendMessage = (conversationId: string, body: string) =>
   api<ChatMessage>(`/conversations/${conversationId}/messages`, { body: { type: 'TEXT', body }, auth: true, idempotent: true });
+
+/** Chat search: own messages containing the query, newest first. */
+export const searchMessages = (q: string) => api<ChatMessage[]>(`/messages/search?q=${encodeURIComponent(q)}`, { auth: true });
+
+/** Chat search: accounts to start a chat with. */
+export const searchAccounts = (q: string) =>
+  api<ApiUserSearch>(`/search?type=users&limit=20&q=${encodeURIComponent(q)}`, { auth: true }).then((r) => r.data.users);
 
 export const markRead = (conversationId: string) =>
   api(`/conversations/${conversationId}/read`, { method: 'POST', auth: true }).catch(() => {});

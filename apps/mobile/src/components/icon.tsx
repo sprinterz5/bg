@@ -7,6 +7,7 @@ const icons = {
   notifBack: require('@/assets/icons/notif-back.svg'),
   compose: require('@/assets/icons/compose.svg'),
   chatSearch: require('@/assets/icons/chat-search.svg'),
+  chatSearchEmpty: require('@/assets/icons/chat-search-empty.svg'),
   chatCall: require('@/assets/icons/chat-call.svg'),
   chatVideo: require('@/assets/icons/chat-video.svg'),
   chatGallery: require('@/assets/icons/chat-gallery.svg'),

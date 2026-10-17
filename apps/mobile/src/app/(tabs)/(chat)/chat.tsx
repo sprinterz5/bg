@@ -2,13 +2,13 @@ import { Image } from 'expo-image';
 import { useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { ConnectionRowSkeleton } from '@/components/skeleton';
-import { INTER_FAMILIES, Text, TextInput } from '@/components/text';
+import { INTER_FAMILIES, Text } from '@/components/text';
 import { chatSocket, fetchConversations, otherMember, type Conversation } from '@/lib/chat';
 import { push } from '@/lib/nav';
 import { useSession } from '@/state/session';
@@ -19,14 +19,11 @@ const SUBTLE = '#858585';
 type Row = { id: string; username: string; title: string; subtitle: string; avatar: string | null; unread: number };
 
 // Chats list (AutoLayouts export): compose · own name · search, then the conversations — avatar 55, name and the last
-// message, unread ones in semibold with a count badge. The search field (not in the export) opens in the empty band
-// between the header and the list.
+// message, unread ones in semibold with a count badge. Search opens its own screen (chat-search).
 export default function Chat() {
   const insets = useSafeAreaInsets();
   const { user } = useSession();
   const [conversations, setConversations] = useState<Conversation[] | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [query, setQuery] = useState('');
 
   const load = useCallback(() => {
     fetchConversations()
@@ -65,13 +62,6 @@ export default function Chat() {
       }),
     [conversations, user],
   );
-  const q = query.trim().toLowerCase();
-  const data = q ? rows.filter((r) => r.username.toLowerCase().includes(q) || r.title.toLowerCase().includes(q)) : rows;
-
-  const toggleSearch = () => {
-    setSearching((v) => !v);
-    setQuery('');
-  };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -82,41 +72,21 @@ export default function Chat() {
         <Text style={styles.title} numberOfLines={1}>
           {user?.name || user?.username || ''}
         </Text>
-        <PressableScale onPress={toggleSearch} hitSlop={10} scaleTo={0.88} accessibilityLabel="Search chats" style={styles.search}>
+        <PressableScale onPress={() => push('/chat-search')} hitSlop={10} scaleTo={0.88} accessibilityLabel="Search chats" style={styles.search}>
           <Icon name="chatSearch" width={21.65} height={21.65} />
         </PressableScale>
       </View>
 
-      <View style={styles.band}>
-        {searching ? (
-          <Animated.View collapsable={false} entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)} style={styles.field}>
-            <Icon name="searchField" width={15} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search"
-              placeholderTextColor="#536471"
-              autoFocus
-              autoCorrect={false}
-              autoCapitalize="none"
-              returnKeyType="search"
-              selectionColor={colors.primary}
-              cursorColor={colors.text}
-              style={styles.input}
-              accessibilityLabel="Search chats"
-            />
-          </Animated.View>
-        ) : null}
-      </View>
+      <View style={styles.band} />
 
       <FlatList
-        data={data}
+        data={rows}
         keyExtractor={(r) => r.id}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           conversations ? (
-            <Text style={styles.empty}>{q ? 'Nothing found.' : 'No chats yet.\nTap the pencil to message someone you follow.'}</Text>
+            <Text style={styles.empty}>{'No chats yet.\nTap the pencil to message someone you follow.'}</Text>
           ) : (
             <Animated.View collapsable={false} exiting={FadeOut.duration(150)}>
               {Array.from({ length: 7 }, (_, i) => (
@@ -168,19 +138,6 @@ const styles = StyleSheet.create({
   title: { marginTop: 12.08, maxWidth: 260, fontFamily: INTER_FAMILIES['700'], fontSize: 22, lineHeight: 27, color: colors.text },
   search: { position: 'absolute', right: 17.29, top: 16.03 },
   band: { height: 54 },
-  field: {
-    height: 39,
-    marginTop: 7.5,
-    marginLeft: 10,
-    marginRight: 11,
-    borderRadius: 10,
-    backgroundColor: '#EFF3F4',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingLeft: 15,
-    gap: 14,
-  },
-  input: { flex: 1, fontSize: 16, color: colors.text, padding: 0, height: 39 },
   row: { height: 80, flexDirection: 'row', paddingLeft: 14, paddingRight: 15 },
   avatar: { width: 55, height: 55, borderRadius: 27.5, backgroundColor: colors.surfaceSoft },
   names: { flex: 1, marginLeft: 13.2, marginRight: 12, paddingTop: 9.59 },
