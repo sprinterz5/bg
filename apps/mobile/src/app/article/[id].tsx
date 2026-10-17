@@ -31,6 +31,7 @@ import { LikeButton } from '@/components/like-button';
 import { PlaceholderScreen } from '@/components/placeholder-screen';
 import { PressableScale } from '@/components/pressable-scale';
 import { RollingLabel } from '@/components/rolling-label';
+import { ShareSheet } from '@/components/share-sheet';
 import { paginateLines } from '@/lib/paginate';
 import type { Article } from '@/mock/data';
 import { useFeed } from '@/state/feed';
@@ -78,6 +79,7 @@ function Reader({ article }: { article: Article }) {
   const [following, setFollowing] = useState(false);
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const top = insets.top;
   const IMG_H = top + 180;
@@ -348,13 +350,14 @@ function Reader({ article }: { article: Article }) {
           style={styles.barItem}
           countStyle={styles.barText}
         />
-        <BarItem icon="readerShare" w={16.4} h={16.4} label={String(article.shares)} />
+        <BarItem icon="readerShare" w={16.4} h={16.4} label={String(article.shares)} onPress={() => setSharing(true)} />
         <PressableScale onPress={() => setSaved((v) => !v)} hitSlop={10} accessibilityLabel="Bookmark">
           <Icon name="readerBookmark" width={16.5} height={18.5} tintColor={saved ? colors.primary : undefined} />
         </PressableScale>
       </Animated.View>
       </Animated.View>
       </GestureDetector>
+      {sharing ? <ShareSheet article={article} onClose={() => setSharing(false)} /> : null}
     </View>
   );
 }
