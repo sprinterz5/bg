@@ -6,17 +6,17 @@ import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, t
 
 import type { Story } from '@/mock/data';
 import { colors } from '@/theme';
-import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
-import { RingSweep, SeenRing } from './ring-sweep';
+import { RingSweep, SeenRing, StoryRing } from './ring-sweep';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { push } from '@/lib/nav';
 import { onStoriesClosing, setStoryOrigin } from '@/lib/story-origin';
 import { useSeenStories } from '@/state/feed';
 
-// Frame 1198 home: rings 98.2 (3.6 gradient stroke) every 110 from x 10.9, photo 85 inside a 3px white
-// stroke; the username (Inter 10.75, +4%) 4.4 under the ring. Watched stories get the grey ring.
-const RING = 98.2;
+// AutoLayouted-12: rings 97 (3px black stroke) every 113 from x 11.5, photo 85 inside a 3px white gap; the username
+// 3.3 under the ring. Watched stories get the grey ring.
+const RING = 97;
+const STEP = 113;
 const PHOTO = 85;
 
 // Overscroll like Instagram: the row barely gives at either end and every story stretches a touch
@@ -136,7 +136,7 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
     const o = x.value < 0 ? x.value : x.value > max.value ? x.value - max.value : 0;
     if (o === 0) return { transform: [{ translateX: 0 }, { scaleX: 1 }] };
     const grow = STRETCH * Math.abs(o);
-    const extra = (RING + 108 - RING) * grow; // each stretched story pushes the next one along
+    const extra = STEP * grow; // each stretched story pushes the next one along
     const fromEdge = o < 0 ? index : count - 1 - index;
     const wave = (fromEdge * extra + (RING * grow) / 2) * (o < 0 ? 1 : -1);
     return { transform: [{ translateX: o * (1 - GIVE) + wave }, { scaleX: 1 + grow }] };
@@ -151,7 +151,7 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
         style={styles.item}>
         <View ref={(v) => registerRing(s.id, v)} collapsable={false} style={styles.ring}>
           <Image source={s.image} style={styles.photo} contentFit="cover" transition={150} />
-          {grey ? <SeenRing size={RING} /> : <Icon name="storyRing" width={RING} style={StyleSheet.absoluteFill} />}
+          {grey ? <SeenRing size={RING} /> : <StoryRing size={RING} />}
           {sweepDelay !== null ? <RingSweep size={RING} delay={sweepDelay} onDone={done} /> : null}
         </View>
         <Text style={styles.name} numberOfLines={1}>
@@ -163,9 +163,9 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
 }
 
 const styles = StyleSheet.create({
-  row: { paddingLeft: 10.9, paddingRight: 8, gap: 110 - RING },
+  row: { paddingLeft: 11.5, paddingRight: 8, gap: STEP - RING },
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
-  name: { marginTop: 4.4, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 11.25, lineHeight: 14, letterSpacing: 11.25 * 0.04, color: '#000000' },
+  name: { marginTop: 3.3, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 11.25, lineHeight: 14, letterSpacing: 11.25 * 0.04, color: '#000000' },
 });

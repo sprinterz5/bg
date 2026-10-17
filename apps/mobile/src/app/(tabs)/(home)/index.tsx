@@ -179,7 +179,7 @@ export default function Home() {
 }
 
 const IOS = Platform.OS === 'ios';
-const HEADER_H = 59.4;
+const HEADER_H = 60;
 // Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
 const THRESHOLD = 64;
 const HOLD = 52;
@@ -193,8 +193,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   list: { flex: 1 },
   // Frame 1049 home (status bar 47): plus 21 at (14, 64), "Smarts" (Caveat 36.5) centred 3px left of the
-  // screen centre on y 73.2; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); story rings start at y 106.4;
-  // first avatar at 242.5.
+  // screen centre on y 73.2; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
+  // first avatar at 240.5.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   header: { height: HEADER_H, alignItems: 'center' },
   plus: { position: 'absolute', left: 21, top: 18 },
@@ -203,6 +203,6 @@ const styles = StyleSheet.create({
   logo: { marginTop: 1.2, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39, lineHeight: 50, color: colors.text, transform: [{ translateX: -3.1 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
-  storiesGap: { marginBottom: 20.5 },
+  storiesGap: { marginBottom: 19.2 },
   separator: { height: 29 },
 });
