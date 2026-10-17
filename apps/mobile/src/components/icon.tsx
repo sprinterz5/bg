@@ -8,6 +8,7 @@ const icons = {
   compose: require('@/assets/icons/compose.svg'),
   chatSearch: require('@/assets/icons/chat-search.svg'),
   chatSearchEmpty: require('@/assets/icons/chat-search-empty.svg'),
+  followingCompose: require('@/assets/icons/following-compose.svg'),
   shareCheck: require('@/assets/icons/share-check.svg'),
   chatCall: require('@/assets/icons/chat-call.svg'),
   chatVideo: require('@/assets/icons/chat-video.svg'),

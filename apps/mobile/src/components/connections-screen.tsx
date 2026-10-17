@@ -5,19 +5,20 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Text, TextInput } from '@/components/text';
+import { INTER_FAMILIES, Text, TextInput } from '@/components/text';
 import { CONNECTIONS, type Connection } from '@/mock/data';
 import { colors } from '@/theme';
 import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
-import { ProfileButton } from './profile';
+import { FollowButton } from './follow-button';
 import { ConnectionRowSkeleton } from './skeleton';
 import { back, openProfile } from '@/lib/nav';
 import { fetchConnections, setFollow } from '@/lib/users';
 
-// Figma 3184:982 (Followers, with Follow/Following buttons) and 3184:1274 (Following, no buttons).
-const HEADER_H = 67; // back + title centred on design y 80.5, search field starts at y 114
-const MUTED = '#737A84';
+// AutoLayouted-9 (Followers, Follow / Following buttons) and -10 (Following, no buttons): back at (19.5, 22.9), title
+// Inter 23 bold, the field (#F5F5F5, 10 from both sides) at 67, rows 74 apart from 29 under it.
+const HEADER_H = 67;
+const MUTED = '#999999';
 
 type Props = {
   title: string;
@@ -93,19 +94,19 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
       {header ?? (
         <View style={styles.header}>
           <PressableScale onPress={() => back()} hitSlop={12} scaleTo={0.85} accessibilityLabel="Back" style={styles.back}>
-            <Icon name="searchBack" width={12} height={20} />
+            <Icon name="notifBack" width={11.66} height={20.15} />
           </PressableScale>
           <Text style={styles.title}>{title}</Text>
         </View>
       )}
 
       <View style={styles.field}>
-        <Icon name="searchField" width={15} />
+        <Icon name="searchField" width={14.38} />
         <TextInput
           value={query}
           onChangeText={setQuery}
           placeholder="Search"
-          placeholderTextColor="#536471"
+          placeholderTextColor={MUTED}
           autoCorrect={false}
           autoCapitalize="none"
           returnKeyType="search"
@@ -141,7 +142,7 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
         )}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingTop: 19, paddingBottom: insets.bottom + 16 }}
+        contentContainerStyle={{ paddingTop: 18.5, paddingBottom: insets.bottom + 16 }}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -187,7 +188,7 @@ function Row({
       </PressableScale>
       {button ? (
         <View style={styles.button}>
-          <ProfileButton label={following ? 'Following' : 'Follow'} primary={!following} height={29} fill={false} onPress={onToggle} />
+          <FollowButton following={following} onPress={onToggle} />
         </View>
       ) : null}
     </View>
@@ -196,28 +197,28 @@ function Row({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  header: { height: HEADER_H, flexDirection: 'row', alignItems: 'center', paddingLeft: 19 },
-  back: { width: 12, height: 20 },
-  title: { marginLeft: 28, fontSize: 21, lineHeight: 26, fontWeight: '700', color: colors.text },
-  // x 10..379, 39 tall; magnifier at x 25, text at x 54
+  header: { height: HEADER_H },
+  back: { position: 'absolute', left: 19.45, top: 22.93 },
+  title: { position: 'absolute', left: 58, top: 20.01, fontFamily: INTER_FAMILIES['700'], fontSize: 23, lineHeight: 28, color: colors.text },
+  // x 10..380, 39 tall; magnifier at x 25.4, text at x 53.4
   field: {
     height: 39,
     marginLeft: 10,
-    marginRight: 11,
+    marginRight: 10,
     borderRadius: 10,
-    backgroundColor: '#EFF3F4',
+    backgroundColor: '#F5F5F5',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 15,
-    gap: 14,
+    paddingLeft: 15.4,
+    gap: 13.6,
   },
-  input: { flex: 1, fontSize: 16, color: colors.text, padding: 0, height: 39 },
-  // rows 72 tall: avatar 53 at x 11, names at x 77, button 105x29 at right 11
-  row: { height: 72, flexDirection: 'row', alignItems: 'center', paddingLeft: 11, paddingRight: 11 },
-  person: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 13 },
+  input: { flex: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 14.8, color: colors.text, padding: 0, height: 39 },
+  // rows 74 tall: avatar 53 at x 11 (10.5 down), names 10 under its top at x 77, button 105x28 at right 10
+  row: { height: 74, flexDirection: 'row', alignItems: 'flex-start', paddingTop: 10.5, paddingLeft: 11, paddingRight: 10 },
+  person: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 13 },
   avatar: { width: 53, height: 53, borderRadius: 26.5, backgroundColor: colors.surfaceSoft },
-  names: { flex: 1 },
-  name: { fontSize: 14, lineHeight: 17, fontWeight: '600', color: colors.text },
-  sub: { fontSize: 13, lineHeight: 16, color: MUTED },
-  button: { width: 105, marginLeft: 8 },
+  names: { flex: 1, paddingTop: 10 },
+  name: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.9, lineHeight: 17, color: '#000000' },
+  sub: { marginTop: 1.06, fontFamily: INTER_FAMILIES['400'], fontSize: 13.1, lineHeight: 16, color: MUTED },
+  button: { marginLeft: 8, marginTop: 12.875 },
 });

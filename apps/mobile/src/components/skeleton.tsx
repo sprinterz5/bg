@@ -70,7 +70,7 @@ export function ConnectionRowSkeleton({ button }: { button: boolean }) {
         <Skeleton width={110} height={13} />
         <Skeleton width={80} height={11} style={styles.mt6} />
       </View>
-      {button ? <Skeleton width={105} height={29} radius={7} /> : null}
+      {button ? <Skeleton width={105} height={28} radius={7} /> : null}
     </View>
   );
 }
@@ -88,6 +88,6 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', marginTop: 19 },
   post: { flexDirection: 'row', paddingLeft: 14.5, marginBottom: 18 },
   postText: { width: 172, marginLeft: 20.1 },
-  row: { height: 72, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 11, gap: 13 },
+  row: { height: 74, flexDirection: 'row', alignItems: 'center', paddingLeft: 11, paddingRight: 10, gap: 13 },
   names: { flex: 1 },
 });
