@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   tabText: { fontFamily: INTER_FAMILIES['500'], fontSize: 14, lineHeight: 16, letterSpacing: 14 * -0.015, color: GRAY },
   tabActive: { color: colors.text },
   tabLine: { position: 'absolute', top: LINE_TOP, left: 0, right: 0, height: 0.75, backgroundColor: '#E5E5E5' },
-  underline: { position: 'absolute', top: LINE_TOP, left: 0, width: UNDERLINE_W, height: 0.75, backgroundColor: '#2A2121' },
+  underline: { position: 'absolute', top: LINE_TOP, left: 0, width: UNDERLINE_W, height: 0.75, backgroundColor: '#000000' },
 
   // Frame 1198 typing: Articles / Profiles 176x28 (radius 7) at x 14 and 194, y 62.
   segmented: { height: 28, marginLeft: SEG_SIDE_L, marginRight: SEG_SIDE_R, flexDirection: 'row', gap: SEG_GAP },

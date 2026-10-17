@@ -1,6 +1,5 @@
 import { forwardRef } from 'react';
 import {
-  Platform,
   Text as RNText,
   TextInput as RNTextInput,
   type StyleProp,
@@ -11,9 +10,9 @@ import {
 import Animated from 'react-native-reanimated';
 
 /**
- * Figma uses SF Pro (iOS system font). Its license forbids shipping it on Android, so Android gets Inter,
- * the closest free match. Android can't pick a weight inside one custom family, so each weight is its own
- * family: fontWeight is translated to the matching Inter file. Styles with an explicit fontFamily are untouched.
+ * The layouts are set in Inter, on both platforms. A custom family can't pick a weight inside itself, so each
+ * weight is its own family: fontWeight is translated to the matching Inter file. Styles with an explicit
+ * fontFamily are untouched.
  */
 export const INTER_FAMILIES = {
   '400': 'Inter_400Regular',
@@ -27,7 +26,6 @@ export const INTER_FAMILIES = {
 const WEIGHT_ALIASES: Record<string, keyof typeof INTER_FAMILIES> = { normal: '400', bold: '700' };
 
 function interStyle(style: StyleProp<TextStyle>): StyleProp<TextStyle> {
-  if (Platform.OS !== 'android') return style;
   let weight: string | undefined;
   let family: string | undefined;
   const walk = (s: unknown) => {
