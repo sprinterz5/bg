@@ -98,11 +98,22 @@ function Reader({ article }: { article: Article }) {
     return paginateLines(lines, LINE_HEIGHT, { first: room, rest: room });
   }, [lines, H, BAR_H, top]);
 
-  const onScroll = useAnimatedScrollHandler((e) => {
-    scrollX.set(e.contentOffset.x);
+  // Which list page is showing: the preview's buttons only take touches while it is.
+  const [page, setPage] = useState(0);
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollX.set(e.contentOffset.x);
+    },
+    onMomentumEnd: (e) => {
+      runOnJS(setPage)(Math.round(e.contentOffset.x / W));
+    },
   });
-  // Preview out to the left, the text pages' chrome in from the right, both with the finger.
-  const previewOut = useAnimatedStyle(() => ({ transform: [{ translateX: -Math.min(scrollX.get(), W) }] }));
+  // Preview → text (not in the design): the preview drifts a third of the way left, shrinks a little and fades while
+  // the text pages and their chrome come in over it with the finger.
+  const previewOut = useAnimatedStyle(() => {
+    const p = Math.min(1, scrollX.get() / W);
+    return { opacity: 1 - p, transform: [{ translateX: -W * 0.35 * p }, { scale: 1 - 0.06 * p }] };
+  });
   const chromeIn = useAnimatedStyle(() => ({ transform: [{ translateX: Math.max(0, W - scrollX.get()) }] }));
   // The dots count text pages only (page 1 of the text is list page 1).
   const textX = useDerivedValue(() => Math.max(0, scrollX.get() - W));
@@ -179,8 +190,35 @@ function Reader({ article }: { article: Article }) {
   // Swipe right on the preview closes the reader: everything follows the finger (the list shows through as the
   // backdrop fades), and past a quarter of the screen, or on a quick flick, it slides away; otherwise it springs back.
   // A swipe left still turns to the text (the pan fails on leftward moves and leaves them to the pages list).
+  // Swipe down on any page also closes it: the reader shrinks into a rounded card that follows the finger; let go
+  // far enough (or flick) and from the preview the cover flies back into its picture in the list, from a text page
+  // the card drops away.
   const dragX = useSharedValue(0);
   const armed = useSharedValue(false);
+  const vArmed = useSharedValue(false);
+  const dragY = useSharedValue(0);
+  const dragVX = useSharedValue(0);
+  const dropAway = useCallback(() => {
+    closing.current = true;
+    const fly = !!articleOrigin(article.id) && scrollX.get() < W / 2;
+    runOnUI(() => {
+      'worklet';
+      if (fly) {
+        flying.set(1);
+        const back = { duration: CLOSE_MS, easing: CLOSE_EASING };
+        dragY.set(withTiming(0, back));
+        dragVX.set(withTiming(0, back));
+        t.set(withTiming(0, back, (fin) => {
+          if (fin) runOnJS(backWhenReady)();
+        }));
+      } else {
+        dragY.set(withTiming(H, { duration: 260, easing: Easing.in(Easing.quad) }));
+        t.set(withTiming(0, { duration: 260 }, (fin) => {
+          if (fin) runOnJS(backWhenReady)();
+        }));
+      }
+    })();
+  }, [article.id, scrollX, W, H, flying, dragY, dragVX, t]);
   const swipedAway = useCallback(() => backWhenReady(), []);
   const markClosing = useCallback(() => {
     closing.current = true;
@@ -201,16 +239,33 @@ function Reader({ article }: { article: Article }) {
       const dx = touch.absoluteX - startX.get();
       const dy = touch.absoluteY - startY.get();
       if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-      if (dx > 10 && Math.abs(dy) < dx * 0.7 && scrollX.get() < 1 && t.get() === 1 && !armed.get()) {
+      if (armed.get() || vArmed.get()) return;
+      if (dx > 10 && Math.abs(dy) < dx * 0.7 && scrollX.get() < 1 && t.get() === 1) {
         armed.set(true);
         manager.activate();
-      } else if (!armed.get()) manager.fail();
+      } else if (dy > 10 && Math.abs(dx) < dy * 0.8 && t.get() === 1) {
+        vArmed.set(true);
+        manager.activate();
+      } else manager.fail();
     })
     .onUpdate((e) => {
-      dragX.set(Math.max(0, e.translationX));
+      if (vArmed.get()) {
+        // A little resistance upwards, free downwards; sideways at half speed.
+        dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
+        dragVX.set(e.translationX * 0.5);
+      } else dragX.set(Math.max(0, e.translationX));
     })
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
+      if (vArmed.get()) {
+        vArmed.set(false);
+        if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
+        else {
+          dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
+          dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
+        }
+        return;
+      }
       if (!armed.get()) return;
       armed.set(false);
       if (dragX.get() > W * 0.25 || e.velocityX > 700) {
@@ -223,11 +278,23 @@ function Reader({ article }: { article: Article }) {
     })
     .onFinalize(() => {
       armed.set(false);
+      vArmed.set(false);
     });
-  const slideStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX.get() }] }));
+  const slideStyle = useAnimatedStyle(() => {
+    const d = Math.max(0, dragY.get());
+    return {
+      borderRadius: Math.min(32, d * 0.3),
+      transform: [{ translateX: dragX.get() + dragVX.get() }, { translateY: dragY.get() }, { scale: 1 - 0.2 * Math.min(1, d / (H * 0.6)) }],
+    };
+  });
   // White early in the flight, so the picture left behind in the list doesn't show through while the copy flies.
+  const paper = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) }));
+  // Behind the reader: fades as it is dragged away, so the list shows around the shrinking card.
   const backdropStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) * interpolate(dragX.get(), [0, W], [1, 0], Extrapolation.CLAMP),
+    opacity:
+      interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) *
+      interpolate(dragX.get(), [0, W], [1, 0], Extrapolation.CLAMP) *
+      interpolate(dragY.get(), [0, H * 0.45], [1, 0], Extrapolation.CLAMP),
   }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
   const pictureVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.get() : t.get() }));
@@ -243,7 +310,8 @@ function Reader({ article }: { article: Article }) {
     <View style={styles.root}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
       <GestureDetector gesture={swipeBack}>
-      <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, slideStyle]}>
+      <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, styles.slide, slideStyle]}>
+      <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, paper]} />
       <View pointerEvents="none" style={styles.measure}>
         <Text style={[styles.body, { width: textWidth }]} onTextLayout={(e) => setLines(e.nativeEvent.lines.map((l) => l.text))}>
           {fullText}
@@ -326,7 +394,7 @@ function Reader({ article }: { article: Article }) {
         </View>
       </Animated.View>
 
-      <Animated.View collapsable={false} pointerEvents="box-none" style={[StyleSheet.absoluteFill, styles.preview, previewOut]}>
+      <Animated.View collapsable={false} pointerEvents={page === 0 ? 'box-none' : 'none'} style={[StyleSheet.absoluteFill, styles.preview, previewOut]}>
         <Animated.View collapsable={false} style={[styles.previewHead, { marginTop: top }, chromeStyle]}>
           <PressableScale onPress={close} hitSlop={12} scaleTo={0.85} accessibilityLabel="Back" style={styles.previewBack}>
             <Icon name="searchBack" width={14} height={25} />
@@ -540,6 +608,7 @@ const styles = StyleSheet.create({
   bigHeart: { position: 'absolute', width: HEART_W, height: HEART_H },
   // Transparent: the list stays visible while the reader opens and closes over it.
   root: { flex: 1 },
+  slide: { overflow: 'hidden' },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg },
   // No fill: until the copy is drawn, the same picture in the list shows through.
   flying: { position: 'absolute', left: 0, top: 0, overflow: 'hidden' },
