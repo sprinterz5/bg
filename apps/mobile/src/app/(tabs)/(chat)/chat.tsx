@@ -14,7 +14,7 @@ import { push } from '@/lib/nav';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
 
-const SUBTLE = '#858585';
+const SUBTLE = '#999999';
 
 type Row = { id: string; username: string; title: string; subtitle: string; avatar: string | null; unread: number };
 
@@ -105,7 +105,7 @@ export default function Chat() {
             {item.avatar ? (
               <Image source={{ uri: item.avatar }} style={styles.avatar} transition={150} />
             ) : (
-              <Icon name="avatarPlaceholder" width={55} style={styles.avatar} />
+              <Icon name="avatarPlaceholder" width={53} style={styles.avatar} />
             )}
             <View style={styles.names}>
               <Text style={[styles.name, item.unread > 0 && styles.unread]} numberOfLines={1}>
@@ -128,24 +128,24 @@ export default function Chat() {
   );
 }
 
-// Header design y 47–90: compose 24x24 at (14.5, 63), title Inter 22 bold centred (cap top 64.6), search 21.65 at
-// (351.1, 63). First avatar at y 144, rows 80 apart: avatar 55 at x 14, name / message Inter 14 at x 82.2, baselines
-// 23.2 and 42.4 below the avatar top, badge 19 at 15 from the right edge, 17 below the avatar top.
+// AutoLayouted 18: compose 24x24 at (14.5, 63), title Inter 21.3 bold centred, search 21.65 at (351.1, 63). First
+// avatar at y 144, rows 78 apart: avatar 53 at x 14, name / message Inter 13.75 at x 80.1 (#999 message), badge 19 at
+// 15 from the right edge, 18 below the avatar top.
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   header: { height: 43, alignItems: 'center' },
   compose: { position: 'absolute', left: 14.375, top: 15.875 },
-  title: { marginTop: 12.08, maxWidth: 260, fontFamily: INTER_FAMILIES['700'], fontSize: 22, lineHeight: 27, color: colors.text },
+  title: { marginTop: 13.18, maxWidth: 260, fontFamily: INTER_FAMILIES['700'], fontSize: 21.3, lineHeight: 26, color: colors.text },
   search: { position: 'absolute', right: 17.29, top: 16.03 },
   band: { height: 54 },
-  row: { height: 80, flexDirection: 'row', paddingLeft: 14, paddingRight: 15 },
-  avatar: { width: 55, height: 55, borderRadius: 27.5, backgroundColor: colors.surfaceSoft },
-  names: { flex: 1, marginLeft: 13.2, marginRight: 12, paddingTop: 9.59 },
-  name: { fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 17, color: '#000000' },
+  row: { height: 78, flexDirection: 'row', paddingLeft: 14, paddingRight: 15 },
+  avatar: { width: 53, height: 53, borderRadius: 26.5, backgroundColor: colors.surfaceSoft },
+  names: { flex: 1, marginLeft: 13.1, marginRight: 12, paddingTop: 9.01 },
+  name: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: '#000000' },
   unread: { fontFamily: INTER_FAMILIES['600'] },
-  sub: { marginTop: 2.22, fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 17, color: SUBTLE },
+  sub: { marginTop: 2, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: SUBTLE },
   subUnread: { fontFamily: INTER_FAMILIES['600'], color: colors.text },
-  badge: { marginTop: 17, minWidth: 19, height: 19, paddingHorizontal: 5, borderRadius: 9.5, backgroundColor: colors.text, alignItems: 'center', justifyContent: 'center' },
+  badge: { marginTop: 18, minWidth: 19, height: 19, paddingHorizontal: 5, borderRadius: 9.5, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   badgeText: { fontFamily: INTER_FAMILIES['700'], fontSize: 11.5, lineHeight: 14, color: '#FFFFFF' },
   empty: { marginTop: 40, textAlign: 'center', fontSize: 14, lineHeight: 19, color: colors.textSubtle },
 });
