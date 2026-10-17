@@ -74,7 +74,6 @@ export default function RootLayout() {
               name="article/[id]"
               options={{ presentation: 'transparentModal', animation: 'none', gestureEnabled: false, contentStyle: { backgroundColor: 'transparent' } }}
             />
-            <Stack.Screen name="story/new" options={{ presentation: 'modal' }} />
             <Stack.Screen name="cover-picker" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: '#000000' } }} />
             {/* The viewer animates itself (grows out of the story on Home); Home stays visible around it. */}
             <Stack.Screen

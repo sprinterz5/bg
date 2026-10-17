@@ -18,6 +18,7 @@ import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { Text } from '@/components/text';
 import { push } from '@/lib/nav';
+import { pickStoryPhoto } from '@/lib/pick-cover';
 
 export default function Home() {
   const insets = useSafeAreaInsets();
@@ -155,7 +156,7 @@ export default function Home() {
       </Animated.View>
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: headerTop }, headerStyle]}>
             <View style={styles.header}>
-              <PressableScale haptic onPress={() => push('/story/new')} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
+              <PressableScale haptic onPress={pickStoryPhoto} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
                 <Icon name="homePlus" width={21} />
               </PressableScale>
               {/* NBSPs on both sides: Android clips script glyphs at the line's advance width; symmetric keeps it centred. */}

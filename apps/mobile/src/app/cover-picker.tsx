@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import * as MediaLibrary from 'expo-media-library/legacy';
+import { useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -27,6 +28,7 @@ const RECENTS: Album = { id: null, title: 'Recents' };
 
 export default function CoverPicker() {
   const insets = useSafeAreaInsets();
+  const { title } = useLocalSearchParams<{ title?: string }>();
   const { width } = useWindowDimensions();
   const tileW = (width - GAP * 2) / 3;
   const tileH = (TILE_H * tileW) / TILE_W;
@@ -116,7 +118,7 @@ export default function CoverPicker() {
         <PressableScale onPress={() => backWhenReady()} hitSlop={14} scaleTo={0.85} accessibilityLabel="Close" style={styles.close}>
           <Icon name="coverClose" width={18} />
         </PressableScale>
-        <Text style={styles.title}>Choose a cover</Text>
+        <Text style={styles.title}>{title || 'Choose a cover'}</Text>
       </View>
 
       <Pressable onPress={openAlbums} hitSlop={10} style={styles.album} accessibilityRole="button" accessibilityLabel={`Album: ${album.title}`}>
