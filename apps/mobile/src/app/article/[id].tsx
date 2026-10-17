@@ -13,7 +13,6 @@ import Animated, {
   interpolateColor,
   runOnJS,
   runOnUI,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -98,16 +97,10 @@ function Reader({ article }: { article: Article }) {
     return paginateLines(lines, LINE_HEIGHT, { first: room, rest: room });
   }, [lines, H, BAR_H, top]);
 
-  // Which list page is showing: the preview's buttons only take touches while it is.
+  // Which page is showing (0 = preview): the preview's buttons only take touches while it is. `scrollX` is the pages'
+  // horizontal offset, driven by the reader's own pan (no native scroll view, so paging and swipe-down never fight).
   const [page, setPage] = useState(0);
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollX.set(e.contentOffset.x);
-    },
-    onMomentumEnd: (e) => {
-      runOnJS(setPage)(Math.round(e.contentOffset.x / W));
-    },
-  });
+  const pageCount = pages ? pages.length + 1 : 1;
   // Preview → text (not in the design): the preview drifts a third of the way left, shrinks a little and fades while
   // the text pages and their chrome come in over it with the finger.
   const previewOut = useAnimatedStyle(() => {
@@ -193,11 +186,16 @@ function Reader({ article }: { article: Article }) {
     });
     return () => sub.remove();
   }, [close]);
-  // Swipe down on any page closes the reader: it shrinks into a rounded card that follows the finger; let go far
+  // One pan does both: sideways it turns pages (follows the finger, snaps to the nearest page or the next one on a
+  // flick), downwards it closes the reader — it shrinks into a rounded card that follows the finger; let go far
   // enough (or flick) and from the preview the cover flies back into its picture in the list, from a text page the
-  // card drops away; otherwise it springs back. The pages list's own (horizontal) gesture runs alongside it.
-  const pagesGesture = Gesture.Native();
-  const vArmed = useSharedValue(false);
+  // card drops away; otherwise it springs back.
+  const axis = useSharedValue(0); // 0 undecided, 1 pages, 2 closing
+  const startPage = useSharedValue(0);
+  const lastPage = useSharedValue(0);
+  useEffect(() => {
+    lastPage.set(pageCount - 1);
+  }, [pageCount, lastPage]);
   const dragY = useSharedValue(0);
   const dragVX = useSharedValue(0);
   const dropAway = useCallback(() => {
@@ -221,46 +219,47 @@ function Reader({ article }: { article: Article }) {
       }
     })();
   }, [article.id, scrollX, W, H, flying, dragY, dragVX, t]);
-  // Activated by hand on a mostly downward move, so horizontal swipes stay with the pages list.
-  const startX = useSharedValue(0);
-  const startY = useSharedValue(0);
-  const swipeDown = Gesture.Pan()
-    .manualActivation(true)
-    .simultaneousWithExternalGesture(pagesGesture)
-    .onTouchesDown((e) => {
-      startX.set(e.allTouches[0]?.absoluteX ?? 0);
-      startY.set(e.allTouches[0]?.absoluteY ?? 0);
-    })
-    .onTouchesMove((e, manager) => {
-      const touch = e.allTouches[0];
-      if (!touch || vArmed.get()) return;
-      const dx = touch.absoluteX - startX.get();
-      const dy = touch.absoluteY - startY.get();
-      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      if (dy > 8 && Math.abs(dx) < dy * 0.8 && t.get() > 0.99) {
-        vArmed.set(true);
-        manager.activate();
-      } else manager.fail();
+  const PAGE_SPRING = { damping: 26, stiffness: 260, mass: 0.9, overshootClamping: true };
+  const pan = Gesture.Pan()
+    .minDistance(8)
+    .onStart((e) => {
+      startPage.set(Math.round(scrollX.get() / W));
+      if (t.get() < 0.99) axis.set(0);
+      else if (Math.abs(e.translationX) > Math.abs(e.translationY)) axis.set(1);
+      else axis.set(e.translationY > 0 ? 2 : 0);
     })
     .onUpdate((e) => {
-      if (!vArmed.get()) return;
-      // A little resistance upwards, free downwards; sideways at half speed.
-      dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
-      dragVX.set(e.translationX * 0.5);
+      if (axis.get() === 1) {
+        const max = lastPage.get() * W;
+        let x = startPage.get() * W - e.translationX;
+        // Rubber band past the first / last page.
+        if (x < 0) x *= 0.25;
+        else if (x > max) x = max + (x - max) * 0.25;
+        scrollX.set(x);
+      } else if (axis.get() === 2) {
+        // A little resistance upwards, free downwards; sideways at half speed.
+        dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
+        dragVX.set(e.translationX * 0.5);
+      }
     })
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
-      if (!vArmed.get()) return;
-      vArmed.set(false);
-      if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
-      else {
-        dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
-        dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
+      if (axis.get() === 1) {
+        const from = startPage.get();
+        let to = Math.round((scrollX.get() - e.velocityX * 0.12) / W);
+        to = Math.max(0, Math.min(lastPage.get(), Math.max(from - 1, Math.min(from + 1, to))));
+        scrollX.set(withSpring(to * W, { ...PAGE_SPRING, velocity: -e.velocityX }));
+        runOnJS(setPage)(to);
+      } else if (axis.get() === 2) {
+        if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
+        else {
+          dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
+          dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
+        }
       }
-    })
-    .onFinalize(() => {
-      vArmed.set(false);
+      axis.set(0);
     });
+  const pagesRow = useAnimatedStyle(() => ({ transform: [{ translateX: -scrollX.get() }] }));
   const slideStyle = useAnimatedStyle(() => {
     const d = Math.max(0, dragY.get());
     return {
@@ -289,7 +288,7 @@ function Reader({ article }: { article: Article }) {
   return (
     <View style={styles.root}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
-      <GestureDetector gesture={swipeDown}>
+      <GestureDetector gesture={Gesture.Simultaneous(pan, doubleTap)}>
       <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, styles.slide, slideStyle]}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, paper]} />
       <View pointerEvents="none" style={styles.measure}>
@@ -307,27 +306,15 @@ function Reader({ article }: { article: Article }) {
         </BlurTargetView>
       </Animated.View>
 
-      {/* Mounted once the cover has landed: building the pages during the flight cost frames. The first list page
-          is empty: the preview above it slides with the scroll. */}
+      {/* Mounted once the cover has landed: building the pages during the flight cost frames. Text page i sits at
+          (i + 1) screens; the preview above them slides with the same offset. */}
       {pages && opened ? (
-        <Animated.View collapsable={false} entering={FadeIn.duration(220)} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        <GestureDetector gesture={Gesture.Simultaneous(pagesGesture, doubleTap)}>
-        <Animated.FlatList
-          data={['', ...pages]}
-          keyExtractor={(_, i) => String(i)}
-          horizontal
-          pagingEnabled
-          bounces={false}
-          overScrollMode="never"
-          showsHorizontalScrollIndicator={false}
-          onScroll={onScroll}
-          scrollEventThrottle={16}
-          style={StyleSheet.absoluteFill}
-          renderItem={({ item, index }) =>
-            index === 0 ? <View style={{ width: W }} /> : <ReaderPage text={item} width={W} textWidth={textWidth} top={top + TEXT_TOP} />
-          }
-        />
-        </GestureDetector>
+        <Animated.View collapsable={false} entering={FadeIn.duration(220)} pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, pagesRow]}>
+            {pages.map((text, i) => (
+              <ReaderPage key={i} text={text} width={W} left={(i + 1) * W} textWidth={textWidth} top={top + TEXT_TOP} />
+            ))}
+          </Animated.View>
         </Animated.View>
       ) : null}
 
@@ -548,9 +535,9 @@ function BigHeart({ id, x, y, tilt, onDone }: { id: number; x: number; y: number
   );
 }
 
-function ReaderPage({ text, width, textWidth, top }: { text: string; width: number; textWidth: number; top: number }) {
+function ReaderPage({ text, width, left, textWidth, top }: { text: string; width: number; left: number; textWidth: number; top: number }) {
   return (
-    <View style={{ width }}>
+    <View style={{ position: 'absolute', top: 0, bottom: 0, left, width }}>
       <Text style={[styles.body, styles.pageText, { top, width: textWidth }]}>{text}</Text>
     </View>
   );
