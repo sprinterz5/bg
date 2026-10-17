@@ -984,3 +984,61 @@ function authorPosts(username: string): ProfilePost[] {
     })
     .map((a) => ({ id: a.id, image: a.cover, title: a.title, likes: formatMockCount(a.likes), timeAgo: TIME_AGO[a.id] ?? '', articleId: a.id }));
 }
+
+// Notifications (AutoLayouted-37): sections Today / Last 7 days / Suggestions.
+export type Notice = {
+  id: string;
+  /** One avatar, or two overlapping ones for grouped likes / comments. */
+  avatars: ImageSourcePropType[];
+  /** Bold line: the actor(s). */
+  who: string;
+  /** Second line. */
+  what: string;
+  /** Profile opened by a tap on the row. */
+  username: string;
+  /** Article cover on the right… */
+  thumb?: ImageSourcePropType;
+  /** …or a Follow / Following button. */
+  follow?: boolean;
+};
+
+export const NOTIFICATIONS: { title: string; items: Notice[]; muted?: boolean }[] = [
+  {
+    title: 'Today',
+    items: [
+      { id: 'n1', avatars: [require('@/assets/mock/notif-michael.jpg')], who: 'michael_dimart', what: 'started following you', username: 'michael_dimart', follow: false },
+      { id: 'n2', avatars: [require('@/assets/mock/notif-stivie.jpg')], who: 'stivie_mimi', what: 'started following you', username: 'stivie_mimi', follow: true },
+      {
+        id: 'n3',
+        avatars: [require('@/assets/mock/notif-steward.jpg'), require('@/assets/mock/notif-kalam.jpg')],
+        who: 'steward.jones, k_kalam',
+        what: '+10 others liked your article',
+        username: 'steward.jones',
+        thumb: require('@/assets/mock/notif-books.jpg'),
+      },
+      {
+        id: 'n4',
+        avatars: [require('@/assets/mock/notif-amazon.jpg'), require('@/assets/mock/notif-sophia.jpg')],
+        who: 'amazon_fan, sophia.rozko',
+        what: '+6 others commented your article',
+        username: 'amazon_fan',
+        thumb: require('@/assets/mock/notif-books-2.jpg'),
+      },
+    ],
+  },
+  {
+    title: 'Last 7 days',
+    items: [
+      { id: 'n5', avatars: [require('@/assets/mock/notif-lebron.jpg')], who: 'lebron.jjj', what: 'left a comment:”Ha,ha, never...”', username: 'lebron.jjj', thumb: require('@/assets/mock/notif-reef.jpg') },
+      { id: 'n6', avatars: [require('@/assets/mock/notif-ocean.jpg')], who: 'ocean_man replied', what: 'to your comment:”Lol, this so...”', username: 'ocean_man', thumb: require('@/assets/mock/notif-tokyo.jpg') },
+    ],
+  },
+  {
+    title: 'Suggestions',
+    muted: true,
+    items: [
+      { id: 'n7', avatars: [require('@/assets/mock/notif-michael-2.jpg')], who: 'michael_dimart', what: 'Make a new friend', username: 'michael_dimart', follow: false },
+      { id: 'n8', avatars: [require('@/assets/mock/notif-staring.jpg')], who: 'staring01', what: 'Make a new friend', username: 'staring01', follow: false },
+    ],
+  },
+];

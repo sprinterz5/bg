@@ -4,6 +4,7 @@ import type { StyleProp } from 'react-native';
 const icons = {
   profileSettings: require('@/assets/icons/profile-settings.svg'),
   profileBack: require('@/assets/icons/profile-back.svg'),
+  notifBack: require('@/assets/icons/notif-back.svg'),
   compose: require('@/assets/icons/compose.svg'),
   chatSearch: require('@/assets/icons/chat-search.svg'),
   chatCall: require('@/assets/icons/chat-call.svg'),
