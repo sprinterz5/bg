@@ -9,7 +9,6 @@ export const BigInput = forwardRef<TextInput, TextInputProps>(function BigInput(
     <TextInput
       ref={ref}
       placeholderTextColor={colors.disabled}
-      selectionColor={colors.primary}
       cursorColor={colors.text}
       autoCorrect={false}
       spellCheck={false}

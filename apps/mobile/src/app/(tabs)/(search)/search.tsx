@@ -261,7 +261,6 @@ export default function Search() {
               onSubmitEditing={() => submit(query)}
               returnKeyType="search"
               autoCorrect={false}
-              selectionColor={colors.primary}
               cursorColor={colors.text}
               style={styles.input}
               accessibilityLabel="Search"

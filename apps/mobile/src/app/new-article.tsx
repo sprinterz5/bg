@@ -90,7 +90,6 @@ export default function NewArticle() {
           placeholderTextColor="#737373"
           multiline
           maxLength={ARTICLE_TITLE_MAX}
-          selectionColor={colors.primary}
           style={styles.label}
           accessibilityLabel="Article label"
         />

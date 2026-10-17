@@ -99,7 +99,6 @@ export default function EditProfile() {
               returnKeyType="done"
               maxLength={80}
               autoCorrect={false}
-              selectionColor={colors.primary}
               cursorColor={colors.text}
               style={[styles.value, styles.input]}
               accessibilityLabel="Name"

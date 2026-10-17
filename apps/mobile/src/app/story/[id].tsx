@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Animated, { Easing, Extrapolation, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,7 +54,16 @@ const CLOSE_EASING = Easing.bezier(0.4, 0, 0.2, 1);
 const RING_HANDOFF = 0.22;
 const RING_BASE = 100;
 
-export default function StoryViewer() {
+// Own gesture root: the viewer is a native modal (transparentModal), which on iOS sits outside the app's root view.
+export default function StoryViewerScreen() {
+  return (
+    <GestureHandlerRootView style={styles.root}>
+      <StoryViewer />
+    </GestureHandlerRootView>
+  );
+}
+
+function StoryViewer() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();

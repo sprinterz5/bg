@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type LayoutChangeEvent } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   FadeIn,
@@ -64,7 +64,13 @@ export default function ArticleScreen() {
   const { articles } = useFeed();
   const article = id ? articles[id] : undefined;
   if (!article) return <PlaceholderScreen title="Article not found" showBack />;
-  return <Reader article={article} />;
+  // Own gesture root: the reader is a native modal (transparentModal), which on iOS sits outside the app's root view,
+  // so without it the pages / swipe-down pans never receive touches.
+  return (
+    <GestureHandlerRootView style={styles.root}>
+      <Reader article={article} />
+    </GestureHandlerRootView>
+  );
 }
 
 type Rect = { x: number; y: number; w: number; h: number };
@@ -186,8 +192,8 @@ function Reader({ article }: { article: Article }) {
     });
     return () => sub.remove();
   }, [close]);
-  // One pan does both: sideways it turns pages (follows the finger, snaps to the nearest page or the next one on a
-  // flick), downwards it closes the reader — it shrinks into a rounded card that follows the finger; let go far
+  // Sideways turns pages (follows the finger, snaps to the nearest page or the next one on a flick); downwards closes
+  // the reader — it shrinks into a rounded card that follows the finger; let go far
   // enough (or flick) and from the preview the cover flies back into its picture in the list, from a text page the
   // card drops away; otherwise it springs back.
   const axis = useSharedValue(0); // 0 undecided, 1 pages, 2 closing
@@ -220,45 +226,52 @@ function Reader({ article }: { article: Article }) {
     })();
   }, [article.id, scrollX, W, H, flying, dragY, dragVX, t]);
   const PAGE_SPRING = { damping: 26, stiffness: 260, mass: 0.9, overshootClamping: true };
-  const pan = Gesture.Pan()
-    .minDistance(8)
-    .onStart((e) => {
+  // Two pans racing, like the story viewer (Android reports no translation in onStart, so the direction has to come
+  // from the activation offsets): sideways turns pages, downwards closes. Neither works until the reader is open.
+  const pager = Gesture.Pan()
+    .activeOffsetX([-12, 12])
+    .failOffsetY([-16, 16])
+    .onStart(() => {
       startPage.set(Math.round(scrollX.get() / W));
-      if (t.get() < 0.99) axis.set(0);
-      else if (Math.abs(e.translationX) > Math.abs(e.translationY)) axis.set(1);
-      else axis.set(e.translationY > 0 ? 2 : 0);
+      axis.set(t.get() > 0.99 ? 1 : 0);
     })
     .onUpdate((e) => {
-      if (axis.get() === 1) {
-        const max = lastPage.get() * W;
-        let x = startPage.get() * W - e.translationX;
-        // Rubber band past the first / last page.
-        if (x < 0) x *= 0.25;
-        else if (x > max) x = max + (x - max) * 0.25;
-        scrollX.set(x);
-      } else if (axis.get() === 2) {
-        // A little resistance upwards, free downwards; sideways at half speed.
-        dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
-        dragVX.set(e.translationX * 0.5);
-      }
+      if (axis.get() !== 1) return;
+      // No rubber band: nothing to the right of the preview, nothing past the last page.
+      scrollX.set(Math.max(0, Math.min(lastPage.get() * W, startPage.get() * W - e.translationX)));
+    })
+    .onEnd((e) => {
+      if (axis.get() !== 1) return;
+      axis.set(0);
+      const from = startPage.get();
+      let to = Math.round((scrollX.get() - e.velocityX * 0.12) / W);
+      to = Math.max(0, Math.min(lastPage.get(), Math.max(from - 1, Math.min(from + 1, to))));
+      scrollX.set(withSpring(to * W, { ...PAGE_SPRING, velocity: -e.velocityX }));
+      runOnJS(setPage)(to);
+    });
+  const dismiss = Gesture.Pan()
+    .activeOffsetY(14)
+    .failOffsetX([-14, 14])
+    .onStart(() => {
+      axis.set(t.get() > 0.99 ? 2 : 0);
+    })
+    .onUpdate((e) => {
+      if (axis.get() !== 2) return;
+      // A little resistance upwards, free downwards; sideways at half speed.
+      dragY.set(e.translationY > 0 ? e.translationY : e.translationY * 0.2);
+      dragVX.set(e.translationX * 0.5);
     })
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e) => {
-      if (axis.get() === 1) {
-        const from = startPage.get();
-        let to = Math.round((scrollX.get() - e.velocityX * 0.12) / W);
-        to = Math.max(0, Math.min(lastPage.get(), Math.max(from - 1, Math.min(from + 1, to))));
-        scrollX.set(withSpring(to * W, { ...PAGE_SPRING, velocity: -e.velocityX }));
-        runOnJS(setPage)(to);
-      } else if (axis.get() === 2) {
-        if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
-        else {
-          dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
-          dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
-        }
-      }
+      if (axis.get() !== 2) return;
       axis.set(0);
+      if (dragY.get() > 110 || e.velocityY > 800) runOnJS(dropAway)();
+      else {
+        dragY.set(withSpring(0, { damping: 20, stiffness: 240 }));
+        dragVX.set(withSpring(0, { damping: 20, stiffness: 240 }));
+      }
     });
+  const readerGestures = Gesture.Simultaneous(Gesture.Race(pager, dismiss), doubleTap);
   const pagesRow = useAnimatedStyle(() => ({ transform: [{ translateX: -scrollX.get() }] }));
   const slideStyle = useAnimatedStyle(() => {
     const d = Math.max(0, dragY.get());
@@ -288,7 +301,7 @@ function Reader({ article }: { article: Article }) {
   return (
     <View style={styles.root}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
-      <GestureDetector gesture={Gesture.Simultaneous(pan, doubleTap)}>
+      <GestureDetector gesture={readerGestures}>
       <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, styles.slide, slideStyle]}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, paper]} />
       <View pointerEvents="none" style={styles.measure}>

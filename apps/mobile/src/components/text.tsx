@@ -48,9 +48,22 @@ export const Text = forwardRef<RNText, TextProps>(function Text({ style, ...prop
   return <RNText ref={ref} {...props} style={interStyle(style)} />;
 });
 
+// iOS swaps the native view when an input becomes multiline and the new one keeps the system (blue) caret: the colour
+// is only re-applied when the selectionColor prop changes. A one-step-off shade for multiline inputs makes it change
+// together with `multiline`, so the caret keeps its colour.
+function multilineShade(color: TextInputProps['selectionColor']) {
+  if (color === '#000000') return '#010101';
+  if (color === '#FFFFFF') return '#FEFEFE';
+  return color;
+}
+
 // The typing line (caret) and selection are black everywhere unless a screen sets its own (e.g. white on stories).
-export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput({ style, selectionColor = '#000000', cursorColor = '#000000', ...props }, ref) {
-  return <RNTextInput ref={ref} selectionColor={selectionColor} cursorColor={cursorColor} {...props} style={interStyle(style)} />;
+export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput(
+  { style, selectionColor = '#000000', cursorColor = '#000000', ...props },
+  ref,
+) {
+  const selection = props.multiline ? multilineShade(selectionColor) : selectionColor;
+  return <RNTextInput ref={ref} selectionColor={selection} cursorColor={cursorColor} {...props} style={interStyle(style)} />;
 });
 // Same name as the component, like React Native's own TextInput (value + type).
 // eslint-disable-next-line @typescript-eslint/no-redeclare

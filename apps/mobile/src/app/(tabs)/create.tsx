@@ -75,7 +75,6 @@ export default function CreateArticle() {
             multiline
             scrollEnabled={false}
             textAlignVertical="top"
-            selectionColor={colors.primary}
             style={styles.input}
             accessibilityLabel="Article text"
           />

@@ -73,7 +73,6 @@ export default function NewStory() {
         placeholderTextColor="#999999"
         multiline
         maxLength={CAPTION_MAX}
-        selectionColor={colors.primary}
         cursorColor={colors.text}
         scrollEnabled={false}
         style={styles.caption}

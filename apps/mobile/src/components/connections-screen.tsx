@@ -110,7 +110,6 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
           autoCorrect={false}
           autoCapitalize="none"
           returnKeyType="search"
-          selectionColor={colors.primary}
           cursorColor={colors.text}
           style={styles.input}
           accessibilityLabel={`Search ${title.toLowerCase()}`}

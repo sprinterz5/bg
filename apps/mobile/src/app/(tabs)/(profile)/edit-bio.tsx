@@ -70,7 +70,6 @@ export default function EditBio() {
               maxLength={MAX}
               placeholder="Tell people about yourself"
               placeholderTextColor="#999999"
-              selectionColor={colors.primary}
               cursorColor={colors.text}
               scrollEnabled={false}
               style={styles.input}

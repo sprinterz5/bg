@@ -152,7 +152,6 @@ export function ShareSheet({ article, onClose }: Props) {
                 autoCorrect={false}
                 autoCapitalize="none"
                 returnKeyType="search"
-                selectionColor={colors.primary}
                 cursorColor={colors.text}
                 style={styles.input}
                 accessibilityLabel="Search people"
