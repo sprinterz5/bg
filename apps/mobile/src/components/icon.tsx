@@ -52,6 +52,7 @@ const icons = {
   rowLike: require('@/assets/icons/row-like.svg'),
   rowShare: require('@/assets/icons/row-share.svg'),
   rowBookmark: require('@/assets/icons/row-bookmark.svg'),
+  rowBookmarkFilled: require('@/assets/icons/row-bookmark-filled.svg'),
   rowMore: require('@/assets/icons/row-more.svg'),
   // Frame 1198 "Choose a cover".
   coverClose: require('@/assets/icons/cover-close.svg'),

@@ -66,7 +66,7 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
         <Icon name="rowShare" width={14.72} height={13.5} style={styles.share} />
         <Text style={[styles.count, styles.shareCount]}>{formatCount(article?.shares ?? 0)}</Text>
         <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
-          <Icon name="rowBookmark" width={16.7} height={16.7} tintColor={saved ? colors.primary : undefined} />
+          <Icon name={saved ? 'rowBookmarkFilled' : 'rowBookmark'} width={16.7} height={16.7} />
         </PressableScale>
         <PressableScale onPress={() => setMenu(true)} hitSlop={12} accessibilityLabel="More" style={styles.more}>
           <Icon name="rowMore" width={17.3} height={3.34} />

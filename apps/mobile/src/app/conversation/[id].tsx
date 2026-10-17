@@ -201,7 +201,7 @@ export default function Conversation() {
               placeholderTextColor={SUBTLE}
               multiline
               selectionColor={colors.primary}
-              cursorColor="#999999"
+              cursorColor="#000000"
               style={[styles.input, hasText && styles.inputWithSend]}
               accessibilityLabel="Message"
             />

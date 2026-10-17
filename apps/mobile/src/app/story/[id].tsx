@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, { Easing, Extrapolation, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, Extrapolation, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -438,6 +438,13 @@ export default function StoryViewer() {
   // Sideways turns the page, down closes; whichever moves first wins.
   const gestures = Gesture.Race(pan, dismiss);
 
+  const [replying, setReplying] = useState(false);
+  const [reply, setReply] = useState('');
+  // Story replies have no backend yet: the text is cleared and the keyboard closes.
+  const sendReply = () => {
+    setReply('');
+    Keyboard.dismiss();
+  };
   const pages = (settled ? [prev, next, story] : [story]).filter((s): s is Story => !!s);
   const layers = pages.filter((s) => !!snaps[s.id]).map((s) => ({ id: s.id, image: snaps[s.id] }));
 
@@ -462,13 +469,41 @@ export default function StoryViewer() {
         <Icon name="storyClose" width={24} height={24} />
       </PressableScale>
 
-      <KeyboardStickyView style={[styles.bar, { height: barH }]} offset={{ closed: 0, opened: barH - 63 }}>
-        <View style={styles.pill}>
-          <TextInput placeholder="Send message..." placeholderTextColor="#FFFFFF" style={styles.input} selectionColor="#FFFFFF" cursorColor="#FFFFFF" />
+      {/* Typing a reply (Autolayouted-1/-2/-3): the story dims to 80% black, the field turns into a clear pill with a thin
+          white border spanning the width, grows upwards with the text and gets a white send button inside. */}
+      {replying ? (
+        <Animated.View collapsable={false} entering={FadeIn.duration(180)} exiting={FadeOut.duration(160)} style={[StyleSheet.absoluteFill, styles.dim]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} accessibilityLabel="Close the reply" />
+        </Animated.View>
+      ) : null}
+      <KeyboardStickyView style={[styles.bar, { height: barH }, replying && styles.barTyping]} offset={{ closed: 0, opened: barH - 65 }}>
+        <View style={[styles.pill, replying && [styles.pillTyping, { bottom: barH - 53 }]]}>
+          <TextInput
+            value={reply}
+            onChangeText={setReply}
+            onFocus={() => setReplying(true)}
+            onBlur={() => setReplying(false)}
+            multiline={replying}
+            placeholder="Send message..."
+            placeholderTextColor="#FFFFFF"
+            style={[styles.input, replying && styles.inputTyping, replying && reply.trim() ? styles.inputWithSend : null]}
+            selectionColor="#FFFFFF"
+            cursorColor="#FFFFFF"
+            accessibilityLabel="Reply to the story"
+          />
+          {replying && reply.trim() ? (
+            <Animated.View collapsable={false} entering={FadeIn.duration(140)} exiting={FadeOut.duration(120)} style={styles.sendWrap}>
+              <PressableScale haptic onPress={sendReply} scaleTo={0.9} hitSlop={6} style={styles.send} accessibilityRole="button" accessibilityLabel="Send">
+                <Icon name="chatSend" width={20.2} height={18.2} />
+              </PressableScale>
+            </Animated.View>
+          ) : null}
         </View>
-        <PressableScale haptic hitSlop={10} accessibilityLabel="Like story" style={styles.heart}>
-          <Icon name="storyHeart" width={27} height={24} />
-        </PressableScale>
+        {replying ? null : (
+          <PressableScale haptic hitSlop={10} accessibilityLabel="Like story" style={styles.heart}>
+            <Icon name="storyHeart" width={27} height={24} />
+          </PressableScale>
+        )}
       </KeyboardStickyView>
       </Animated.View>
       </Animated.View>
@@ -674,5 +709,27 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   input: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.4, color: '#FFFFFF', padding: 0 },
+  dim: { backgroundColor: 'rgba(0,0,0,0.8)' },
+  barTyping: { backgroundColor: 'transparent' },
+  // Field while typing: x 16..368, its bottom 12 above the keyboard, ≥45.75 tall, radius 22.9, thin white border.
+  pillTyping: {
+    top: undefined,
+    left: 16,
+    width: undefined,
+    right: 22,
+    height: undefined,
+    minHeight: 45.75,
+    borderRadius: 22.9,
+    backgroundColor: 'transparent',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#FFFFFF',
+    justifyContent: 'flex-end',
+    paddingLeft: 17,
+    paddingRight: 16,
+  },
+  inputTyping: { fontSize: 15.5, lineHeight: 19.5, maxHeight: 19.5 * 5, paddingTop: 13, paddingBottom: 13 },
+  inputWithSend: { marginRight: 50 },
+  sendWrap: { position: 'absolute', right: 5, bottom: 5.5 },
+  send: { width: 46, height: 34, borderRadius: 17, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   heart: { position: 'absolute', left: 328, top: 19.75 },
 });

@@ -11,6 +11,7 @@ import { PROFILE_HEADER_H, ProfileBio, ProfileButton, ProfileButtons, ProfilePos
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { push } from '@/lib/nav';
+import { pickStoryPhoto } from '@/lib/pick-cover';
 import { deleteAccount, exportMyData, loadProfile } from '@/lib/users';
 import type { Profile as ProfileData } from '@/mock/data';
 import { useSession } from '@/state/session';
@@ -75,7 +76,7 @@ export default function Profile() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <PressableScale onPress={() => router.navigate('/create')} hitSlop={8} scaleTo={0.88} accessibilityLabel="New article" style={styles.plus}>
+        <PressableScale onPress={pickStoryPhoto} hitSlop={8} scaleTo={0.88} accessibilityLabel="New story" style={styles.plus}>
           <Icon name="profilePlus" width={21} height={21} />
         </PressableScale>
         <PressableScale onPress={() => setSettings(true)} hitSlop={10} scaleTo={0.88} accessibilityLabel="Settings" style={styles.settings}>

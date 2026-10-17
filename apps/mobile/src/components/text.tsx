@@ -48,8 +48,9 @@ export const Text = forwardRef<RNText, TextProps>(function Text({ style, ...prop
   return <RNText ref={ref} {...props} style={interStyle(style)} />;
 });
 
-export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput({ style, ...props }, ref) {
-  return <RNTextInput ref={ref} {...props} style={interStyle(style)} />;
+// The typing line (caret) and selection are black everywhere unless a screen sets its own (e.g. white on stories).
+export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput({ style, selectionColor = '#000000', cursorColor = '#000000', ...props }, ref) {
+  return <RNTextInput ref={ref} selectionColor={selectionColor} cursorColor={cursorColor} {...props} style={interStyle(style)} />;
 });
 // Same name as the component, like React Native's own TextInput (value + type).
 // eslint-disable-next-line @typescript-eslint/no-redeclare
