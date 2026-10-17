@@ -14,6 +14,7 @@ import Animated, {
   runOnJS,
   runOnUI,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withDelay,
   withSequence,
@@ -50,6 +51,7 @@ const TEXT_SIDE = 43;
 const TEXT_TOP = 107.3;
 const STRIP_H = 59;
 const PAGE_BOTTOM_PAD = 10;
+const noop = () => {};
 const WORDS_PER_MIN = 200;
 // Open / close (not in the design): the cover grows out of the tapped picture (feed, Explore, profile) into the
 // preview's picture and the rest of the reader comes in after it; closing shrinks it back into that picture.
@@ -108,13 +110,20 @@ function Reader({ article }: { article: Article }) {
   const [page, setPage] = useState(0);
   const rise = useSharedValue(0);
   const textCount = pages ? pages.length : 0;
-  // Preview → text (not in the design): the preview drifts up a quarter screen, shrinks a little and fades while the
-  // text pages and their chrome rise from the bottom with the finger.
+  // Preview → text (not in the design): the text flows out of the preview. Its picture morphs into the cover strip at
+  // the top of the text pages (MorphCover below), the preview's words drift up and fade, the text rises from below,
+  // the author card settles in from the top and the bar slides up from the bottom — all with the finger.
   const previewOut = useAnimatedStyle(() => {
     const p = rise.get();
-    return { opacity: 1 - p, transform: [{ translateY: -H * 0.25 * p }, { scale: 1 - 0.06 * p }] };
+    return { opacity: interpolate(p, [0, 0.6], [1, 0], Extrapolation.CLAMP), transform: [{ translateY: -H * 0.18 * p }] };
   });
-  const chromeIn = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * H }] }));
+  const stripIn = useAnimatedStyle(() => ({ opacity: rise.get() > 0.995 ? 1 : 0 }));
+  const cardIn = useAnimatedStyle(() => ({
+    opacity: interpolate(rise.get(), [0.55, 1], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateY: -24 * (1 - rise.get()) }],
+  }));
+  const barIn = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * (BAR_H + 20) }] }));
+  const morphing = useDerivedValue<number>(() => (rise.get() > 0.001 && rise.get() < 0.995 ? 1 : 0));
 
   // Double tap on the text likes the article (never unlikes) and pops a big heart where the finger was.
   const [hearts, setHearts] = useState<{ id: number; x: number; y: number; tilt: number }[]>([]);
@@ -287,7 +296,10 @@ function Reader({ article }: { article: Article }) {
       axis.set(0);
     });
   const readerGestures = Gesture.Simultaneous(pan, doubleTap);
-  const pagesRow = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * H }, { translateX: -scrollX.get() }] }));
+  const pagesRow = useAnimatedStyle(() => ({
+    opacity: interpolate(rise.get(), [0.25, 0.9], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateY: (1 - rise.get()) * H * 0.55 }, { translateX: -scrollX.get() }],
+  }));
   // White early in the flight, so the picture left behind in the list doesn't show through while the copy flies.
   const paper = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0, 0.3], [0, 1], Extrapolation.CLAMP) }));
   // Behind the reader: fades as it is pulled away to the right, so the list shows through.
@@ -296,7 +308,7 @@ function Reader({ article }: { article: Article }) {
   }));
   const slideStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX.get() }] }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
-  const pictureVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.get() : t.get() }));
+  const pictureVisible = useAnimatedStyle(() => ({ opacity: (origin ? 1 - flying.get() : t.get()) * (rise.get() > 0.001 ? 0 : 1) }));
 
   // The preview layer starts at the window's top-left, so the picture's layout box is its window rect.
   const measurePicture = (e: LayoutChangeEvent) => {
@@ -318,7 +330,7 @@ function Reader({ article }: { article: Article }) {
       </View>
 
       {/* Text pages' cover strip: the blur source of the author card. */}
-      <Animated.View collapsable={false} pointerEvents="none" style={[StyleSheet.absoluteFill, chromeIn]}>
+      <Animated.View collapsable={false} pointerEvents="none" style={[StyleSheet.absoluteFill, stripIn]}>
         <BlurTargetView ref={targetRef} style={StyleSheet.absoluteFill}>
           <View style={[styles.cover, { height: top + STRIP_H }]}>
             <Image source={article.cover} style={styles.fill} contentFit="cover" />
@@ -338,8 +350,8 @@ function Reader({ article }: { article: Article }) {
         </Animated.View>
       ) : null}
 
-      <Animated.View collapsable={false} pointerEvents="box-none" style={[StyleSheet.absoluteFill, chromeIn]}>
-        <View style={[styles.card, { top: top + 23.5 }]}>
+      <Animated.View collapsable={false} pointerEvents={page === 0 ? 'none' : 'box-none'} style={StyleSheet.absoluteFill}>
+        <Animated.View collapsable={false} style={[styles.card, { top: top + 23.5 }, cardIn]}>
           {/* Blur from the first frame: turning it on later made the card and the cover blink on Android. */}
           <Glass blurTarget={targetRef} radius={13.5} style={styles.glassFill}>
             <Pressable onPress={() => openProfile(article.author.username, true)} hitSlop={6} accessibilityRole="link" style={styles.author}>
@@ -354,15 +366,15 @@ function Reader({ article }: { article: Article }) {
               <FollowPill following={following} onPress={toggleFollow} />
             </View>
           </Glass>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.close, { top: top - 16 }]}>
+        <Animated.View collapsable={false} style={[styles.close, { top: top - 16 }, cardIn]}>
           <PressableScale onPress={close} hitSlop={10} scaleTo={0.9} accessibilityLabel="Close">
             <Icon name="readerClose2" width={31} />
           </PressableScale>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.bar, { height: BAR_H }]}>
+        <Animated.View collapsable={false} style={[styles.bar, { height: BAR_H }, barIn]}>
           <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments)} x={43.75} iconTop={11.62} />
           <LikeButton
             liked={liked}
@@ -378,7 +390,7 @@ function Reader({ article }: { article: Article }) {
           <PressableScale onPress={() => setSaved((v) => !v)} hitSlop={10} accessibilityLabel="Bookmark" style={styles.barBookmark}>
             <Icon name="readerBookmark" width={16.5} height={18.5} tintColor={saved ? colors.primary : undefined} />
           </PressableScale>
-        </View>
+        </Animated.View>
       </Animated.View>
 
       <Animated.View collapsable={false} pointerEvents={page === 0 ? 'box-none' : 'none'} style={[StyleSheet.absoluteFill, styles.preview, previewOut]}>
@@ -425,6 +437,16 @@ function Reader({ article }: { article: Article }) {
       </Animated.View>
 
       {origin && picture ? <FlyingCover origin={origin} source={article.cover} t={t} flying={flying} target={picture} onShown={onCoverShown} /> : null}
+      {picture ? (
+        <FlyingCover
+          origin={{ ...picture, radius: 1, aspect: null }}
+          source={article.cover}
+          t={rise}
+          flying={morphing}
+          target={{ x: 0, y: 0, w: W, h: top + STRIP_H }}
+          onShown={noop}
+        />
+      ) : null}
 
       {hearts.map((h) => (
         <BigHeart key={h.id} id={h.id} x={h.x} y={h.y} tilt={h.tilt} onDone={dropHeart} />
