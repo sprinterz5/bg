@@ -15,7 +15,7 @@ import { StepScreen } from '@/components/step-screen';
 import { INTERESTS, INTERESTS_MAX, INTERESTS_MIN } from '@/mock/data';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
-import { AnimatedText, Text } from '@/components/text';
+import { AnimatedText, Text, INTER_FAMILIES } from '@/components/text';
 import { push } from '@/lib/nav';
 
 export default function InterestsStep() {
@@ -63,6 +63,7 @@ export default function InterestsStep() {
     <StepScreen
       title="Pick your interests"
       showBack={false}
+      titleStyle={styles.title}
       gutter={18}
       footerLift={22}
       avoidKeyboard={false}
@@ -116,11 +117,14 @@ function InterestRow({ label, checked, onPress }: { label: string; checked: bool
 }
 
 const styles = StyleSheet.create({
-  subtitle: { marginTop: -12, fontSize: 17.5, lineHeight: 22, color: colors.textMuted, letterSpacing: -0.35 },
-  list: { flex: 1, marginTop: 27 },
+  // No layout-2: title Inter 29.8 bold (cap top 89.5), subtitle Inter 17.2 (cap top 137.7), first check at y 186,
+  // rows ~29 apart, labels Inter Medium 17.3.
+  title: { fontSize: 29.8, lineHeight: 33 },
+  subtitle: { marginTop: -19.44, fontFamily: INTER_FAMILIES['400'], fontSize: 17.2, lineHeight: 22, color: colors.textMuted },
+  list: { flex: 1, marginTop: 28.54 },
   listContent: { paddingBottom: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 29 },
   check: { width: 24, height: 24 },
   checkOn: { alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 17.5, lineHeight: 23, fontWeight: '500', color: colors.text, letterSpacing: 0.1 },
+  label: { fontFamily: INTER_FAMILIES['500'], fontSize: 17.3, lineHeight: 23, color: colors.text },
 });

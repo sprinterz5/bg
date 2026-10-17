@@ -37,11 +37,15 @@ export default function PasswordStep() {
           accessibilityLabel="Password"
         />
       </View>
-      <FieldMessage text="Password must be at least 6 letters/ numbers" />
+      <View style={styles.hint}>
+        <FieldMessage text="Password must be at least 6 letters/ numbers" />
+      </View>
     </StepScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  // AutoLayouted-2: the hint's cap top 51 under the field line (the message's own 14 plus 27.8).
+  hint: { marginTop: 27.8 },
   row: { flexDirection: 'row' },
 });

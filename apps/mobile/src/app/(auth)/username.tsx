@@ -8,7 +8,7 @@ import { StepScreen } from '@/components/step-screen';
 import { USERNAME_PATTERN, checkUsernameAvailable, normalizeUsername } from '@/lib/auth';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
-import { Text } from '@/components/text';
+import { Text, INTER_FAMILIES } from '@/components/text';
 import { push } from '@/lib/nav';
 
 type Status = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
@@ -72,7 +72,8 @@ export default function UsernameStep() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  at: { fontSize: 32, fontWeight: '900', color: colors.text, marginTop: -2 },
+  // No layout-1: "@" Inter SemiBold 29.2 at x 13.6, the name 10.65 after it.
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10.65 },
+  at: { marginLeft: 0.64, fontFamily: INTER_FAMILIES['600'], fontSize: 29.2, lineHeight: 36, color: colors.text },
   messageSlot: { paddingLeft: 40 },
 });

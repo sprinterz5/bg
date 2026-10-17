@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeInDown, LinearTransition } from 'react-native-rea
 
 import { PrimaryButton } from '@/components/primary-button';
 import { StepScreen } from '@/components/step-screen';
+import { INTER_FAMILIES } from '@/components/text';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
 import { push } from '@/lib/nav';
@@ -43,8 +44,11 @@ export default function AvatarStep() {
   return (
     <StepScreen
       centered
+      titleShift={14.42}
+      titleStyle={styles.title}
+      subtitleStyle={styles.subtitle}
       avoidKeyboard={false}
-      footerLift={79}
+      footerLift={69}
       title="Set a profile picture"
       subtitle="If you don`t want to share your face, upload images of your interests and topics that match your character"
       footer={
@@ -73,7 +77,11 @@ export default function AvatarStep() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', paddingTop: 41 },
+  // AutoLayotued: title Inter 29.65 bold (box at 64.2 under the status bar), subtitle Inter 16.3 / 23.4 #999 18.8 under
+  // it, the picture's top at 251.
+  title: { fontFamily: INTER_FAMILIES['700'], fontSize: 29.65, lineHeight: 33, letterSpacing: 0 },
+  subtitle: { marginTop: 18.83, fontFamily: INTER_FAMILIES['400'], fontSize: 16.3, lineHeight: 23.4, letterSpacing: 0, color: '#999999' },
+  center: { flex: 1, alignItems: 'center', paddingTop: 29.25 },
   avatar: {
     width: AVATAR,
     height: AVATAR,
@@ -85,5 +93,5 @@ const styles = StyleSheet.create({
   },
   placeholder: { width: AVATAR * 1.2, height: AVATAR * 1.2 },
   fill: { width: '100%', height: '100%' },
-  buttons: { gap: 10 },
+  buttons: { gap: 11.5 },
 });

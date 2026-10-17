@@ -3,7 +3,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { colors } from '@/theme';
 import { Icon } from './icon';
-import { Text } from '@/components/text';
+import { Text, INTER_FAMILIES } from '@/components/text';
 
 type Props = { text: string; tone?: 'hint' | 'error' };
 
@@ -23,6 +23,7 @@ export function FieldMessage({ text, tone = 'hint' }: Props) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 14, gap: 6, paddingRight: 24 },
   icon: { paddingTop: 3 },
-  text: { flex: 1, fontSize: 18, lineHeight: 22, color: colors.textMuted, letterSpacing: -0.36 },
+  // AutoLayouted-2 / No Layout-1: Inter 16.25, lines ~22.4 apart.
+  text: { flex: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 16.25, lineHeight: 22.4, color: colors.textMuted },
   hint: { fontSize: 13, lineHeight: 17, letterSpacing: 0 },
 });

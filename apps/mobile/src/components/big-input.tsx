@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import { StyleSheet, type TextInputProps } from 'react-native';
 
 import { colors } from '@/theme';
-import { TextInput } from '@/components/text';
+import { INTER_FAMILIES, TextInput } from '@/components/text';
 
 export const BigInput = forwardRef<TextInput, TextInputProps>(function BigInput({ style, ...props }, ref) {
   return (
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 26,
-    fontWeight: '500',
+    fontFamily: INTER_FAMILIES['400'],
     color: colors.text,
     paddingVertical: 4,
     minHeight: 40,
