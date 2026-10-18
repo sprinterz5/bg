@@ -40,6 +40,13 @@ const icons = {
   plus: require('@/assets/icons/plus-circle.svg'),
   // Home + story viewer (Frame 1049)
   homePlus: require('@/assets/icons/home-plus.svg'),
+  feedLike: require('@/assets/icons/feed-like.svg'),
+  feedLikeFilled: require('@/assets/icons/feed-like-filled.svg'),
+  feedComment: require('@/assets/icons/feed-comment.svg'),
+  feedViews: require('@/assets/icons/feed-views.svg'),
+  feedBookmark: require('@/assets/icons/feed-bookmark.svg'),
+  feedBookmarkFilled: require('@/assets/icons/feed-bookmark-filled.svg'),
+  feedShare: require('@/assets/icons/feed-share.svg'),
   homeBell: require('@/assets/icons/home-bell.svg'),
   profilePlus: require('@/assets/icons/profile-plus.svg'),
   postViews: require('@/assets/icons/post-views.svg'),
