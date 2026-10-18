@@ -17,6 +17,7 @@ type ScorableContent = {
   publishedAt: Date | null;
   author: {
     createdAt: Date;
+    email: string | null;
     emailVerified: boolean;
   };
 };
@@ -110,7 +111,8 @@ async function scoreContent(prisma: PrismaClient, content: ScorableContent, thre
   const reportRate = reports / impressions;
   const authorPostVelocity = authorArticleCount + authorReviewCount;
 
-  if (!content.author.emailVerified) {
+  // Signup needs no email; only an added-but-unconfirmed one counts.
+  if (content.author.email && !content.author.emailVerified) {
     signals.push({ name: "author_email_unverified", weight: 8, value: true });
   }
   if (accountAgeHours < 24) {
@@ -224,7 +226,7 @@ export async function runSpamScoringJob(prisma: PrismaClient, options: SpamJobOp
       orderBy: { updatedAt: "desc" },
       take: limit,
       include: {
-        author: { select: { createdAt: true, emailVerified: true } }
+        author: { select: { createdAt: true, email: true, emailVerified: true } }
       }
     }),
     prisma.review.findMany({
@@ -236,7 +238,7 @@ export async function runSpamScoringJob(prisma: PrismaClient, options: SpamJobOp
       orderBy: { updatedAt: "desc" },
       take: limit,
       include: {
-        author: { select: { createdAt: true, emailVerified: true } }
+        author: { select: { createdAt: true, email: true, emailVerified: true } }
       }
     })
   ]);

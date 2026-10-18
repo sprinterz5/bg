@@ -352,6 +352,19 @@ def diff(oldp, newp):
     print(''.join(body))
 
 
+def dump(snapp, frame):
+    """Layers of one frame, one per line: path, tag, box and paint (status bar / keyboard left out)."""
+    m, imgs = screen_map(load(snapp)[frame])
+    for k, e in m.items():
+        if re.search(r'(^|/)(Menu Bar|Home Indicator|Keyboard)(/|$)', k):
+            continue
+        a = e[3]
+        info = ' '.join('%s=%s' % (x, a[x]) for x in ('bbox', 'x', 'y', 'cx', 'cy', 'r', 'width', 'height', 'rx', 'fill', 'fill-opacity', 'stroke', 'stroke-width', 'opacity', 'transform', 'filter', 'mask') if x in a)
+        print('%s [%s] %s' % (re.sub(r'#\d+', '', k), e[1], info))
+    for v in imgs.values():
+        print('image', v)
+
+
 def merge(oldp, newp, dst):
     old, new = load(oldp), load(newp)
     pairs, _ = pair(old, new)
@@ -366,6 +379,8 @@ def merge(oldp, newp, dst):
 if __name__ == '__main__':
     if sys.argv[1] == 'snap':
         snap(sys.argv[2], sys.argv[3])
+    elif sys.argv[1] == 'dump':
+        dump(sys.argv[2], sys.argv[3])
     elif sys.argv[1] == 'merge':
         merge(sys.argv[2], sys.argv[3], sys.argv[4])
     else:

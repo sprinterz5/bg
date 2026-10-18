@@ -21,8 +21,12 @@ const googleClientIds = env.GOOGLE_CLIENT_IDS.split(",").map((id) => id.trim()).
 // Letters, digits, _ and . (case-insensitive); a dot cannot start or end the name or repeat.
 const USERNAME_FORMAT = /^(?!\.)(?!.*\.\.)[a-zA-Z0-9_.]+(?<!\.)$/;
 
+// At least 6 characters with at least one letter (signup step "Create a password").
+const passwordSchema = z.string().min(6).max(200).regex(/\p{L}/u, "Password must contain at least one letter");
+
 const registerSchema = z.object({
-  email: z.string().email().transform((value) => value.toLowerCase()),
+  // Optional: the signup flow is username + password; an email can be added later for recovery.
+  email: z.string().email().transform((value) => value.toLowerCase()).optional(),
   username: z
     .string()
     .min(3)
@@ -30,7 +34,7 @@ const registerSchema = z.object({
     .regex(USERNAME_FORMAT)
     .transform(normalizeUsername),
   displayName: z.string().min(1).max(80).optional(),
-  password: z.string().min(8).max(200),
+  password: passwordSchema,
   interests: z.array(z.string().min(1).max(40)).max(20).default([]),
   // "I'm 13 or older" at signup; logged as a consent.
   ageConfirmed: z.literal(true)
@@ -55,7 +59,7 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   token: z.string().min(32),
-  password: z.string().min(8).max(200)
+  password: passwordSchema
 });
 
 const verifyEmailSchema = z.object({
@@ -212,7 +216,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     const existing = await app.prisma.user.findFirst({
       where: {
-        OR: [{ email: body.email }, { username: body.username }]
+        OR: [...(body.email ? [{ email: body.email }] : []), { username: body.username }]
       }
     });
 
@@ -223,7 +227,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const passwordHash = await argon2.hash(body.password);
     const user = await app.prisma.user.create({
       data: {
-        email: body.email,
+        email: body.email ?? null,
         username: body.username,
         displayName: body.displayName,
         passwordHash,
@@ -239,10 +243,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     });
 
     const tokens = await issueTokens(app, user, request);
-    const emailVerificationToken = await createEmailVerificationToken(app, user);
+    const emailVerificationToken = user.email ? await createEmailVerificationToken(app, { id: user.id, email: user.email }) : null;
     return reply.status(201).send({
       ...asApi<ApiAuthResponse>({ user, ...tokens }),
-      ...(shouldExposeDevEmailToken() ? { devEmailVerificationToken: emailVerificationToken } : {})
+      ...(emailVerificationToken && shouldExposeDevEmailToken() ? { devEmailVerificationToken: emailVerificationToken } : {})
     });
   });
 
@@ -418,8 +422,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     if (user.emailVerified) {
       return { ok: true, alreadyVerified: true };
     }
+    if (!user.email) {
+      throw reply.badRequest("The account has no email");
+    }
 
-    const token = await createEmailVerificationToken(app, user);
+    const token = await createEmailVerificationToken(app, { id: user.id, email: user.email });
     return reply.status(202).send({
       ok: true,
       alreadyVerified: false,
@@ -463,11 +470,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       select: { id: true, email: true }
     });
 
-    if (!user) {
+    if (!user?.email) {
       return reply.status(202).send({ ok: true });
     }
 
-    const token = await createPasswordResetToken(app, user);
+    const token = await createPasswordResetToken(app, { id: user.id, email: user.email });
     return reply.status(202).send({
       ok: true,
       ...(shouldExposeDevEmailToken() ? { devPasswordResetToken: token } : {})

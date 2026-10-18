@@ -29,7 +29,7 @@ export default function Ready() {
       }, remaining);
     }, (e) => {
       if (cancelled) return;
-      // Username taken meanwhile, provider token expired or no network: start over from the provider sheet.
+      // Username taken meanwhile or no network: start the signup over.
       Alert.alert('Could not create the account', e instanceof Error ? e.message : 'Try again.');
       resetDraft();
       router.replace('/welcome');

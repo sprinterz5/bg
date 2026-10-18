@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 import { logout, restoreSession } from '@/lib/auth';
 import { setSessionExpiredHandler } from '@/lib/api';
+import { CAPTURE, captureParam } from '@/lib/capture';
 import { closeChatSocket } from '@/lib/chat';
 
 export type SessionUser = {
@@ -13,9 +14,6 @@ export type SessionUser = {
 };
 
 export type SignupDraft = {
-  provider: 'google' | 'apple' | null;
-  /** Provider ID token from the first step; sent again with the signup fields. */
-  identityToken: string | null;
   name: string;
   username: string;
   password: string;
@@ -26,8 +24,6 @@ export type SignupDraft = {
 };
 
 const emptyDraft: SignupDraft = {
-  provider: null,
-  identityToken: null,
   name: '',
   username: '',
   password: '',
@@ -49,19 +45,22 @@ type SessionContextValue = {
   signOut: () => void;
 };
 
+const CAPTURE_USER: SessionUser = { id: 'capture', name: 'Oleg Tinkov', username: 'oleg_tinkov', avatarUri: null, interests: [] };
+
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [ready, setReady] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(CAPTURE ? CAPTURE_USER : null);
+  const [ready, setReady] = useState(CAPTURE);
 
   useEffect(() => {
+    if (CAPTURE) return;
     restoreSession()
       .then((u) => u && setUser(u))
       .catch(() => {})
       .finally(() => setReady(true));
   }, []);
-  const [draft, setDraft] = useState<SignupDraft>(emptyDraft);
+  const [draft, setDraft] = useState<SignupDraft>(() => ({ ...emptyDraft, ...JSON.parse(captureParam('draft') ?? '{}') }));
 
   // The refresh token was rejected: drop the in-memory user so the app returns to sign-in.
   useEffect(() => {

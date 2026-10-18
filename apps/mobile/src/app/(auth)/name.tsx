@@ -26,6 +26,7 @@ export default function NameStep() {
   return (
     <StepScreen
       title="Write your name"
+      titleStyle={styles.title}
       footer={
         <>
           {/* Not in the design: minimum age (13) confirmed before the account is created. */}
@@ -63,7 +64,9 @@ export default function NameStep() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row' },
+  // AutoLayouted-1 sits a little lower than the other steps: title +3, field +4.
+  title: { marginTop: 3 },
+  row: { flexDirection: 'row', marginTop: 1 },
   age: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: 10, marginBottom: 16 },
   ageText: { fontSize: 15, lineHeight: 20, fontWeight: '500', color: colors.text },
 });

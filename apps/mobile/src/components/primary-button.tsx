@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { colors, layout, motion } from '@/theme';
 import { PressableScale } from './pressable-scale';
 import { AnimatedText } from '@/components/text';
+
+// Signup frames (No layout, AutoLayouted-3): a disabled Continue is #B3B3B3 with white text.
+const DISABLED = '#B3B3B3';
 
 type Props = {
   title: string;
@@ -13,9 +16,11 @@ type Props = {
   loading?: boolean;
   variant?: 'primary' | 'outline';
   style?: StyleProp<ViewStyle>;
+  /** Frames that set the label differently (e.g. "Upload from gallery"). */
+  labelStyle?: StyleProp<TextStyle>;
 };
 
-export function PrimaryButton({ title, onPress, enabled = true, loading = false, variant = 'primary', style }: Props) {
+export function PrimaryButton({ title, onPress, enabled = true, loading = false, variant = 'primary', style, labelStyle }: Props) {
   const active = useSharedValue(enabled ? 1 : 0);
 
   useEffect(() => {
@@ -27,10 +32,10 @@ export function PrimaryButton({ title, onPress, enabled = true, loading = false,
   const bgStyle = useAnimatedStyle(() =>
     outline
       ? {}
-      : { backgroundColor: interpolateColor(active.value, [0, 1], [colors.disabled, colors.primary]) },
+      : { backgroundColor: interpolateColor(active.value, [0, 1], [DISABLED, colors.primary]) },
   );
   const textStyle = useAnimatedStyle(() =>
-    outline ? {} : { color: interpolateColor(active.value, [0, 1], [colors.textMuted, '#FFFFFF']) },
+    outline ? {} : { color: '#FFFFFF' },
   );
 
   const interactive = enabled && !loading;
@@ -48,7 +53,7 @@ export function PrimaryButton({ title, onPress, enabled = true, loading = false,
         {loading ? (
           <ActivityIndicator color={outline ? colors.text : '#FFFFFF'} />
         ) : (
-          <AnimatedText style={[styles.label, outline ? styles.outlineLabel : null, textStyle]}>{title}</AnimatedText>
+          <AnimatedText style={[styles.label, outline ? styles.outlineLabel : null, labelStyle, textStyle]}>{title}</AnimatedText>
         )}
       </Animated.View>
     </PressableScale>
@@ -67,10 +72,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.disabled,
   },
+  // Continue in the signup frames: Inter Bold ~17.5, tracked in a little.
   label: {
     fontSize: 17.5,
-    fontWeight: '600',
-    letterSpacing: -0.2,
+    fontWeight: '700',
+    letterSpacing: -0.26,
   },
   outlineLabel: {
     color: colors.text,

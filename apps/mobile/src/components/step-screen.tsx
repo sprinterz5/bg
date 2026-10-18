@@ -81,9 +81,9 @@ export function StepScreen({
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
   backRow: { height: 28, justifyContent: 'center', marginBottom: 10.3 },
-  back: { width: 32, height: 28, justifyContent: 'center' },
+  back: { width: 32, height: 28, justifyContent: 'center', marginLeft: 1 },
   // Inter on both platforms (the frames' glyph widths are Inter's).
-  title: { fontSize: 32, lineHeight: 36, fontFamily: INTER_FAMILIES['700'], color: colors.text },
+  title: { fontSize: 32, lineHeight: 36, letterSpacing: -0.32, fontFamily: INTER_FAMILIES['800'], color: colors.text },
   subtitle: { marginTop: 10, fontSize: 16.5, lineHeight: 22, fontFamily: INTER_FAMILIES['400'], color: colors.textMuted },
   centerText: { textAlign: 'center' },
   body: { flex: 1, marginTop: 35.5 },

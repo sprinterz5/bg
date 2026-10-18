@@ -1,30 +1,8 @@
-import type { ApiAuthResponse, ApiSessionUser, ApiSocialResponse, ApiUsernameAvailability } from '@api/api';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
+import type { ApiAuthResponse, ApiSessionUser, ApiUsernameAvailability } from '@api/api';
 
 import type { SessionUser, SignupDraft } from '@/state/session';
 import { ApiError, api, clearTokens, getStoredRefreshToken, refreshSession, saveTokens } from './api';
 import { uploadImage } from './media';
-
-/** Expo Go has no Google Sign-In native module: requiring it there crashes the app at startup. */
-export const googleSignInAvailable = Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
-
-type GoogleModule = typeof import('@react-native-google-signin/google-signin');
-let google: GoogleModule | null = null;
-
-function getGoogle(): GoogleModule {
-  if (!googleSignInAvailable) throw new Error('Google sign-in works only in the Smarts dev build, not in Expo Go');
-  if (!google) {
-    // Lazy: the native module exists only in the dev build (Expo Go would crash on import).
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    google = require('@react-native-google-signin/google-signin') as GoogleModule;
-    // OAuth client ids are public. The ID token's audience is the web client; the backend accepts all three.
-    google.GoogleSignin.configure({
-      webClientId: '380177386353-ea8l9fgsp80j3lkg8gden0f2dchgci8s.apps.googleusercontent.com',
-      iosClientId: '380177386353-prjvke8s4u7dtftpsv8d9h2v2jcaj318.apps.googleusercontent.com',
-    });
-  }
-  return google;
-}
 
 // Same rule as the backend (usernameService): a–z, 0–9, _ and . — no dot at either end, no double dots.
 export const USERNAME_PATTERN = /^(?!\.)(?!.*\.\.)[a-z0-9_.]{3,30}(?<!\.)$/;
@@ -35,44 +13,25 @@ export function normalizeUsername(value: string) {
 
 type ApiUser = ApiSessionUser;
 type AuthResponse = ApiAuthResponse;
-type SocialResponse = ApiSocialResponse;
 
 function toSessionUser(u: ApiUser): SessionUser {
   return { id: u.id, name: u.displayName ?? u.username, username: u.username, avatarUri: u.avatarUrl, interests: u.interests };
 }
 
-export type SocialResult = { kind: 'cancelled' } | { kind: 'signedIn'; user: SessionUser } | { kind: 'signup'; identityToken: string };
+// Same rule as the backend (passwordSchema): at least 6 characters, at least one letter.
+export const isPasswordValid = (p: string) => p.length >= 6 && /\p{L}/u.test(p);
 
-/** Provider sheet → backend. An existing account signs in; a new one gets the signup steps. */
-export async function socialSignIn(provider: 'google' | 'apple'): Promise<SocialResult> {
-  if (provider === 'apple') throw new Error('Sign in with Apple is not set up yet');
-
-  const { GoogleSignin, isSuccessResponse } = getGoogle();
-  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-  const res = await GoogleSignin.signIn();
-  if (!isSuccessResponse(res)) return { kind: 'cancelled' };
-  const identityToken = res.data.idToken;
-  if (!identityToken) throw new Error('Google returned no ID token');
-
-  const data = await api<SocialResponse>('/auth/google', { body: { identityToken } });
-  if (data.signupRequired) return { kind: 'signup', identityToken };
-  await saveTokens(data);
-  return { kind: 'signedIn', user: toSessionUser(data.user) };
-}
-
-/** Creates the account with the provider token kept from the first step. */
+/** Creates the account (username + password, no email) and signs in. */
 export async function completeSignup(draft: SignupDraft): Promise<SessionUser> {
-  const data = await api<SocialResponse>(`/auth/${draft.provider}`, {
+  const data = await api<AuthResponse>('/auth/register', {
     body: {
-      identityToken: draft.identityToken,
       username: draft.username,
       displayName: draft.name,
-      password: draft.password || undefined,
+      password: draft.password,
       interests: draft.interests,
       ageConfirmed: draft.ageConfirmed || undefined,
     },
   });
-  if (data.signupRequired) throw new Error('Signup was not completed');
   await saveTokens(data);
   const user = toSessionUser(data.user);
   if (!draft.avatarUri) return user;
@@ -118,5 +77,4 @@ export async function logout() {
   const refreshToken = await getStoredRefreshToken();
   if (refreshToken) await api('/auth/logout', { body: { refreshToken } }).catch(() => {});
   await clearTokens();
-  if (googleSignInAvailable) await getGoogle().GoogleSignin.signOut().catch(() => {});
 }

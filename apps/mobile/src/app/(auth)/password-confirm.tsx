@@ -7,6 +7,7 @@ import { PrimaryButton } from '@/components/primary-button';
 import { StepScreen } from '@/components/step-screen';
 import { useSession } from '@/state/session';
 import { push } from '@/lib/nav';
+import { INTER_FAMILIES } from '@/components/text';
 
 export default function PasswordConfirmStep() {
   const { draft } = useSession();
@@ -19,7 +20,7 @@ export default function PasswordConfirmStep() {
   };
 
   return (
-    <StepScreen title="Repeat the password" footer={<PrimaryButton title="Continue" enabled={matches} onPress={next} />}>
+    <StepScreen title="Repeat the password" titleStyle={styles.title} footer={<PrimaryButton title="Continue" enabled={matches} onPress={next} />}>
       <View style={styles.row}>
         <BigInput
           autoFocus
@@ -40,5 +41,7 @@ export default function PasswordConfirmStep() {
 }
 
 const styles = StyleSheet.create({
+  // AutoLayouted-4: this title is Inter Bold 31.7, not ExtraBold like the other steps.
+  title: { fontFamily: INTER_FAMILIES['700'], fontSize: 31.7, letterSpacing: 0 },
   row: { flexDirection: 'row' },
 });

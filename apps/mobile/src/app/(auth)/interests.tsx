@@ -65,9 +65,14 @@ export default function InterestsStep() {
       showBack={false}
       titleStyle={styles.title}
       gutter={18}
-      footerLift={22}
+      titleTop={39}
+      footerLift={15}
       avoidKeyboard={false}
-      footer={<PrimaryButton title="Continue" enabled={valid} onPress={next} />}>
+      footer={
+        <View style={styles.footer}>
+          <PrimaryButton title="Continue" enabled={valid} onPress={next} />
+        </View>
+      }>
       <AnimatedText style={[styles.subtitle, subtitleStyle]}>
         Select from {INTERESTS_MIN} to {INTERESTS_MAX} topics to continue
       </AnimatedText>
@@ -105,9 +110,9 @@ function InterestRow({ label, checked, onPress }: { label: string; checked: bool
       aria-checked={checked}
       hitSlop={{ top: 4, bottom: 4 }}>
       <View style={styles.check}>
-        <Icon name="checkOff" width={24} style={StyleSheet.absoluteFill} />
+        <Icon name="checkOff" width={23} style={StyleSheet.absoluteFill} />
         <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, styles.checkOn, fillStyle]}>
-          <Icon name="checkOn" width={24} style={StyleSheet.absoluteFill} />
+          <Icon name="checkOn" width={23} style={StyleSheet.absoluteFill} />
           <Icon name="tick" width={12} />
         </Animated.View>
       </View>
@@ -117,14 +122,15 @@ function InterestRow({ label, checked, onPress }: { label: string; checked: bool
 }
 
 const styles = StyleSheet.create({
-  // No layout-2: title Inter 29.8 bold (cap top 89.5), subtitle Inter 17.2 (cap top 137.7), first check at y 186,
-  // rows ~29 apart, labels Inter Medium 17.3.
-  title: { fontSize: 29.8, lineHeight: 33 },
-  subtitle: { marginTop: -19.44, fontFamily: INTER_FAMILIES['400'], fontSize: 17.2, lineHeight: 22, color: colors.textMuted },
-  list: { flex: 1, marginTop: 28.54 },
+  // AutoLayoyted: title Inter ExtraBold 29.8 (ink 19.7 × 89.8), subtitle Inter 17.2 #999 (cap top 137.7), 14 rows
+  // 36 apart with 23px checks from y 195, labels Inter Medium 17 from x 55.4, Continue 352 wide at y 739.
+  title: { fontSize: 29.8, lineHeight: 33, marginLeft: 1.5 },
+  subtitle: { marginTop: -20.44, fontFamily: INTER_FAMILIES['400'], fontSize: 17.2, lineHeight: 22, color: '#999999' },
+  list: { flex: 1, marginTop: 33.54 },
   listContent: { paddingBottom: 24 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 29 },
-  check: { width: 24, height: 24 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 13.5, height: 36 },
+  check: { width: 23, height: 23 },
   checkOn: { alignItems: 'center', justifyContent: 'center' },
-  label: { fontFamily: INTER_FAMILIES['500'], fontSize: 17.3, lineHeight: 23, color: colors.text },
+  label: { fontFamily: INTER_FAMILIES['500'], fontSize: 17, lineHeight: 23, letterSpacing: 0.17, color: colors.text },
+  footer: { marginHorizontal: 1 },
 });

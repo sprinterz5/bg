@@ -123,11 +123,19 @@ describe("Puzzle API integration", () => {
     expect(initialSessions.response.statusCode).toBe(200);
     expect(initialSessions.payload.data.length).toBeGreaterThanOrEqual(1);
 
+    // A password needs a letter.
+    const digitsOnly = await json(app, {
+      method: "POST",
+      url: "/auth/register",
+      body: { username: `${bobUsername}x`, password: "123456", ageConfirmed: true }
+    });
+    expect(digitsOnly.response.statusCode).toBe(400);
+
+    // Signup without an email (username + password only).
     const bobRegister = await json(app, {
       method: "POST",
       url: "/auth/register",
       body: {
-        email: `${bobUsername}@puzzle.dev`,
         username: bobUsername,
         displayName: "Integration Bob",
         password: "Puzzle123!",

@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { CaptureInsets } from '@/lib/capture';
 import { installErrorReporting } from '@/lib/report-errors';
 import { FeedProvider } from '@/state/feed';
 import { SessionProvider } from '@/state/session';
@@ -57,6 +58,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
       <SafeAreaProvider>
+      <CaptureInsets>
         <SessionProvider>
         <FeedProvider>
           <StatusBar style="dark" />
@@ -88,6 +90,7 @@ export default function RootLayout() {
           </DesignOverlay>
         </FeedProvider>
         </SessionProvider>
+      </CaptureInsets>
       </SafeAreaProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>

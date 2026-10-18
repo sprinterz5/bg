@@ -58,7 +58,7 @@ export default function AvatarStep() {
               <PrimaryButton title="Change a photo" variant="outline" onPress={pick} />
             </Animated.View>
           ) : null}
-          <PrimaryButton title={uri ? 'Continue' : 'Upload from gallery'} onPress={uri ? next : pick} />
+          <PrimaryButton title={uri ? 'Continue' : 'Upload from gallery'} labelStyle={uri ? undefined : styles.uploadLabel} onPress={uri ? next : pick} />
         </Animated.View>
       }>
       <View style={styles.center}>
@@ -77,11 +77,13 @@ export default function AvatarStep() {
 }
 
 const styles = StyleSheet.create({
-  // AutoLayotued: title Inter 29.65 bold (box at 64.2 under the status bar), subtitle Inter 16.3 / 23.4 #999 18.8 under
+  // AutoLayotued: title Inter ExtraBold 30.4 (ink top 115.8), subtitle Inter 16.3 / 23.4 #999 18.8 under
   // it, the picture's top at 251.
-  title: { fontFamily: INTER_FAMILIES['700'], fontSize: 29.65, lineHeight: 33, letterSpacing: 0 },
-  subtitle: { marginTop: 18.83, fontFamily: INTER_FAMILIES['400'], fontSize: 16.3, lineHeight: 23.4, letterSpacing: 0, color: '#999999' },
-  center: { flex: 1, alignItems: 'center', paddingTop: 29.25 },
+  // The frame's column is centred ~3 left of the screen centre (title, text and picture alike).
+  title: { fontFamily: INTER_FAMILIES['800'], fontSize: 30.4, lineHeight: 33, letterSpacing: -0.6, transform: [{ translateX: -3 }] },
+  subtitle: { marginTop: 18.83, marginHorizontal: 10, fontFamily: INTER_FAMILIES['400'], fontSize: 16.3, lineHeight: 23.4, letterSpacing: 0, color: '#999999', transform: [{ translateX: -3 }] },
+  center: { flex: 1, alignItems: 'center', paddingTop: 29.25, transform: [{ translateX: -3.5 }] },
+  uploadLabel: { fontFamily: INTER_FAMILIES['600'], fontWeight: 'normal', fontSize: 16.9, letterSpacing: -0.17 },
   avatar: {
     width: AVATAR,
     height: AVATAR,

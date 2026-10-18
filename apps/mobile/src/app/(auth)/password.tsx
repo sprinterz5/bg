@@ -6,9 +6,8 @@ import { FieldMessage } from '@/components/field-message';
 import { PrimaryButton } from '@/components/primary-button';
 import { StepScreen } from '@/components/step-screen';
 import { useSession } from '@/state/session';
+import { isPasswordValid } from '@/lib/auth';
 import { push } from '@/lib/nav';
-
-const isPasswordValid = (p: string) => p.length >= 6 && /[a-z]/i.test(p) && /\d/.test(p);
 
 export default function PasswordStep() {
   const { draft, updateDraft } = useSession();
@@ -38,14 +37,14 @@ export default function PasswordStep() {
         />
       </View>
       <View style={styles.hint}>
-        <FieldMessage text="Password must be at least 6 letters/ numbers" />
+        <FieldMessage text="Password must be at least 6 symbol with at least 1 letter" />
       </View>
     </StepScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  // AutoLayouted-2: the hint's cap top 51 under the field line (the message's own 14 plus 27.8).
-  hint: { marginTop: 27.8 },
+  // AutoLayouted-3: the hint's cap top at 255.6, its text from x 17.8 (two lines, wraps after "with").
+  hint: { marginTop: 28.8, paddingLeft: 2.5 },
   row: { flexDirection: 'row' },
 });

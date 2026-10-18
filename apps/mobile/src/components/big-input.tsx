@@ -21,10 +21,12 @@ export const BigInput = forwardRef<TextInput, TextInputProps>(function BigInput(
 const styles = StyleSheet.create({
   input: {
     flex: 1,
-    fontSize: 26,
-    fontFamily: INTER_FAMILIES['400'],
+    fontSize: 25.6,
+    fontFamily: INTER_FAMILIES['500'],
     color: colors.text,
     paddingVertical: 4,
+    // the frames' typed text starts ~4.5 in from the screen gutter
+    paddingLeft: 4.5,
     minHeight: 40,
   },
 });

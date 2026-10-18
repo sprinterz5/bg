@@ -42,6 +42,7 @@ export default function UsernameStep() {
   return (
     <StepScreen
       title="Create a unique username"
+      titleStyle={styles.title}
       footer={
         <PrimaryButton title="Continue" enabled={status === 'available'} onPress={next} />
       }>
@@ -51,6 +52,7 @@ export default function UsernameStep() {
           autoFocus
           value={username}
           onChangeText={(v) => setUsername(normalizeUsername(v))}
+          style={styles.input}
           maxLength={30}
           autoCapitalize="none"
           autoComplete="username-new"
@@ -72,8 +74,11 @@ export default function UsernameStep() {
 }
 
 const styles = StyleSheet.create({
-  // No layout-1: "@" Inter SemiBold 29.2 at x 13.6, the name 10.65 after it.
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10.65 },
+  // AutoLayouted-2: the two-line title is set smaller than the other steps (Inter ExtraBold ~30).
+  title: { fontSize: 30, letterSpacing: -0.3 },
+  // No layout-1: "@" Inter SemiBold 29.2 at x 13.6, the name 10.65 after it; AutoLayouted-2: the row 4.5 higher than on the other steps.
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10.65, marginTop: -4.5 },
   at: { marginLeft: 0.64, fontFamily: INTER_FAMILIES['600'], fontSize: 29.2, lineHeight: 36, color: colors.text },
+  input: { paddingLeft: 2 },
   messageSlot: { paddingLeft: 40 },
 });
