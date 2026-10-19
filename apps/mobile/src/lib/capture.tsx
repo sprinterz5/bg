@@ -36,6 +36,8 @@ function UndoAutofocusScroll() {
       document.querySelectorAll<HTMLElement>('*').forEach((el) => {
         if (el.scrollTop) el.scrollTop = 0;
         if (el.scrollLeft) el.scrollLeft = 0;
+        // RN-web gives multiline inputs rows=2; on the phone an empty one is one line tall
+        if (el instanceof HTMLTextAreaElement && el.rows !== 1) el.rows = 1;
       });
     };
     // web inputs have an intrinsic min width (20 chars) that overflows flex rows

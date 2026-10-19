@@ -2,12 +2,16 @@ import type { Profile } from '@/mock/data';
 import type { ApiConnection, ApiProfile, ApiUserArticle, ApiUserSearch, Page } from '@api/api';
 
 import { api, ApiError } from './api';
+import { CAPTURE } from './capture';
 
 export type { ApiConnection, ApiProfile, ApiUserArticle };
 
 const enc = encodeURIComponent;
 
-export const fetchProfile = (username: string) => api<ApiProfile>(`/users/${enc(username)}`, { auth: true });
+export const fetchProfile = (username: string): Promise<ApiProfile> =>
+  CAPTURE && username === 'balbe_4ek'
+    ? import('@/mock/chats').then((m) => m.CAPTURE_PROFILE)
+    : api<ApiProfile>(`/users/${enc(username)}`, { auth: true });
 
 export const fetchUserArticles = (username: string) =>
   api<Page<ApiUserArticle>>(`/users/${enc(username)}/articles?limit=50`, { auth: true }).then((p) => p.data);

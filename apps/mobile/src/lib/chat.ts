@@ -17,8 +17,10 @@ export const openDirect = (userId: string) =>
   api<ApiConversationBase>('/conversations/direct', { body: { userId }, auth: true });
 
 /** Newest first. */
-export const fetchMessages = (conversationId: string, cursor?: string) =>
-  api<Page<ChatMessage>>(`/conversations/${conversationId}/messages?limit=50${cursor ? `&cursor=${cursor}` : ''}`, {
+export const fetchMessages = (conversationId: string, cursor?: string): Promise<Page<ChatMessage>> =>
+  CAPTURE
+    ? import('@/mock/chats').then((m) => ({ data: cursor ? [] : m.CAPTURE_MESSAGES, nextCursor: null }))
+    : api<Page<ChatMessage>>(`/conversations/${conversationId}/messages?limit=50${cursor ? `&cursor=${cursor}` : ''}`, {
     auth: true,
   });
 
@@ -33,7 +35,7 @@ export const searchAccounts = (q: string) =>
   api<ApiUserSearch>(`/search?type=users&limit=20&q=${encodeURIComponent(q)}`, { auth: true }).then((r) => r.data.users);
 
 export const markRead = (conversationId: string) =>
-  api(`/conversations/${conversationId}/read`, { method: 'POST', auth: true }).catch(() => {});
+  CAPTURE ? Promise.resolve() : api(`/conversations/${conversationId}/read`, { method: 'POST', auth: true }).catch(() => {});
 
 export const otherMember = (c: Conversation, meId: string) => c.members.find((m) => m.userId !== meId)?.user ?? null;
 

@@ -173,9 +173,7 @@ export default function Conversation() {
             return (
               <View>
                 {stamp ? <Text style={styles.stamp}>{formatStamp(item.createdAt)}</Text> : null}
-                <View style={[styles.bubble, mine ? styles.mine : styles.theirs, !stamp && { marginTop: older?.senderId === item.senderId ? 7 : 12 }]}>
-                  <Text style={[styles.bubbleText, mine && styles.mineText]}>{item.body}</Text>
-                </View>
+                <Bubble mine={mine} body={item.body ?? ''} style={!stamp ? { marginTop: older?.senderId === item.senderId ? 7 : 12 } : undefined} />
               </View>
             );
           }}
@@ -234,6 +232,17 @@ function formatStamp(iso: string) {
 // Card: avatar 105 28 under the header, name 16.4 semibold, line 14.5 #999. Bubbles: Inter 14.55 / 20.2, 14 / 7.9 padding,
 // radius 18, mine #1E1E1E (white text) 7 from the right, theirs #F7F7F7 10 from the left. Stamps Inter 13 #999, 34.3
 // above and 13.7 below. Composer: a #F7F7F7 40px "+" circle at x 18, the pill (44 tall, radius 22) from 64 to 383.
+function Bubble({ mine, body, style }: { mine: boolean; body: string; style?: { marginTop: number } }) {
+  const [multi, setMulti] = useState(false);
+  return (
+    <View style={[styles.bubble, multi && styles.bubbleMulti, mine ? styles.mine : styles.theirs, style]}>
+      <Text onTextLayout={(e) => setMulti(e.nativeEvent.lines.length > 1)} style={[styles.bubbleText, mine && styles.mineText]}>
+        {body}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { height: 58, borderBottomWidth: 0.5, borderBottomColor: '#E9E9E9' },
@@ -241,19 +250,21 @@ const styles = StyleSheet.create({
   who: { position: 'absolute', left: 46, top: 11, right: 100, flexDirection: 'row' },
   avatar: { width: 37.5, height: 37.5, borderRadius: 18.75, backgroundColor: colors.surfaceSoft },
   names: { flex: 1, marginLeft: 10.5, paddingTop: 2.66 },
-  name: { fontFamily: INTER_FAMILIES['600'], fontSize: 15.5, lineHeight: 18, color: colors.text },
+  name: { fontFamily: INTER_FAMILIES['600'], fontSize: 15.2, lineHeight: 18, color: colors.text },
   username: { marginTop: -0.69, fontFamily: INTER_FAMILIES['400'], fontSize: 13, lineHeight: 16, color: colors.text },
   call: { position: 'absolute', left: 303.25, top: 17.75 },
   video: { position: 'absolute', right: 14.26, top: 18 },
 
   body: { flex: 1 },
-  list: { paddingLeft: 10, paddingRight: 7, paddingTop: 12 },
+  list: { paddingLeft: 10, paddingRight: 7, paddingTop: 7 },
   card: { alignItems: 'center', paddingTop: 28, marginBottom: -11.54 },
   cardAvatar: { width: 105, height: 105, borderRadius: 52.5, backgroundColor: colors.surfaceSoft },
-  cardName: { marginTop: 9.45, maxWidth: 300, fontFamily: INTER_FAMILIES['600'], fontSize: 16.4, lineHeight: 20, color: colors.text },
-  cardSub: { marginTop: 3.09, fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 17, color: SUBTLE },
+  cardName: { marginTop: 9.45, maxWidth: 300, fontFamily: INTER_FAMILIES['600'], fontSize: 16, lineHeight: 20, color: colors.text },
+  cardSub: { marginTop: 3.09, fontFamily: INTER_FAMILIES['500'], fontSize: 14.2, lineHeight: 17, color: SUBTLE },
   stamp: { marginTop: 34.28, marginBottom: 13.72, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 13, lineHeight: 16, color: SUBTLE },
-  bubble: { maxWidth: '84%', paddingHorizontal: 14, paddingVertical: 7.9, borderRadius: 18 },
+  bubble: { maxWidth: '87.5%', paddingHorizontal: 14, paddingVertical: 7.9, borderRadius: 18 },
+  // AutoLayouted-26: a bubble of several lines gets a little more padding and a smaller radius (15)
+  bubbleMulti: { paddingVertical: 8.9, borderRadius: 15 },
   mine: { alignSelf: 'flex-end', backgroundColor: '#1E1E1E' },
   theirs: { alignSelf: 'flex-start', backgroundColor: BUBBLE },
   bubbleText: { fontFamily: INTER_FAMILIES['400'], fontSize: 14.55, lineHeight: BUBBLE_LINE, color: colors.text },
