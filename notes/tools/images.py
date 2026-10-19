@@ -16,7 +16,7 @@ for el in ET.parse(src).getroot().iter():
     m = re.match(r'data:image/(\w+);base64,(.*)', href, re.S)
     if not m:
         continue
-    name = el.get('data-name') or el.get('id')
+    name = el.get('data-name') or el.get('id') or 'image'
     name = re.sub(r'[^\w.-]+', '_', name)
     ext = 'jpg' if m.group(1) == 'jpeg' else m.group(1)
     if not name.lower().endswith('.' + ext):

@@ -2,6 +2,7 @@ import type { ApiAuthResponse, ApiSessionUser, ApiUsernameAvailability } from '@
 
 import type { SessionUser, SignupDraft } from '@/state/session';
 import { ApiError, api, clearTokens, getStoredRefreshToken, refreshSession, saveTokens } from './api';
+import { CAPTURE } from './capture';
 import { uploadImage } from './media';
 
 // Same rule as the backend (usernameService): a–z, 0–9, _ and . — no dot at either end, no double dots.
@@ -63,6 +64,8 @@ export async function loginWithUsername(username: string, password: string): Pro
 }
 
 export async function checkUsernameAvailable(username: string) {
+  // design check (No Layout-1): "steve_jobsie" is the taken name
+  if (CAPTURE) return username !== 'steve_jobsie';
   const data = await api<ApiUsernameAvailability>(`/auth/username-availability?username=${encodeURIComponent(username)}`);
   return data.available;
 }
