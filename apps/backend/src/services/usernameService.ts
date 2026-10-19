@@ -3,6 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 // Letters, digits, _ and . ; a dot cannot start or end the name or repeat (like Instagram).
 const usernamePattern = /^(?!\.)(?!.*\.\.)[a-z0-9_.]+(?<!\.)$/;
 const reservedUsernames = new Set([
+  "thoughts",
   "admin",
   "administrator",
   "api",

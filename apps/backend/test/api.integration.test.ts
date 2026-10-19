@@ -144,6 +144,9 @@ describe("Puzzle API integration", () => {
       }
     });
     expect(bobRegister.response.statusCode).toBe(201);
+    // A new account gets the welcome chat from "Thoughts".
+    const bobChats = await json(app, { method: "GET", url: "/conversations", token: bobRegister.payload.accessToken as string });
+    expect(bobChats.payload.some((c: { members: { user: { username: string } }[] }) => c.members.some((m) => m.user.username === "thoughts"))).toBe(true);
     const bobId = bobRegister.payload.user.id as string;
     const bobToken = bobRegister.payload.accessToken as string;
 

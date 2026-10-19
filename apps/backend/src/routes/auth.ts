@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { env } from "../config/env.js";
 import { sendMail, shouldExposeDevEmailToken } from "../services/emailService.js";
+import { sendWelcomeChat } from "../services/welcomeChat.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { checkUsernameAvailability, normalizeUsername, validateUsername } from "../services/usernameService.js";
 import { sha256 } from "../utils/hash.js";
@@ -243,6 +244,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     });
 
     const tokens = await issueTokens(app, user, request);
+    await sendWelcomeChat(app.prisma, user.id);
     const emailVerificationToken = user.email ? await createEmailVerificationToken(app, { id: user.id, email: user.email }) : null;
     return reply.status(201).send({
       ...asApi<ApiAuthResponse>({ user, ...tokens }),
