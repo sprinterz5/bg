@@ -197,12 +197,13 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', paddingLeft: 13, paddingRight: 17 },
   left: { flex: 1, marginRight: 12 },
   avatar: { width: 106, height: 106, borderRadius: 53, marginTop: 14.5, backgroundColor: colors.surfaceSoft },
-  name: { marginTop: 14.81, fontFamily: INTER_FAMILIES['700'], fontSize: 26, lineHeight: 31, color: colors.text },
-  username: { marginTop: 8.55, marginLeft: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 17, color: SUBTLE },
+  name: { marginTop: 14.81, fontFamily: INTER_FAMILIES['800'], fontSize: 26.4, lineHeight: 31, letterSpacing: -0.26, color: colors.text },
+  username: { marginTop: 8.55, marginLeft: 1, fontFamily: INTER_FAMILIES['500'], fontSize: 14, lineHeight: 17, color: SUBTLE },
   stats: { flexDirection: 'row', marginTop: 15.67, marginLeft: 2 },
-  statValue: { fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 18, color: colors.text },
-  statLabel: { marginTop: 2.55, fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 15, color: colors.text },
-  bio: { marginTop: 20.9, paddingLeft: 15, paddingRight: 17 },
+  statValue: { fontFamily: INTER_FAMILIES['700'], fontSize: 14.5, lineHeight: 18, color: colors.text },
+  statLabel: { marginTop: 2.55, fontFamily: INTER_FAMILIES['500'], fontSize: 12.6, lineHeight: 15, color: colors.text },
+  // AutoLayouted-20: the bio wraps at ~245 ("…cycling again. And" / "money 💴 a bit.")
+  bio: { marginTop: 20.9, paddingLeft: 15, width: 260 },
   bioText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 17.5, color: colors.text },
 
   buttons: { flexDirection: 'row', marginTop: 22.42, paddingLeft: 13, paddingRight: 17, gap: 16 },
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   button: { borderRadius: 7, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   buttonLarge: { height: 42, borderRadius: 20 },
   buttonText: { fontSize: 13, lineHeight: 16, fontWeight: '600' },
-  buttonTextLarge: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.5, lineHeight: 17 },
+  buttonTextLarge: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.6, lineHeight: 17 },
 
   tabs: { height: 26.63 },
   tab: { position: 'absolute', top: 0, width: TAB_W, height: 22, alignItems: 'center' },

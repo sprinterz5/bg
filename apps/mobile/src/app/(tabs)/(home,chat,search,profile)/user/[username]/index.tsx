@@ -81,7 +81,7 @@ export default function UserProfile() {
         </ProfileButtons>
       )}
       <ProfileBio bio={profile.bio} />
-      <ProfileTabs tab={tab} onChange={setTab} marginTop={TABS_GAP} />
+      <ProfileTabs tab={tab} onChange={setTab} marginTop={profile.bio.length ? TABS_GAP : TABS_GAP_NO_BIO} />
     </Animated.View>
   ) : (
     <Animated.View collapsable={false} exiting={FadeOut.duration(150)}>
@@ -124,7 +124,9 @@ export default function UserProfile() {
 }
 
 // Bio (or buttons) → tabs block (design y 360.9 → 390.1).
-const TABS_GAP = 29.22;
+const TABS_GAP = 25.7;
+// AutoLayouted-22: without a bio the tabs sit 7.5 closer to the buttons.
+const TABS_GAP_NO_BIO = 21.7;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },

@@ -16,7 +16,16 @@ import { colors } from '@/theme';
 
 const SUBTLE = '#999999';
 
-type Row = { id: string; username: string; title: string; subtitle: string; avatar: string | null; unread: number };
+type Row = { id: string; username: string; title: string; subtitle: string; time: string | null; avatar: string | null; unread: number };
+
+/** Short age like the design: 2h, 1d, 3w. */
+function age(iso: string) {
+  const m = Math.max(0, (Date.now() - new Date(iso).getTime()) / 60_000);
+  if (m < 60) return `${Math.max(1, Math.round(m))}m`;
+  if (m < 60 * 24) return `${Math.round(m / 60)}h`;
+  if (m < 60 * 24 * 7) return `${Math.round(m / 1440)}d`;
+  return `${Math.round(m / 10080)}w`;
+}
 
 // Chats list (AutoLayouts export): compose · own name · search, then the conversations — avatar 55, name and the last
 // message, unread ones in semibold with a count badge. Search opens its own screen (chat-search).
@@ -49,12 +58,23 @@ export default function Chat() {
         if (!other) return [];
         const last = c.messages[0];
         const mine = last && last.senderId === user?.id;
+        const otherRead = c.members.find((m) => m.userId !== user?.id)?.lastReadAt;
+        // AutoLayouted 18: an unread message alone (semibold); a read one with its age ("whats wrong? · 2h");
+        // after our own message "seen 1h ago" / "sent 1d ago".
+        let subtitle = 'No messages yet';
+        let time: string | null = null;
+        if (last && mine) subtitle = otherRead && otherRead >= last.createdAt ? `seen ${age(otherRead)} ago` : `sent ${age(last.createdAt)} ago`;
+        else if (last) {
+          subtitle = last.body ?? '';
+          if (!c.unreadCount) time = age(last.createdAt);
+        }
         return [
           {
             id: c.id,
             username: other.username,
             title: other.displayName || other.username,
-            subtitle: last ? `${mine ? 'You: ' : ''}${last.body ?? ''}` : 'No messages yet',
+            subtitle,
+            time,
             avatar: other.avatarUrl,
             unread: c.unreadCount ?? 0,
           },
@@ -111,9 +131,12 @@ export default function Chat() {
               <Text style={[styles.name, item.unread > 0 && styles.unread]} numberOfLines={1}>
                 {item.title}
               </Text>
-              <Text style={[styles.sub, item.unread > 0 && styles.subUnread]} numberOfLines={1}>
-                {item.subtitle}
-              </Text>
+              <View style={styles.subRow}>
+                <Text style={[styles.sub, item.unread > 0 && styles.subUnread]} numberOfLines={1}>
+                  {item.subtitle}
+                </Text>
+                {item.time ? <Text style={styles.sub}>{`·${item.time}`}</Text> : null}
+              </View>
             </View>
             {item.unread > 0 ? (
               <View style={styles.badge}>
@@ -140,12 +163,13 @@ const styles = StyleSheet.create({
   band: { height: 54 },
   row: { height: 78, flexDirection: 'row', paddingLeft: 14, paddingRight: 15 },
   avatar: { width: 53, height: 53, borderRadius: 26.5, backgroundColor: colors.surfaceSoft },
-  names: { flex: 1, marginLeft: 13.1, marginRight: 12, paddingTop: 9.01 },
+  names: { flex: 1, marginLeft: 13.1, marginRight: 12, paddingTop: 10 },
   name: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: '#000000' },
   unread: { fontFamily: INTER_FAMILIES['600'] },
-  sub: { marginTop: 2, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: SUBTLE },
+  subRow: { marginTop: 2, flexDirection: 'row' },
+  sub: { flexShrink: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: SUBTLE },
   subUnread: { fontFamily: INTER_FAMILIES['600'], color: colors.text },
   badge: { marginTop: 18, minWidth: 19, height: 19, paddingHorizontal: 5, borderRadius: 9.5, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
-  badgeText: { fontFamily: INTER_FAMILIES['700'], fontSize: 11.5, lineHeight: 14, color: '#FFFFFF' },
+  badgeText: { fontFamily: INTER_FAMILIES['700'], fontSize: 10.5, lineHeight: 13, color: '#FFFFFF' },
   empty: { marginTop: 40, textAlign: 'center', fontSize: 14, lineHeight: 19, color: colors.textSubtle },
 });

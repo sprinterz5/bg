@@ -644,21 +644,22 @@ const tinkovProfile: Profile = {
   name: 'Oleg Tinkov',
   avatar: require('@/assets/mock/avatar-tinkov.png'),
   articles: 42,
-  followers: '1,5M',
-  following: 20,
+  followers: '119',
+  following: 28,
   bio: ['Owner at Plata - “Banco Plata”', 'Grandpa, father and husband 👨‍🦳', 'Love cycling 🚵, and cycling again. And money 💴 a bit.'],
   posts: [
     {
       id: 't1',
       image: require('@/assets/mock/thumb-plata.png'),
-      title: 'How Tinkov Managed to Recreate His Tinkov Bank Model in Mexico So Successfully Under a New Name “Plata”',
+      title: 'The Genius of Tinkov and how he managed to change the world',
       likes: '1.2K',
       timeAgo: '5 days ago',
       articleId: 'tinkov',
     },
-    { id: 't2', image: require('@/assets/mock/thumb-bill.png'), title: 'Which 12 Books Bill Recommends to Read. His Most Favourite Ones!', likes: '20', timeAgo: '2 weeks ago' },
-    { id: 't3', image: require('@/assets/mock/thumb-yacht.png'), title: 'Why “La Datcha” Luxury Rents Is My Favourite Work for the Past 10 Years.', likes: '200', timeAgo: '1 month ago' },
-    { id: 't4', image: require('@/assets/mock/thumb-nyc.png'), title: 'What 2 Years of Living in New York Taught Me About Business', likes: '45', timeAgo: '2 months ago' },
+    // AutoLayouted-20 / -21 (BG(2))
+    { id: 't2', image: require('@/assets/mock/thumb-bill.png'), title: 'Which 12 books Bill recommends to read. His most favourite ones!', likes: '20', timeAgo: '2 weeks ago' },
+    { id: 't3', image: require('@/assets/mock/post-room.jpg'), title: 'Steve Jobs was a crazy guy without any initiative for work or fun, but`s good', likes: '20', timeAgo: '2 weeks ago' },
+    { id: 't4', image: require('@/assets/mock/thumb-bill.png'), title: 'Which 12 books Bill recommends to read. His most favourite ones!', likes: '500', timeAgo: '1 week ago' },
   ],
 };
 

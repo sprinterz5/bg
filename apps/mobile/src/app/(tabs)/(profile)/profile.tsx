@@ -112,7 +112,7 @@ export default function Profile() {
           <ProfileButton large label="Edit profile" onPress={() => push('/edit-profile')} />
         </ProfileButtons>
         <ProfileBio bio={data?.bio ?? []} />
-        <ProfileTabs tab={tab} onChange={setTab} marginTop={TABS_GAP} />
+        <ProfileTabs tab={tab} onChange={setTab} marginTop={data?.bio?.length ? TABS_GAP : TABS_GAP_NO_BIO} />
 
         {tab === 'posts' && posts.length ? (
           <View style={styles.posts}>
@@ -159,7 +159,9 @@ function EmptyCard({ icon, text, action, onPress }: { icon: IconName; text: stri
 }
 
 // Bio (or buttons) → tabs block (design y 360.9 → 390.1).
-const TABS_GAP = 29.22;
+const TABS_GAP = 25.7;
+// AutoLayouted-22: without a bio the tabs sit 7.5 closer to the buttons.
+const TABS_GAP_NO_BIO = 21.7;
 
 // Header (design y 47–83): "+" 21x21 at (14.5, 54), settings gear 21.65x21.67 at (345.5, 52.66).
 const styles = StyleSheet.create({

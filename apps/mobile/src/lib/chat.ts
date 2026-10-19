@@ -2,13 +2,15 @@ import type { ApiChatMessage, ApiConversation, ApiConversationBase, ApiUserSearc
 import { io, type Socket } from 'socket.io-client';
 
 import { api, API_URL, getAccessToken, refreshSession } from './api';
+import { CAPTURE } from './capture';
 
 // Response shapes come from the backend's contracts (type-only import, nothing is bundled).
 export type ChatUser = ApiUserSummary;
 export type ChatMessage = ApiChatMessage;
 export type Conversation = ApiConversation;
 
-export const fetchConversations = () => api<Conversation[]>('/conversations', { auth: true });
+export const fetchConversations = () =>
+  CAPTURE ? import('@/mock/chats').then((m) => m.CAPTURE_CHATS) : api<Conversation[]>('/conversations', { auth: true });
 
 /** Existing direct chat with this user, or a new one. */
 export const openDirect = (userId: string) =>
@@ -40,6 +42,7 @@ let socket: Socket | null = null;
 
 export function chatSocket() {
   if (socket) return socket;
+  if (CAPTURE) return (socket = io('http://localhost:1', { autoConnect: false }));
   const [, origin, prefix = ''] = API_URL.match(/^(https?:\/\/[^/]+)(\/.*?)?\/?$/) ?? [];
   socket = io(origin, {
     path: `${prefix}/socket.io`,
