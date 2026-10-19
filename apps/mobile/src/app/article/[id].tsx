@@ -39,6 +39,7 @@ import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { articleOrigin, type ArticleOrigin } from '@/lib/article-origin';
+import { captureParam } from '@/lib/capture';
 import { backWhenReady, openProfile } from '@/lib/nav';
 
 // Page 1 is the preview (AutoLayouted-18): back · author · ⋯, the title, "N pages · N min read", the subtitle, the
@@ -107,8 +108,9 @@ function Reader({ article }: { article: Article }) {
   // Which page is showing (0 = preview, 1.. text pages): the preview's buttons only take touches while it is.
   // `rise` goes 0 → 1 as the text comes up over the preview (pulled up from the bottom); `scrollX` is the horizontal
   // offset among the text pages. Both are driven by the reader's own pan.
-  const [page, setPage] = useState(0);
-  const rise = useSharedValue(0);
+  // design check: `?capture&text=1` opens straight on the first text page
+  const [page, setPage] = useState(captureParam('text') ? 1 : 0);
+  const rise = useSharedValue(captureParam('text') ? 1 : 0);
   const textCount = pages ? pages.length : 0;
   // Preview → text (not in the design): the text flows out of the preview. Its picture morphs into the cover strip at
   // the top of the text pages (MorphCover below), the preview's words drift up and fade, the text rises from below,
@@ -682,5 +684,5 @@ const styles = StyleSheet.create({
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopWidth: 0.5, borderTopColor: '#E5E5E5' },
   barItem: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 9.5 },
   barBookmark: { position: 'absolute', left: 323.75, top: 12.75 },
-  barText: { fontFamily: INTER_FAMILIES['400'], fontSize: 13, lineHeight: 16, color: colors.text },
+  barText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.6, lineHeight: 16, color: colors.text },
 });
