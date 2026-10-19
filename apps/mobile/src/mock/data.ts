@@ -311,7 +311,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
   {
     id: 'e-kindergarten',
     image: require('@/assets/mock/explore-kindergarten.jpg'),
-    title: 'Wiggling Is Welcome in This Kindergarten Classroom in Germany',
+    title: 'Wiggling is Welcome in This Kindergarten Classroom in Germany',
     lead: 'Kim',
     rest: ' Broomer`s classroom is one of the most unique and supportive learning environments I`ve ever seen in life',
     timeAgo: '2d ago',
@@ -321,7 +321,7 @@ export const EXPLORE_FEED: ExplorePost[] = [
   {
     id: 'e-nighty',
     image: require('@/assets/mock/post-habits.jpg'),
-    title: '3 Nighty Habits That Helped Steve Jobs Rest and Recharge',
+    title: '3 Nighty Habits that Helped Steve Jobs Rest and Recharge',
     lead: '',
     rest: 'and these are not simple ones like meditation or journaling.',
     timeAgo: '3mon ago',

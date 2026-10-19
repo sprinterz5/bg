@@ -55,7 +55,7 @@ export default function Notifications() {
 function Row({ item, muted, following, onToggle }: { item: Notice; muted?: boolean; following?: boolean; onToggle: () => void }) {
   const [first, second] = item.avatars;
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, second ? styles.rowPair : null]}>
       <PressableScale
         scaleTo={0.98}
         onPress={() => openProfile(item.username, true)}
@@ -71,10 +71,10 @@ function Row({ item, muted, following, onToggle }: { item: Notice; muted?: boole
           <Image source={first} style={styles.avatar} transition={150} />
         )}
         <View style={styles.texts}>
-          <Text style={styles.who} numberOfLines={1}>
+          <Text style={[styles.who, muted && styles.whoSuggestion]} numberOfLines={1}>
             {item.who}
           </Text>
-          <Text style={[styles.what, muted && { color: MUTED }]} numberOfLines={1}>
+          <Text style={[styles.what, muted && styles.whatSuggestion]} numberOfLines={1}>
             {item.what}
           </Text>
         </View>
@@ -94,22 +94,28 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   header: { height: 61 },
   back: { position: 'absolute', left: 18.97, top: 21.81 },
-  title: { position: 'absolute', left: 51, right: 16, top: 19.97, fontFamily: INTER_FAMILIES['700'], fontSize: 22, lineHeight: 27, color: colors.text },
-  sectionGap: { marginTop: 25.8 },
-  section: { marginLeft: 11, marginBottom: 21.18, fontFamily: INTER_FAMILIES['600'], fontSize: 16.5, lineHeight: 20, color: colors.text },
+  title: { position: 'absolute', left: 51, right: 16, top: 20.2, fontFamily: INTER_FAMILIES['700'], fontSize: 21.5, lineHeight: 27, color: colors.text },
+  // AutoLayouted-33 (BG(2)): a section's cap top 30.8 under the previous row, its first avatar 37.2 under that.
+  sectionGap: { marginTop: 4.8 },
+  section: { marginLeft: 11, marginBottom: 21.6, fontFamily: INTER_FAMILIES['700'], fontSize: 16.4, lineHeight: 20, color: colors.text },
   row: { height: 53, marginBottom: 20, flexDirection: 'row', alignItems: 'center', paddingLeft: 11, paddingRight: 12 },
+  // rows with two avatars sit 71 apart instead of 73
+  rowPair: { marginBottom: 18 },
   person: { flex: 1, flexDirection: 'row', alignSelf: 'stretch' },
   avatar: { width: 53, height: 53, borderRadius: 26.5 },
   // Grouped actors: two 38px circles, the second 15 right / 14 down over the first.
   pair: { position: 'absolute', left: 0, top: 0, width: 38, height: 38, borderRadius: 19 },
   pairBack: { left: 15, top: 14 },
   texts: { flex: 1, marginLeft: 13, paddingTop: 10.8 },
-  who: { fontFamily: INTER_FAMILIES['600'], fontSize: 14, lineHeight: 17, color: colors.text },
-  what: { marginTop: 0.3, fontFamily: INTER_FAMILIES['400'], fontSize: 12.7, lineHeight: 15, color: colors.text },
+  who: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.7, lineHeight: 17, color: colors.text },
+  what: { marginTop: 0.3, fontFamily: INTER_FAMILIES['400'], fontSize: 12.55, lineHeight: 15, color: colors.text },
+  // Suggestions: the name in Regular 14.1, "Make a new friend" Light 12.5 #999
+  whoSuggestion: { fontFamily: INTER_FAMILIES['400'], fontSize: 14.1 },
+  whatSuggestion: { fontFamily: INTER_FAMILIES['300'], fontSize: 12.5, color: MUTED },
   thumb: { width: 74, height: 45, borderRadius: 5, marginLeft: 12 },
   button: { width: 103, height: 28, borderRadius: 7, marginLeft: 12, marginTop: 3, alignItems: 'center', justifyContent: 'center' },
   buttonOn: { backgroundColor: '#000000' },
   buttonOff: { borderWidth: 1, borderColor: '#D9D9D9' },
-  buttonText: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.5, lineHeight: 16, color: '#FFFFFF' },
-  buttonTextOff: { fontFamily: INTER_FAMILIES['500'], color: MUTED },
+  buttonText: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.4, lineHeight: 16, color: '#FFFFFF' },
+  buttonTextOff: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.1, color: MUTED },
 });

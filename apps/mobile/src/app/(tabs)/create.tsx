@@ -142,6 +142,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
-  postText: { fontSize: 15, fontWeight: '700', color: '#999999' },
+  postText: { fontSize: 14, fontWeight: '700', color: '#999999' },
   postTextActive: { color: colors.text },
 });

@@ -140,11 +140,10 @@ export default function ChatSearch() {
             style={styles.input}
             accessibilityLabel="Search chats"
           />
-          {query ? (
-            <PressableScale onPress={() => setQuery('')} hitSlop={10} scaleTo={0.85} accessibilityLabel="Clear" style={styles.clear}>
-              <Icon name="searchClear" width={16} />
-            </PressableScale>
-          ) : null}
+          {/* AutoLayouted 23: the ✕ shows on the empty field too; there it leaves the search */}
+          <PressableScale onPress={() => (query ? setQuery('') : back())} hitSlop={10} scaleTo={0.85} accessibilityLabel="Clear" style={styles.clear}>
+            <Icon name="searchClear" width={16} />
+          </PressableScale>
         </View>
       </View>
 

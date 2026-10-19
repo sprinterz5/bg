@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="15" height="26" viewBox="0 0 15 26" fill="none"><defs><mask id="stroke2_4312_7059" fill="white">
+<use xlink:href="#stroke1_4312_7059" />
+</mask>
+<path id="stroke1_4312_7059" d="M16.0859 69.3887L27.4071 80.5L29.5 78.5263L19.1842 68L29.5 57.4737L27.4071 55.5L16.0859 66.6113C15.7108 66.9797 15.5 67.4792 15.5 68C15.5 68.5208 15.7108 69.0203 16.0859 69.3887Z" fill-rule="evenodd" clip-rule="evenodd" />
+</defs><g transform="translate(-15 -55)"><use xlink:href="#stroke1_4312_7059" fill="black" />
+<path d="M16.0859 69.3887L27.4071 80.5L29.5 78.5263L19.1842 68L29.5 57.4737L27.4071 55.5L16.0859 66.6113C15.7108 66.9797 15.5 67.4792 15.5 68C15.5 68.5208 15.7108 69.0203 16.0859 69.3887Z" stroke-width="1.1" stroke="#FAFAFA" mask="url(#stroke2_4312_7059)" />
+</g></svg>

@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   thumb: { position: 'absolute', left: 276.5, top: 35, width: 91, height: 59, borderRadius: 2, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   // counters (Inter Medium 11.25/16): heart at x 26.8, "520" at x 47.5, share at x 101.1, its count at x 123.9,
   // bookmark at x 300.9, ••• at x 343.8
-  counters: { height: 16, marginTop: 26.8 },
+  counters: { height: 16, marginTop: 29.8 },
   like: { position: 'absolute', left: 26.8, top: 2.2 },
   share: { position: 'absolute', left: 101.13, top: 2.3 },
   bookmark: { position: 'absolute', left: 300.85, top: 1.1 },
@@ -108,5 +108,5 @@ const styles = StyleSheet.create({
   count: { position: 'absolute', top: 0, fontFamily: INTER_FAMILIES['500'], fontSize: 11.25, lineHeight: 16, color: GRAY },
   likeCount: { left: 47.5 },
   shareCount: { left: 123.9 },
-  hairline: { marginTop: 36.2, marginLeft: 1, width: 389, height: 0.5, backgroundColor: '#E5E5E5' },
+  hairline: { marginTop: 33.2, marginLeft: 1, width: 389, height: 0.5, backgroundColor: '#E5E5E5' },
 });

@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
 
   tabs: { position: 'absolute', top: 0, left: 0, right: 0, height: LIST_TOP },
   tab: { position: 'absolute', top: TABS_TOP },
-  tabText: { fontFamily: INTER_FAMILIES['500'], fontSize: 14, lineHeight: 16, letterSpacing: 14 * -0.015, color: GRAY },
+  tabText: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.5, lineHeight: 16, letterSpacing: 0, color: GRAY },
   tabActive: { color: colors.text },
   tabLine: { position: 'absolute', top: LINE_TOP, left: 0, right: 0, height: 0.75, backgroundColor: '#E5E5E5' },
   underline: { position: 'absolute', top: LINE_TOP, left: 0, width: UNDERLINE_W, height: 0.75, backgroundColor: '#000000' },

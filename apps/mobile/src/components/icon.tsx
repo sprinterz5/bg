@@ -99,6 +99,7 @@ const icons = {
   pickerNextInactive: require('@/assets/icons/picker-next-inactive.svg'),
   pickerNextActive: require('@/assets/icons/picker-next-active.svg'),
   newArticleBack: require('@/assets/icons/newarticle-back.svg'),
+  articleBack: require('@/assets/icons/article-back.svg'),
   tabHome: require('@/assets/icons/tab-home.svg'),
   tabHomeInactive: require('@/assets/icons/tab-home-inactive.svg'),
   tabCreateActive: require('@/assets/icons/tab-create-active.svg'),

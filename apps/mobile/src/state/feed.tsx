@@ -8,6 +8,8 @@ export type ArticleDraft = {
   coverUri: string | null;
   body: string;
   label: string;
+  /** "Subtitle..." on the New Article step; shown on the reader's preview. */
+  subtitle: string;
 };
 
 /** `done`: the post is in the feed and the "Posting..." row is folding away. */
@@ -42,7 +44,7 @@ function mockPage(from: number): Post[] {
   });
 }
 
-const emptyDraft: ArticleDraft = { coverUri: null, body: '', label: '' };
+const emptyDraft: ArticleDraft = { coverUri: null, body: '', label: '', subtitle: '' };
 
 const FeedContext = createContext<FeedContextValue | null>(null);
 // Separate from the feed so marking stories watched re-renders only the stories row, not the whole Home list.
@@ -73,6 +75,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     const id = `a_${Date.now()}`;
     const cover = { uri: d.coverUri };
     const title = d.label.trim();
+    const subtitle = d.subtitle.trim() || undefined;
     const body = d.body
       .split(/\n{2,}/)
       .map((p) => p.trim())
@@ -84,10 +87,10 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setArticles((a) => ({
         ...a,
-        [id]: { id, author, cover, title, body: body.length ? body : [title], likes: 0, comments: 0, shares: 0 },
+        [id]: { id, author, cover, title, subtitle, body: body.length ? body : [title], likes: 0, comments: 0, shares: 0 },
       }));
       setPosts((p) => [
-        { id: `p_${id}`, author, image: cover, title, caption: title, timeAgo: 'just now', likes: 0, comments: 0, shares: 0, articleId: id },
+        { id: `p_${id}`, author, image: cover, title, caption: subtitle ?? '', timeAgo: 'just now', likes: 0, comments: 0, shares: 0, articleId: id },
         ...p,
       ]);
       // The row folds away while the new post opens up in its place, then goes.

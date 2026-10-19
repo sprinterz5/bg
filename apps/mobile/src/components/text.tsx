@@ -15,6 +15,7 @@ import Animated from 'react-native-reanimated';
  * fontFamily are untouched.
  */
 export const INTER_FAMILIES = {
+  '300': 'Inter_300Light',
   '400': 'Inter_400Regular',
   '500': 'Inter_500Medium',
   '600': 'Inter_600SemiBold',

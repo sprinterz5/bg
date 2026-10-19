@@ -1,41 +1,47 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, type NativeSyntheticEvent, type TextLayoutEventData } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Share, StyleSheet, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
+import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
 import { useFeed } from '@/state/feed';
 import { useSession } from '@/state/session';
 import { colors, motion } from '@/theme';
-import { ARTICLE_TITLE_MAX, exploreTitleStyle } from '@/components/explore-card';
-import { AnimatedText, Text, TextInput } from '@/components/text';
+import { AnimatedText, INTER_FAMILIES, Text, TextInput } from '@/components/text';
 import { back } from '@/lib/nav';
 
-// Figma 3128:459 (empty) and 3128:560 (typing). Design status bar = 47.
-const HEADER_H = 58; // hairline at y 105
-const BUTTON_BOTTOM_LIFT = 7; // Post bottom at y 803 on an 844 frame with a 34px home indicator
+// AutoLayouted-16 … -19 (BG(2)), y − 47 under the status bar. Header: chevron at (15.5, 55.5), "New Article" Inter
+// Bold 14.2 centred (ink 61.7), ⋯ three 3.3 dots from x 354.8 at 66.3, a 1px #E9E9E9 line at 92. Below it, fixed
+// places: the title (Inter Bold 31.9, -0.03em, lines 42 apart, #0F1419) with its ink from 146.5, "3 pages · 223 words"
+// (Inter 12.3) at 297, the subtitle (Inter 15.6 / 26, #6B6B6B) from 322, the picture 360×272 (r 1) at (15, 419);
+// Post 360×38 (r 7) 15 above the home indicator / 10 above the keyboard.
+const LINE_Y = 93; // under the header line
+const WORDS_PER_PAGE = 75; // "3 pages · 223 words"
 const KEYBOARD_GAP = 10;
-const TITLE_W = (exploreTitleStyle as { width: number }).width;
 
 export default function NewArticle() {
   const insets = useSafeAreaInsets();
   const { draft, updateDraft, publish } = useFeed();
   const { user } = useSession();
+  const [menu, setMenu] = useState(false);
   const canPost = !!draft.coverUri && draft.label.trim().length > 0;
+  const words = draft.body.trim() ? draft.body.trim().split(/\s+/).length : 0;
+  const pages = Math.max(1, Math.ceil(words / WORDS_PER_PAGE));
 
   const active = useSharedValue(canPost ? 1 : 0);
   useEffect(() => {
     active.set(withTiming(canPost ? 1 : 0, { duration: motion.base }));
   }, [canPost, active]);
   const buttonStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(active.value, [0, 1], [colors.disabled, colors.primary]),
+    backgroundColor: interpolateColor(active.get(), [0, 1], ['#DDDDDD', '#000000']),
   }));
   const labelStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(active.value, [0, 1], [colors.textMuted, '#FFFFFF']),
+    color: interpolateColor(active.get(), [0, 1], ['#8C8C8C', '#FFFFFF']),
   }));
 
   const onPost = () => {
@@ -48,56 +54,55 @@ export default function NewArticle() {
     router.dismissTo('/');
   };
 
-  const bottomPad = Math.max(insets.bottom, 12) + BUTTON_BOTTOM_LIFT;
-
-  // The label is laid out off-screen exactly like the Explore card title. A third line is refused (the last
-  // text that fit comes back); on the second line we show how many characters still fit.
-  const lastFit = useRef(draft.label);
-  const [left, setLeft] = useState<number | null>(null);
-  const onMeasure = (e: NativeSyntheticEvent<TextLayoutEventData>) => {
-    const lines = e.nativeEvent.lines;
-    if (lines.length > 2) {
-      updateDraft({ label: lastFit.current });
-      return;
-    }
-    lastFit.current = draft.label;
-    if (lines.length < 2 || !draft.label) return setLeft(null);
-    const used = lines[0].width + lines[1].width;
-    const perChar = used / Math.max(draft.label.length, 1);
-    setLeft(Math.max(0, Math.floor((TITLE_W - lines[1].width) / perChar)));
-  };
+  const bottomPad = insets.bottom + 15;
+  const at = (y: number) => y - LINE_Y; // design y → offset under the header line
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <PressableScale onPress={() => back()} hitSlop={8} scaleTo={0.9} accessibilityLabel="Back" style={styles.back}>
-          <Icon name="newArticleBack" width={43} />
+        <PressableScale onPress={() => back()} hitSlop={12} scaleTo={0.9} accessibilityLabel="Back" style={styles.back}>
+          <Icon name="articleBack" width={15} height={26} />
         </PressableScale>
-        <Text style={styles.title}>New article</Text>
+        <Text style={styles.title}>New Article</Text>
+        {/* Not designed: ⋯ offers sharing the draft text or discarding it. */}
+        <PressableScale onPress={() => setMenu(true)} hitSlop={12} accessibilityLabel="More" style={styles.menu}>
+          <View style={styles.dot} />
+          <View style={styles.dot} />
+          <View style={styles.dot} />
+        </PressableScale>
       </View>
 
       <View style={styles.body}>
-        {draft.coverUri ? (
-          <Animated.View collapsable={false} entering={FadeIn.duration(300)} style={styles.coverCard}>
-            <Image source={{ uri: draft.coverUri }} style={styles.fill} contentFit="cover" transition={150} />
-          </Animated.View>
-        ) : null}
         <TextInput
           autoFocus
           value={draft.label}
-          onChangeText={(label) => updateDraft({ label })}
-          placeholder="Label your article..."
-          placeholderTextColor="#737373"
+          onChangeText={(label) => updateDraft({ label: label.replace(/\n/g, ' ') })}
+          placeholder="The title..."
+          placeholderTextColor="#0F1419"
           multiline
-          maxLength={ARTICLE_TITLE_MAX}
-          style={styles.label}
-          accessibilityLabel="Article label"
+          maxLength={80}
+          submitBehavior="blurAndSubmit"
+          style={[styles.titleInput, { top: at(137.1) }]}
+          accessibilityLabel="Title"
         />
-        {left !== null ? <Text style={styles.left}>{left} left</Text> : null}
-        <View pointerEvents="none" style={styles.measure} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Text style={exploreTitleStyle} onTextLayout={onMeasure}>
-            {draft.label || ' '}
-          </Text>
+        <View style={[styles.meta, { top: at(294) }]}>
+          <Text style={styles.metaText}>{pages === 1 ? '1 page' : `${pages} pages`}</Text>
+          <View style={styles.metaDot} />
+          <Text style={[styles.metaText, styles.metaWords]}>{words === 1 ? '1 word' : `${words} words`}</Text>
+        </View>
+        <TextInput
+          value={draft.subtitle}
+          onChangeText={(subtitle) => updateDraft({ subtitle: subtitle.replace(/\n/g, ' ') })}
+          placeholder="Subtitle..."
+          placeholderTextColor="#6B6B6B"
+          multiline
+          maxLength={140}
+          submitBehavior="blurAndSubmit"
+          style={[styles.subtitleInput, { top: at(314.7) }]}
+          accessibilityLabel="Subtitle"
+        />
+        <View style={[styles.picture, { top: at(419) }]}>
+          {draft.coverUri ? <Image source={{ uri: draft.coverUri }} style={styles.fill} contentFit="cover" transition={150} /> : null}
         </View>
       </View>
 
@@ -110,36 +115,44 @@ export default function NewArticle() {
           </PressableScale>
         </View>
       </KeyboardStickyView>
+
+      <PostActions
+        visible={menu}
+        onClose={() => setMenu(false)}
+        actions={[
+          { label: 'Share text', onPress: () => Share.share({ message: [draft.label, draft.body].filter(Boolean).join('\n\n') }).catch(() => {}) },
+          {
+            label: 'Discard draft',
+            destructive: true,
+            onPress: () =>
+              Alert.alert('Discard this draft?', undefined, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Discard', style: 'destructive', onPress: () => { updateDraft({ label: '', subtitle: '', body: '', coverUri: null }); router.dismissTo('/'); } },
+              ]),
+          },
+        ]}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  measure: { position: 'absolute', left: 0, top: 0, opacity: 0 },
-  // Not in the design: a small counter once the title reaches the card's second line.
-  left: { alignSelf: 'flex-end', marginTop: 4, marginRight: 16, fontSize: 12, lineHeight: 16, color: colors.textMuted },
   root: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    height: HEADER_H,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.hairline,
-  },
-  back: { position: 'absolute', left: 12, top: 6 },
-  title: { fontSize: 16, lineHeight: 16, letterSpacing: -0.16, fontWeight: '700', color: colors.text, marginTop: -4 },
-  body: { flex: 1, paddingTop: 13 },
-  coverCard: { alignSelf: 'center', width: 280, height: 162, borderRadius: 10, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
+  header: { height: 46, borderBottomWidth: 1, borderBottomColor: '#E9E9E9' },
+  back: { position: 'absolute', left: 15, top: 8 },
+  title: { position: 'absolute', left: 0, right: 0, top: 11.6, textAlign: 'center', fontFamily: INTER_FAMILIES['700'], fontSize: 14.2, lineHeight: 17, color: colors.text, transform: [{ translateX: -2 }] },
+  menu: { position: 'absolute', left: 354.8, top: 19.3, flexDirection: 'row', gap: 3.7 },
+  dot: { width: 3.3, height: 3.3, borderRadius: 1.65, backgroundColor: '#000000' },
+  body: { flex: 1 },
+  titleInput: { position: 'absolute', left: 15.6, width: 350, padding: 0, fontFamily: INTER_FAMILIES['700'], fontSize: 31.9, lineHeight: 42, letterSpacing: -0.96, color: '#0F1419' },
+  meta: { position: 'absolute', left: 16.4, flexDirection: 'row', alignItems: 'center' },
+  metaText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.3, lineHeight: 15, color: '#000000' },
+  metaDot: { width: 1.8, height: 1.8, borderRadius: 0.9, marginLeft: 5.8, marginTop: 1.5, backgroundColor: '#0F1419' },
+  metaWords: { marginLeft: 5.1 },
+  subtitleInput: { position: 'absolute', left: 16.3, width: 340, padding: 0, fontFamily: INTER_FAMILIES['400'], fontSize: 15.6, lineHeight: 26, color: '#6B6B6B' },
+  picture: { position: 'absolute', left: 15, width: 360, height: 272, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   fill: { width: '100%', height: '100%' },
-  label: {
-    marginTop: 17,
-    marginHorizontal: 22,
-    fontSize: 13.25,
-    lineHeight: 16,
-    color: colors.text,
-    padding: 0,
-  },
-  footer: { paddingHorizontal: 21 },
+  footer: { paddingHorizontal: 15 },
   post: { height: 38, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
-  postText: { fontSize: 13.5, lineHeight: 16, letterSpacing: 0.27, fontWeight: '600' },
+  postText: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.6, lineHeight: 16, letterSpacing: 0.14 },
 });
