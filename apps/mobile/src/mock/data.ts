@@ -149,6 +149,8 @@ const miniBill: Author = { username: 'mini.bill_g', name: 'Bill Gates', avatar: 
 const miniBoozie: Author = { username: 'mini_boozie', name: 'Mini Boozie', avatar: require('@/assets/mock/avatar-mini-boozie.jpg'), subtitle: 'Recommended' };
 const boss: Author = { username: 'boss', name: 'Boss', avatar: require('@/assets/mock/avatar-boss.jpg'), subtitle: 'Recommended' };
 const billijean: Author = { username: 'billijean', avatar: require('@/assets/mock/avatar-billijean.jpg'), subtitle: 'Recommended for you' };
+const danielKraig: Author = { username: 'daniel_kraig', name: 'Daniel Kraig', avatar: require('@/assets/mock/avatar-daniel.jpg'), subtitle: '' };
+const zhangir: Author = { username: 'lesbekov_zh', name: 'Zhangir Cool', avatar: require('@/assets/mock/avatar-zhangir.jpg'), subtitle: '' };
 const dinara: Author = { username: 'dinara_satzhan', avatar: require('@/assets/mock/avatar-dinara.jpg'), subtitle: '' };
 
 /** Home stories row (Frame 1049): the circles show the story photo; the last one is already watched. */
@@ -161,31 +163,31 @@ export const HOME_STORIES: Story[] = [
 ];
 
 export const FEED: Post[] = [
-  // Frame 1198 home card.
+  // AutoLayouted-34 (BG(2)) home posts.
   {
     id: 'p-nighty',
-    author: miniBill,
-    image: require('@/assets/mock/post-habits.jpg'),
-    title: '3 Nighty Habits That Helped Steve Jobs to Rest and Charge',
+    author: danielKraig,
+    image: require('@/assets/mock/post-room.jpg'),
+    title: '3 nighty habits that helped Steve Jobs to rest and charge',
     caption: 'and these are not simple ones like meditation or journaling, these are really the unique ones',
-    timeAgo: '1 day ago',
+    timeAgo: '7 hours ago',
     likes: 520,
-    comments: 14,
+    comments: 270,
     shares: 39,
-    views: 520,
+    views: 3000,
     articleId: 'journal',
   },
   {
-    id: 'p-kindergarten',
-    author: miniBill,
-    image: require('@/assets/mock/explore-kindergarten.jpg'),
-    title: 'Wiggling Is Welcome in This Kindergarten Classroom',
-    caption: 'Kim Broomer`s classroom is one of the most unique and supportive learning environronments I`ve ever seen in life',
-    timeAgo: '1 day ago',
+    id: 'p-armpits',
+    author: zhangir,
+    image: require('@/assets/mock/post-dodo.jpg'),
+    title: 'Why I never shave my armpits. Actually its a science based reason.',
+    caption: 'and these are not simple ones like meditation or journaling, these are really the unique ones',
+    timeAgo: '17 hours ago',
     likes: 120,
-    comments: 0,
+    comments: 14,
     shares: 39,
-    views: 520,
+    views: 1200,
     articleId: 'journal',
   },
   {
@@ -844,6 +846,7 @@ function articleFrom(id: string, author: Author, cover: ImageSourcePropType, tit
 // Body source per post: a key into BODIES, or an existing hand-written article.
 const BODY_OF: Record<string, string> = {
   'p-nighty': 'habits',
+  'p-armpits': 'habits',
   'e-nighty': 'habits',
   'e-mason': 'spiderman',
   'r-craziness': 'stevePresentations',

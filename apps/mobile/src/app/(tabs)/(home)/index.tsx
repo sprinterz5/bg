@@ -7,7 +7,8 @@ import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedSty
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
-import { FeedPost } from '@/components/feed-post';
+import { FeedPost, FeedSeparator } from '@/components/feed-post';
+import { FeedTabs } from '@/components/feed-tabs';
 import { Collapse, GrowIn } from '@/components/grow-in';
 import { PostingRow } from '@/components/posting-row';
 import { PressableScale } from '@/components/pressable-scale';
@@ -133,9 +134,10 @@ export default function Home() {
         scrollEventThrottle={16}
         ListHeaderComponent={
           <>
-            <Animated.View collapsable={false} entering={FadeInDown.duration(380)}>
+            <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
               <HomeStories stories={HOME_STORIES} />
             </Animated.View>
+            <FeedTabs />
             {publishing ? (
               <Collapse closed={!!publishing.done}>
                 <PostingRow coverUri={publishing.coverUri} />
@@ -143,7 +145,7 @@ export default function Home() {
             ) : null}
           </>
         }
-        ItemSeparatorComponent={Separator}
+        ItemSeparatorComponent={FeedSeparator}
         ListHeaderComponentStyle={styles.storiesGap}
         contentInset={IOS ? { top } : undefined}
         contentOffset={IOS ? { x: 0, y: -top } : undefined}
@@ -157,12 +159,12 @@ export default function Home() {
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: headerTop }, headerStyle]}>
             <View style={styles.header}>
               <PressableScale haptic onPress={pickStoryPhoto} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
-                <Icon name="homePlus" width={21.45} height={21.45} />
+                <Icon name="homePlus" width={20} height={20} />
               </PressableScale>
               {/* NBSPs on both sides: Android clips script glyphs at the line's advance width; symmetric keeps it centred. */}
               <Text style={styles.logo}>{' Thoughts '}</Text>
               <PressableScale haptic onPress={() => push('/notifications')} hitSlop={10} accessibilityLabel="Notifications" style={styles.bell}>
-                <Icon name="homeBell" width={20.3} height={23.3} />
+                <Icon name="homeBell" width={20} height={22.5} />
               </PressableScale>
             </View>
       </Animated.View>
@@ -187,8 +189,6 @@ const MAX_PULL = 140;
 // Posts first mounted within this time after the screen opens get the staggered entrance.
 const INTRO_MS = 1000;
 
-const Separator = () => <View style={styles.separator} />;
-
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   list: { flex: 1 },
@@ -196,12 +196,15 @@ const styles = StyleSheet.create({
   // first avatar at 240.5.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   header: { height: HEADER_H, alignItems: 'center' },
-  plus: { position: 'absolute', left: 20.78, top: 17.78 },
-  bell: { position: 'absolute', left: 341.85, top: 16.63 },
+  // AutoLayouted-34 (BG(2)): plus at (22.5, 61.5), bell at (343.5, 61) incl. their strokes; logo ink 107.3 wide from
+  // 140.6 × 59.9; story rings 94 at x 12 + 113n, y 104.5.
+  plus: { position: 'absolute', left: 22.5, top: 15.5 },
+  bell: { position: 'absolute', left: 343.5, top: 15 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
-  logo: { marginTop: 2.54, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 37.2, lineHeight: 50, color: colors.text, transform: [{ translateX: -7.35 }] },
+  logo: { marginTop: -0.46, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 35.1, lineHeight: 50, color: colors.text, transform: [{ translateX: -4.35 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
-  storiesGap: { marginBottom: 19.2 },
-  separator: { height: 29 },
+  // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
+  storiesGap: { marginBottom: -1.3 },
+  stories: { marginTop: -3, marginLeft: -1.5 },
 });
