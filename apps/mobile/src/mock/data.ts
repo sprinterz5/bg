@@ -537,7 +537,7 @@ export const SEARCH_ARTICLES: ExplorePost[] = [
   {
     id: 'r-craziness',
     image: require('@/assets/mock/result-craziness.jpg'),
-    title: 'Steve Jobs` Craziness Is Actually His Genius as He Explains Himself',
+    title: 'Steve Jobs` Craziness is Actually His Genius as He Explains Himself',
     lead: '',
     rest: '“Genius and madness - how interconnected these things are” - one interview from 1995 that explains a lot.',
     timeAgo: '2d ago',

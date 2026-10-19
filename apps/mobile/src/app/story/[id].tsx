@@ -26,7 +26,8 @@ const MAX_H = 540;
 
 /** The viewer's photo box: full width, up to MAX_H tall, centred on design y 390 (cover-cropped when taller). */
 function photoHeight(story: Story, width: number) {
-  const src = Image.resolveAssetSource(story.image as number);
+  // resolveAssetSource is native-only (react-native-web lacks it)
+  const src = Image.resolveAssetSource?.(story.image as number);
   return Math.min(MAX_H, src ? (width * src.height) / src.width : MAX_H);
 }
 

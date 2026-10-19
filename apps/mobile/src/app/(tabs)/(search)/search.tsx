@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   clearResults: { right: 9 },
   back: { position: 'absolute', left: 16, top: 14 },
   exit: { position: 'absolute', left: 340.2, top: 12.4 },
-  exitText: { fontSize: 15.5, lineHeight: 23, letterSpacing: 15.5 * -0.02, color: colors.text },
+  exitText: { fontFamily: INTER_FAMILIES['500'], fontSize: 14.4, lineHeight: 23, color: colors.text },
 
   tabs: { position: 'absolute', top: 0, left: 0, right: 0, height: LIST_TOP },
   tab: { position: 'absolute', top: TABS_TOP },
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   segment: { height: 28, borderRadius: 7, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D9D9D9' },
   segIndicator: { position: 'absolute', left: 0, top: 0, backgroundColor: '#000000', borderColor: '#000000' },
   segHit: { position: 'absolute', top: 0, left: 0, height: 28, alignItems: 'center', justifyContent: 'center' },
-  segText: { fontSize: 13, lineHeight: 16, fontWeight: '600' },
+  segText: { fontSize: 13.4, lineHeight: 16, fontWeight: '600' },
 
   // AutoLayouted-7: the 30px icon box at x 14, rows 57 apart from y 148.5, text at 68.1.
   suggestionsList: { paddingTop: 12.5 },
@@ -438,6 +438,6 @@ const styles = StyleSheet.create({
   // AutoLayouted-8: avatar 46 at x 14, names Inter 13.25 semibold / 12.3.
   profile: { height: 64, flexDirection: 'row', alignItems: 'center', paddingLeft: 14, gap: 13 },
   profileAvatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.surfaceSoft },
-  profileName: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.25, lineHeight: 16, color: colors.text },
-  profileSub: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.3, lineHeight: 15, color: MUTED },
+  profileName: { fontFamily: INTER_FAMILIES['700'], fontSize: 12.7, lineHeight: 16, color: colors.text },
+  profileSub: { fontFamily: INTER_FAMILIES['300'], fontSize: 12.4, lineHeight: 15, color: MUTED },
 });
