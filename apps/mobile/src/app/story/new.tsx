@@ -113,5 +113,5 @@ const styles = StyleSheet.create({
   },
   share: { position: 'absolute', left: 21, right: 21, height: 38, borderRadius: 7, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   shareOff: { backgroundColor: '#B3B3B3' },
-  shareText: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.8, lineHeight: 17, color: '#FFFFFF' },
+  shareText: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.2, lineHeight: 17, color: '#FFFFFF' },
 });

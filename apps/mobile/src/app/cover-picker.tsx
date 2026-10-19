@@ -121,7 +121,7 @@ export default function CoverPicker() {
         <Text style={styles.title}>{title || 'Choose a cover'}</Text>
       </View>
 
-      <Pressable onPress={openAlbums} hitSlop={10} style={styles.album} accessibilityRole="button" accessibilityLabel={`Album: ${album.title}`}>
+      <Pressable onPress={openAlbums} hitSlop={10} style={[styles.album, { top: insets.top + 96.1 }]} accessibilityRole="button" accessibilityLabel={`Album: ${album.title}`}>
         <Text style={styles.albumText} numberOfLines={1}>
           {album.title}
         </Text>
@@ -201,7 +201,8 @@ const styles = StyleSheet.create({
   close: { position: 'absolute', left: 20, top: 22 },
   title: { position: 'absolute', top: 20.7, left: 0, right: 0, textAlign: 'center', fontSize: 16, lineHeight: 20, fontWeight: '600', color: '#FFFFFF' },
   // "Recents" at x 17.4 (line 96.1), the chevron 7x14 at x 90, y 99.5; the grid starts at 140.
-  album: { position: 'absolute', left: 16.6, top: 96.1, flexDirection: 'row', alignItems: 'center', maxWidth: 300 },
+  // absolutely placed views ignore the root's safe-area padding: the top is added in render
+  album: { position: 'absolute', left: 16.6, flexDirection: 'row', alignItems: 'center', maxWidth: 300 },
   albumText: { fontSize: 15.5, lineHeight: 20, fontWeight: '600', color: '#FFFFFF' },
   chevron: { marginLeft: 10.5 },
   chevronOpen: { transform: [{ rotate: '90deg' }] },

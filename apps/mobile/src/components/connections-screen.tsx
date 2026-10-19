@@ -218,6 +218,6 @@ const styles = StyleSheet.create({
   avatar: { width: 53, height: 53, borderRadius: 26.5, backgroundColor: colors.surfaceSoft },
   names: { flex: 1, paddingTop: 10 },
   name: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.9, lineHeight: 17, color: '#000000' },
-  sub: { marginTop: 1.06, fontFamily: INTER_FAMILIES['400'], fontSize: 13.1, lineHeight: 16, color: MUTED },
+  sub: { marginTop: 1.06, fontFamily: INTER_FAMILIES['300'], fontSize: 13, lineHeight: 16, color: MUTED },
   button: { marginLeft: 8, marginTop: 12.875 },
 });
