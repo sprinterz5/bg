@@ -28,16 +28,40 @@ export const sendMessage = (conversationId: string, body: string) =>
   api<ChatMessage>(`/conversations/${conversationId}/messages`, { body: { type: 'TEXT', body }, auth: true, idempotent: true });
 
 /** Chat search: own messages containing the query, newest first. */
-export const searchMessages = (q: string) => api<ChatMessage[]>(`/messages/search?q=${encodeURIComponent(q)}`, { auth: true });
+export const searchMessages = (q: string): Promise<ChatMessage[]> =>
+  CAPTURE ? import('@/mock/chats').then((m) => (/steve/i.test(q) ? m.CAPTURE_SEARCH_MESSAGES : [])) : api<ChatMessage[]>(`/messages/search?q=${encodeURIComponent(q)}`, { auth: true });
 
 /** Chat search: accounts to start a chat with. */
-export const searchAccounts = (q: string) =>
-  api<ApiUserSearch>(`/search?type=users&limit=20&q=${encodeURIComponent(q)}`, { auth: true }).then((r) => r.data.users);
+export const searchAccounts = (q: string): Promise<ChatUser[]> =>
+  CAPTURE ? import('@/mock/chats').then((m) => (/steve/i.test(q) ? m.CAPTURE_SEARCH_ACCOUNTS : [])) : api<ApiUserSearch>(`/search?type=users&limit=20&q=${encodeURIComponent(q)}`, { auth: true }).then((r) => r.data.users);
 
 export const markRead = (conversationId: string) =>
   CAPTURE ? Promise.resolve() : api(`/conversations/${conversationId}/read`, { method: 'POST', auth: true }).catch(() => {});
 
 export const otherMember = (c: Conversation, meId: string) => c.members.find((m) => m.userId !== meId)?.user ?? null;
+
+/** Short age like the design: 2h, 1d, 3w. */
+export function shortAge(iso: string) {
+  const m = Math.max(0, (Date.now() - new Date(iso).getTime()) / 60_000);
+  if (m < 60) return `${Math.max(1, Math.round(m))}m`;
+  if (m < 60 * 24) return `${Math.round(m / 60)}h`;
+  if (m < 60 * 24 * 7) return `${Math.round(m / 1440)}d`;
+  return `${Math.round(m / 10080)}w`;
+}
+
+/**
+ * The grey line under a chat (AutoLayouted 18 / 21): an unread message alone; a read one with its age
+ * ("whats wrong? · 2h"); after our own message "seen 1h ago" / "sent 1d ago"; "start chatting" when empty.
+ */
+export function chatStatus(c: Conversation, meId: string): { text: string; time: string | null } {
+  const last = c.messages[0];
+  if (!last) return { text: 'start chatting', time: null };
+  if (last.senderId === meId) {
+    const read = c.members.find((m) => m.userId !== meId)?.lastReadAt;
+    return { text: read && read >= last.createdAt ? `seen ${shortAge(read)} ago` : `sent ${shortAge(last.createdAt)} ago`, time: null };
+  }
+  return { text: last.body ?? '', time: c.unreadCount ? null : shortAge(last.createdAt) };
+}
 
 // One shared Socket.IO connection. The server sits behind the /api prefix on the VPS, so the path follows API_URL.
 let socket: Socket | null = null;

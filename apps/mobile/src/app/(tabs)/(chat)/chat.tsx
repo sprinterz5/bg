@@ -9,7 +9,7 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { ConnectionRowSkeleton } from '@/components/skeleton';
 import { INTER_FAMILIES, Text } from '@/components/text';
-import { chatSocket, fetchConversations, otherMember, type Conversation } from '@/lib/chat';
+import { chatSocket, chatStatus, fetchConversations, otherMember, type Conversation } from '@/lib/chat';
 import { push } from '@/lib/nav';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
@@ -17,15 +17,6 @@ import { colors } from '@/theme';
 const SUBTLE = '#999999';
 
 type Row = { id: string; username: string; title: string; subtitle: string; time: string | null; avatar: string | null; unread: number };
-
-/** Short age like the design: 2h, 1d, 3w. */
-function age(iso: string) {
-  const m = Math.max(0, (Date.now() - new Date(iso).getTime()) / 60_000);
-  if (m < 60) return `${Math.max(1, Math.round(m))}m`;
-  if (m < 60 * 24) return `${Math.round(m / 60)}h`;
-  if (m < 60 * 24 * 7) return `${Math.round(m / 1440)}d`;
-  return `${Math.round(m / 10080)}w`;
-}
 
 // Chats list (AutoLayouts export): compose · own name · search, then the conversations — avatar 55, name and the last
 // message, unread ones in semibold with a count badge. Search opens its own screen (chat-search).
@@ -56,18 +47,7 @@ export default function Chat() {
       (conversations ?? []).flatMap((c) => {
         const other = user ? otherMember(c, user.id) : null;
         if (!other) return [];
-        const last = c.messages[0];
-        const mine = last && last.senderId === user?.id;
-        const otherRead = c.members.find((m) => m.userId !== user?.id)?.lastReadAt;
-        // AutoLayouted 18: an unread message alone (semibold); a read one with its age ("whats wrong? · 2h");
-        // after our own message "seen 1h ago" / "sent 1d ago".
-        let subtitle = 'No messages yet';
-        let time: string | null = null;
-        if (last && mine) subtitle = otherRead && otherRead >= last.createdAt ? `seen ${age(otherRead)} ago` : `sent ${age(last.createdAt)} ago`;
-        else if (last) {
-          subtitle = last.body ?? '';
-          if (!c.unreadCount) time = age(last.createdAt);
-        }
+        const { text: subtitle, time } = chatStatus(c, user?.id ?? '');
         return [
           {
             id: c.id,

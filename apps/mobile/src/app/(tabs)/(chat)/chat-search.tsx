@@ -9,6 +9,7 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { INTER_FAMILIES, Text, TextInput } from '@/components/text';
 import {
+  chatStatus,
   fetchConversations,
   openDirect,
   otherMember,
@@ -36,8 +37,8 @@ type Hit = {
   kind: 'chat' | 'account' | 'message';
   user: ChatUser;
   conversationId?: string;
-  /** Plain grey line, or the matched message split for highlighting. */
-  sub: string | { match: string; rest: string };
+  /** Grey line (with the message age for chats), or the matched message split for highlighting. */
+  sub: string | { text: string; time: string | null } | { match: string; rest: string };
 };
 
 export default function ChatSearch() {
@@ -84,9 +85,8 @@ export default function ChatSearch() {
     const byConversation = new Map(conversations.map((c) => [c.id, c]));
     const chats: Hit[] = conversations.flatMap((c) => {
       const other = otherMember(c, user.id);
-      if (!other || !(other.username.toLowerCase().includes(lower) || other.displayName?.toLowerCase().includes(lower))) return [];
-      const last = c.messages[0];
-      return [{ key: `c${c.id}`, kind: 'chat', user: other, conversationId: c.id, sub: last ? `${last.body ?? ''} · ${shortAgo(last.createdAt)}` : 'start chatting' }];
+      if (!other || !nameMatches(`${other.username} ${other.displayName ?? ''}`, q)) return [];
+      return [{ key: `c${c.id}`, kind: 'chat', user: other, conversationId: c.id, sub: chatStatus(c, user.id) }];
     });
     const chatUsers = new Set(chats.map((h) => h.user.id));
     const people: Hit[] = accounts
@@ -160,7 +160,7 @@ export default function ChatSearch() {
             ListEmptyComponent={
               loading ? null : (
                 <Animated.View collapsable={false} entering={FadeIn.duration(180)} style={styles.empty}>
-                  <Icon name="chatSearchEmpty" width={127} height={127} />
+                  <Icon name="chatSearchEmpty" width={127} height={127} style={styles.emptyIcon} />
                   <Text style={styles.emptyText}>No account and no messages were found</Text>
                 </Animated.View>
               )
@@ -180,10 +180,17 @@ export default function ChatSearch() {
                     <Text style={styles.sub} numberOfLines={1}>
                       {item.sub}
                     </Text>
+                  ) : 'text' in item.sub ? (
+                    <View style={styles.subRow}>
+                      <Text style={[styles.sub, styles.subShrink]} numberOfLines={1}>
+                        {item.sub.text}
+                      </Text>
+                      {item.sub.time ? <Text style={styles.sub}>{`·${item.sub.time}`}</Text> : null}
+                    </View>
                   ) : (
                     <Text style={styles.sub} numberOfLines={1}>
                       <Text style={styles.match}>“{item.sub.match}</Text>
-                      {item.sub.rest.length > 12 ? `${item.sub.rest.slice(0, 12).trimEnd()}...` : item.sub.rest}”
+                      {firstWord(item.sub.rest)}”
                     </Text>
                   )}
                 </View>
@@ -225,18 +232,24 @@ function Tabs({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
 const TAB_X: Record<Tab, number> = { All: 16.2, Messages: 61, Accounts: 159.3 };
 
 /** "1d", "3h", "5m", "2w". */
-function shortAgo(iso: string) {
-  const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-  if (m < 60) return `${m}m`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h}h`;
-  const d = Math.round(h / 24);
-  return d < 7 ? `${d}d` : `${Math.round(d / 7)}w`;
-}
 
 // Design y − 47: field 44..375 at 6 (40 tall, #F5F5F5, radius 10); tabs' text box at 66.4; the rule and the 24px
 // underline at 99; rows from 119.75, 75 apart: avatar 50 at x 11, name / sub Inter 13.4 at x 73.3.
+/** AutoLayouted 21: "Steve Jobs" finds "Stevie jobsie" and "steve_jobs": any word of the query (3+ letters) in the name. */
+function nameMatches(name: string, q: string) {
+  const n = name.toLowerCase().replace(/[_.]/g, ' ');
+  return q.toLowerCase().split(/\s+/).some((w) => w.length >= 3 && n.includes(w));
+}
+
+/** The frame cuts the message after the word that follows the match: “steve jobs was...”. */
+function firstWord(rest: string) {
+  const m = rest.match(/^\s*\S+/);
+  return m && m[0].length < rest.length ? `${m[0]}...` : rest;
+}
+
 const styles = StyleSheet.create({
+  subRow: { flexDirection: 'row' },
+  subShrink: { flexShrink: 1 },
   root: { flex: 1, backgroundColor: colors.bg },
   header: { height: 52 },
   back: { position: 'absolute', left: 15.5, top: 15 },
@@ -246,7 +259,7 @@ const styles = StyleSheet.create({
   clear: { position: 'absolute', left: 306, top: 12 },
   tabs: { height: 47.75, borderBottomWidth: 0.75, borderBottomColor: LINE },
   tab: { position: 'absolute', top: 14.41 },
-  tabText: { fontFamily: INTER_FAMILIES['500'], fontSize: 14, lineHeight: 17, color: MUTED },
+  tabText: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.5, lineHeight: 17, color: MUTED },
   tabActive: { color: '#000000' },
   underline: { position: 'absolute', left: 0, bottom: -0.75, width: UNDERLINE_W, height: 0.75, backgroundColor: '#000000' },
   row: { height: 75, flexDirection: 'row', paddingLeft: 11, paddingRight: 16 },
@@ -256,6 +269,8 @@ const styles = StyleSheet.create({
   sub: { marginTop: 2.86, fontFamily: INTER_FAMILIES['400'], fontSize: 13.4, lineHeight: 16, color: MUTED },
   match: { color: '#000000' },
   // Circle 127 at (125.5, 203) and the line at 360.6 — both centred on x 189–191 in the design; centred here.
+  // AutoLayouted 22: the circle sits 6 left of centre in the frame, the line under it in #999
   empty: { alignItems: 'center', paddingTop: 36.25 },
-  emptyText: { marginTop: 30.6, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: colors.text },
+  emptyIcon: { transform: [{ translateX: -6.5 }] },
+  emptyText: { marginTop: 30.6, fontFamily: INTER_FAMILIES['400'], fontSize: 13.9, lineHeight: 17, color: MUTED, transform: [{ translateX: -4 }] },
 });

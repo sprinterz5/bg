@@ -28,7 +28,16 @@ export const CAPTURE_CHATS: Conversation[] = [
   chat('c6', 'Miss Anara', { mine: false, body: 'don`t know, but people say it is the best one', at: 60 * 24 }),
   chat('c7', 'stevie.p', { mine: false, body: 'shared an article', at: 60 * 48 }),
   chat('c8', 'mason_thames', { mine: true, body: 'thanks', at: 60 * 80 }, { seenAt: 60 * 72 }),
+  // AutoLayouted 21 (chat search for "Steve Jobs"), below the fold of the chat list
+  chat('c9', 'Stevie jobsie', { mine: false, body: 'Who are you?', at: 60 * 24 }),
+  chat('c10', 'steve_jobs', { mine: true, body: 'hey', at: 60 * 26 }, { seenAt: 60 * 24 }),
+  chat('c11', 'Legion', { mine: false, body: 'steve jobs was a genius, you know', at: 60 * 30 }),
 ];
+
+export const CAPTURE_SEARCH_MESSAGES: ChatMessage[] = [
+  { id: 'sm1', conversationId: 'c11', senderId: 'u-c11', body: 'steve jobs was a genius, you know', createdAt: ago(60 * 30) },
+];
+export const CAPTURE_SEARCH_ACCOUNTS = [{ id: 'u-mini', username: 'steve_mini', displayName: 'Steve mini', avatarUrl: null }];
 
 // AutoLayouted-26: the conversation with Balbek (newest first, as the API pages them).
 const at = (daysAgo: number, h: number, m: number) => {
