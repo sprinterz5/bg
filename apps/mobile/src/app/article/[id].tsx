@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
   moreDot: { width: 3.33, height: 3.33, borderRadius: 1.67, backgroundColor: '#000000' },
   previewTitle: { marginTop: 48.07, marginLeft: 15, width: 360, fontFamily: INTER_FAMILIES['800'], fontSize: 34.75, lineHeight: 43.7, letterSpacing: -1.39, color: colors.text },
   previewMeta: { marginTop: 26.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['400'], fontSize: 12.75, lineHeight: 15, letterSpacing: 0.1275, color: colors.text },
-  previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 17, lineHeight: 26.4, letterSpacing: 0.17, color: colors.text },
+  previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 16.75, lineHeight: 26.4, letterSpacing: 0.1675, color: colors.text },
   picture: { marginLeft: 15, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   previewBar: { position: 'absolute', left: 0, right: 0, height: 22 },
   previewShare: { position: 'absolute', left: 21.05, top: 1.8, flexDirection: 'row', alignItems: 'center', gap: 13.5 },
