@@ -648,12 +648,12 @@ const styles = StyleSheet.create({
   previewMore: { position: 'absolute', right: 17.8, top: 17.8, flexDirection: 'row', gap: 3.67 },
   moreDot: { width: 3.33, height: 3.33, borderRadius: 1.67, backgroundColor: '#000000' },
   previewTitle: { marginTop: 48.07, marginLeft: 15, width: 360, fontFamily: INTER_FAMILIES['800'], fontSize: 34.75, lineHeight: 43.7, letterSpacing: -1.39, color: colors.text },
-  previewMeta: { marginTop: 21.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['400'], fontSize: 12.75, lineHeight: 15, letterSpacing: 0.1275, color: colors.text },
-  previewSubtitle: { marginTop: 10.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 16.75, lineHeight: 26.4, letterSpacing: 0.1675, color: colors.text },
+  previewMeta: { marginTop: 26.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['400'], fontSize: 12.75, lineHeight: 15, letterSpacing: 0.1275, color: colors.text },
+  previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 16.75, lineHeight: 26.4, letterSpacing: 0.1675, color: colors.text },
   picture: { marginLeft: 15, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   previewBar: { position: 'absolute', left: 0, right: 0, height: 22 },
   previewShare: { position: 'absolute', left: 21.05, top: 1.8, flexDirection: 'row', alignItems: 'center', gap: 13.5 },
-  previewCount: { fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 16, color: colors.text },
+  previewCount: { fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 16, color: colors.text, transform: [{ translateY: -9 }] },
   previewBookmark: { position: 'absolute', left: 348, top: -0.25 },
 
   // Text pages (AutoLayouted 17): card 354x48 at (16.5, 23.5), radius 13.5; avatar 32 at (6.5, 7.5), name Inter Bold
