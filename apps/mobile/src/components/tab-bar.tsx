@@ -44,7 +44,7 @@ const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
   },
 };
 
-const BAR_H = 47; // hairline → where the home indicator area starts (81 - 34 in the frame)
+const BAR_H = 48; // hairline → where the home indicator area starts (81 - 34 in the frame; 1 higher asked for)
 const TAB_W = 64;
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {

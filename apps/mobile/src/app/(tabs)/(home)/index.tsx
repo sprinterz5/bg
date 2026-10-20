@@ -185,7 +185,7 @@ export default function Home() {
         // Plain top padding on both platforms: with contentInset iOS sometimes came back short of the top after a
         // long scroll and the story rings stayed half under the header.
         // the tab bar floats over Home (it slides away), so the feed leaves room for it at the end
-        contentContainerStyle={[styles.content, { paddingTop: top, paddingBottom: 24 + 47 + insets.bottom }]}
+        contentContainerStyle={[styles.content, { paddingTop: top, paddingBottom: 24 + 48 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
         refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
       />
