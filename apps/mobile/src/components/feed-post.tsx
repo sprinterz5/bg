@@ -16,8 +16,7 @@ import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 
 const GRAY = '#999999';
-// TH: the action row went from #999 to the text colour
-const INK = colors.text;
+const INK = GRAY; // action icons and counts (asked for #999 again)
 const RADIUS = 13.2;
 
 function formatCount(n: number) {
