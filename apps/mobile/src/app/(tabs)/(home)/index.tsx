@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
@@ -100,7 +99,7 @@ export default function Home() {
 
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
   const tabsY = useSharedValue(0); // the tabs' place in the list content
-  // The top fade is for posts passing under the status bar: it goes as the top bar comes back over it.
+  // The status-bar cover is for posts passing under the status bar: it goes as the top bar comes back over it.
   const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.min(Math.max(y.get(), 0), hide.get()) / top) }));
   // Feed tabs: in their place under the stories, or right under the logo row while the top bar is out.
   const tabsStyle = useAnimatedStyle(() => {
@@ -206,13 +205,9 @@ export default function Home() {
       </Animated.View>
       {/* Content scrolls under the status bar and fades out there (69px in the frame = status bar + 22). */}
       {/* SVG gradient via expo-image: expo-linear-gradient is not in the Android dev build. */}
-      <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top + 22 }, fadeStyle]}>
-      <Image
-        pointerEvents="none"
-        source={require('@/assets/fade-top.svg')}
-        contentFit="fill"
-        style={StyleSheet.absoluteFill}
-      />
+      {/* While the bar is away: solid white behind the status bar down to design y 45, then a 0.75 #E9E9E9 line */}
+      <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 2 }, fadeStyle]}>
+        <View style={styles.fadeLine} />
       </Animated.View>
       {/* Feed tabs: scroll with the list; further down they ride under the logo row (X-style) */}
       <Animated.View collapsable={false} style={[styles.tabsWrap, tabsStyle]}>
@@ -250,7 +245,8 @@ const styles = StyleSheet.create({
   bell: { position: 'absolute', left: 343.5, top: 15 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
   logo: { marginTop: -1.3, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39, lineHeight: 50, color: colors.text, transform: [{ translateX: -4.35 }] },
-  fade: { position: 'absolute', top: 0, left: 0, right: 0 },
+  fade: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: colors.bg },
+  fadeLine: { position: 'absolute', left: 0, right: 0, bottom: -0.75, height: 0.75, backgroundColor: '#E9E9E9' },
   content: { paddingBottom: 24 },
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   tabsWrap: { position: 'absolute', left: 0, right: 0, top: 0, backgroundColor: colors.bg },
