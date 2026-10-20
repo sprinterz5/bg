@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   previewName: { marginLeft: 9.2, marginTop: 3.85, fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 18, letterSpacing: 0.075, color: colors.text },
   previewMore: { position: 'absolute', right: 17.8, top: 17.8, flexDirection: 'row', gap: 3.67 },
   moreDot: { width: 3.33, height: 3.33, borderRadius: 1.67, backgroundColor: '#000000' },
-  previewTitle: { marginTop: 48.07, marginLeft: 15, width: 360, fontFamily: INTER_FAMILIES['800'], fontSize: 34, lineHeight: 43.7, letterSpacing: -1.36, color: colors.text },
+  previewTitle: { marginTop: 48.07, marginLeft: 15, width: 360, fontFamily: INTER_FAMILIES['800'], fontSize: 35, lineHeight: 43.7, letterSpacing: -1.4, color: colors.text },
   previewMeta: { marginTop: 26.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['400'], fontSize: 12.75, lineHeight: 15, letterSpacing: 0.1275, color: colors.text },
   previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 17, lineHeight: 26.4, letterSpacing: 0.17, color: colors.text },
   picture: { marginLeft: 15, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
