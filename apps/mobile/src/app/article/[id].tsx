@@ -444,7 +444,7 @@ function Reader({ article }: { article: Article }) {
           style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 28.96 : 39.7 }, pictureVisible]}>
           <Image source={article.cover} style={styles.fill} contentFit="cover" onLoad={(e) => e.source.width && e.source.height && setCoverAspect(e.source.width / e.source.height)} />
         </Animated.View>
-        <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 46 }, chromeStyle]}>
+        <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 55 }, chromeStyle]}>
           <PressableScale onPress={() => setSharing(true)} hitSlop={8} accessibilityLabel="Share" style={styles.previewShare}>
             <Icon name="readerShare" width={18.4} height={18.4} />
             <Text style={styles.previewCount}>{article.shares}</Text>
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
   picture: { marginLeft: 15, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   previewBar: { position: 'absolute', left: 0, right: 0, height: 22 },
   previewShare: { position: 'absolute', left: 21.05, top: 1.8, flexDirection: 'row', alignItems: 'center', gap: 13.5 },
-  previewCount: { fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 16, color: colors.text, transform: [{ translateY: -9 }] },
+  previewCount: { fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 16, color: colors.text },
   previewBookmark: { position: 'absolute', left: 348, top: -0.25 },
 
   // Text pages (AutoLayouted 17): card 354x48 at (16.5, 23.5), radius 13.5; avatar 32 at (6.5, 7.5), name Inter Bold
