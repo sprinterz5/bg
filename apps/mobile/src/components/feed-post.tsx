@@ -101,7 +101,8 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </PressableScale>
           <Text style={[styles.count, styles.commentCount]}>{formatCount(post.comments)}</Text>
           <View style={styles.views}>
-            <Icon name="feedViews" width={16} height={17.5} />
+            {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
+            <Icon name="feedViews" width={14.86} height={15.8} />
           </View>
           <Text style={[styles.count, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   actions: { height: 18.5, marginTop: 7.9, marginLeft: 1 },
   like: { position: 'absolute', left: -1.5, top: 0 },
   comment: { position: 'absolute', left: 91.9, top: 0.7 },
-  views: { position: 'absolute', left: 179.7, top: 0 },
+  views: { position: 'absolute', left: 180.3, top: 0.85 },
   bookmark: { position: 'absolute', left: 266.3, top: 0.6 },
   share: { position: 'absolute', left: 302.3, top: 1.2 },
   count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
