@@ -1,9 +1,9 @@
 import { Image } from 'expo-image';
 import { useScrollToTop } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -38,6 +38,12 @@ export default function Home() {
   });
   // Clamped once it is off screen, so scrolling further down doesn't push a style update every frame.
   const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.min(Math.max(y.value, 0), top) }] }));
+
+  // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
+  const swap = useSharedValue(1);
+  const onTab = useCallback(() => {
+    swap.set(withSequence(withTiming(0, { duration: 120 }), withTiming(1, { duration: 260 })));
+  }, [swap]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -75,6 +81,7 @@ export default function Home() {
       }
     });
   const native = Gesture.Native();
+
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
@@ -107,10 +114,12 @@ export default function Home() {
     const entering = first && intro ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : undefined;
     return (
       <Animated.View collapsable={false} entering={entering}>
-        <FeedPost post={item} onHide={hidePost} />
+        <Swap value={swap}>
+          <FeedPost post={item} onHide={hidePost} />
+        </Swap>
       </Animated.View>
     );
-  }, [hidePost]);
+  }, [hidePost, swap]);
 
   return (
     <View style={styles.root}>
@@ -137,7 +146,7 @@ export default function Home() {
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
               <HomeStories stories={HOME_STORIES} />
             </Animated.View>
-            <FeedTabs />
+            <FeedTabs onChange={onTab} />
             {publishing ? (
               <Collapse closed={!!publishing.done}>
                 <PostingRow coverUri={publishing.coverUri} />
@@ -178,6 +187,11 @@ export default function Home() {
       />
     </View>
   );
+}
+
+function Swap({ value, children }: { value: SharedValue<number>; children: ReactNode }) {
+  const style = useAnimatedStyle(() => ({ opacity: value.get(), transform: [{ translateY: (1 - value.get()) * 10 }] }));
+  return <Animated.View style={style}>{children}</Animated.View>;
 }
 
 const IOS = Platform.OS === 'ios';

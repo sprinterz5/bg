@@ -1,8 +1,8 @@
 import { Image } from 'expo-image';
 import { useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import Animated, { FadeOut } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOut, ZoomIn, ZoomOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -25,6 +25,14 @@ export default function Chat() {
   const { user } = useSession();
   const [conversations, setConversations] = useState<Conversation[] | null>(null);
 
+  // rows rise in one after another the first time the list fills, not on every refresh
+  const introDone = useRef(false);
+  useEffect(() => {
+    if (conversations?.length) {
+      const t = setTimeout(() => (introDone.current = true), 800);
+      return () => clearTimeout(t);
+    }
+  }, [conversations]);
   const load = useCallback(() => {
     fetchConversations()
       .then(setConversations)
@@ -95,7 +103,8 @@ export default function Chat() {
             </Animated.View>
           )
         }
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
+          <Animated.View collapsable={false} entering={introDone.current ? undefined : FadeInDown.delay(Math.min(index, 8) * 35).duration(300)}>
           <PressableScale
             onPress={() => push(`/conversation/${item.id}?username=${encodeURIComponent(item.username)}` as Href)}
             scaleTo={0.98}
@@ -119,11 +128,12 @@ export default function Chat() {
               </View>
             </View>
             {item.unread > 0 ? (
-              <View style={styles.badge}>
+              <Animated.View collapsable={false} entering={ZoomIn.springify().damping(12)} exiting={ZoomOut.duration(150)} style={styles.badge}>
                 <Text style={styles.badgeText}>{item.unread > 99 ? '99+' : item.unread}</Text>
-              </View>
+              </Animated.View>
             ) : null}
           </PressableScale>
+          </Animated.View>
         )}
         contentContainerStyle={{ paddingBottom: 24 }}
       />

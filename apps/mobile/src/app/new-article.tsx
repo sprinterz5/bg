@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icon';
 import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
+import { RollingLabel } from '@/components/rolling-label';
 import { useFeed } from '@/state/feed';
 import { useSession } from '@/state/session';
 import { colors, motion } from '@/theme';
@@ -86,9 +87,11 @@ export default function NewArticle() {
           accessibilityLabel="Title"
         />
         <View style={[styles.meta, { top: at(294) }]}>
-          <Text style={styles.metaText}>{pages === 1 ? '1 page' : `${pages} pages`}</Text>
+          <RollingLabel text={pages === 1 ? '1 page' : `${pages} pages`} style={styles.metaText} />
           <View style={styles.metaDot} />
-          <Text style={[styles.metaText, styles.metaWords]}>{words === 1 ? '1 word' : `${words} words`}</Text>
+          <View style={styles.metaWords}>
+            <RollingLabel text={words === 1 ? '1 word' : `${words} words`} style={styles.metaText} />
+          </View>
         </View>
         <TextInput
           value={draft.subtitle}
@@ -102,7 +105,7 @@ export default function NewArticle() {
           accessibilityLabel="Subtitle"
         />
         <View style={[styles.picture, { top: at(419) }]}>
-          {draft.coverUri ? <Image source={{ uri: draft.coverUri }} style={styles.fill} contentFit="cover" transition={150} /> : null}
+          {draft.coverUri ? <Image source={{ uri: draft.coverUri }} style={styles.fill} contentFit="cover" transition={250} /> : null}
         </View>
       </View>
 
@@ -145,7 +148,7 @@ const styles = StyleSheet.create({
   dot: { width: 3.3, height: 3.3, borderRadius: 1.65, backgroundColor: '#000000' },
   body: { flex: 1 },
   titleInput: { position: 'absolute', left: 15.6, width: 350, padding: 0, fontFamily: INTER_FAMILIES['700'], fontSize: 31.9, lineHeight: 42, letterSpacing: -0.96, color: '#0F1419' },
-  meta: { position: 'absolute', left: 16.4, flexDirection: 'row', alignItems: 'center' },
+  meta: { position: 'absolute', left: 16.4, height: 15, overflow: 'hidden', flexDirection: 'row', alignItems: 'center' },
   metaText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.3, lineHeight: 15, color: colors.text },
   metaDot: { width: 1.8, height: 1.8, borderRadius: 0.9, marginLeft: 5.8, marginTop: 1.5, backgroundColor: '#0F1419' },
   metaWords: { marginLeft: 5.1 },

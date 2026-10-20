@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View, ScrollView } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, { Easing, Extrapolation, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, Extrapolation, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -556,14 +556,31 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
   // "...more" (Autolayouted-7 / -8): the photo shrinks into a card at the top and a dark sheet with the whole
   // caption rises from the bottom; tapping the card or the handle puts it back.
   const open = useSharedValue(0);
+  const sheetTopRef = insets.top + (305 - 47);
   const toggleCaption = () => {
     if (cut === null && !expanded) return; // fits in two lines
     const next = !expanded;
     setExpanded(next);
-    open.set(withTiming(next ? 1 : 0, { duration: CAPTION_MS, easing: Easing.out(Easing.cubic) }, (fin) => {
+    // opening springs (clamped: the sheet must not lift off the bottom), closing eases out
+    const done = (fin?: boolean) => {
+      'worklet';
       if (fin) runOnJS(setSettled)((n: number) => n + 1);
-    }));
+    };
+    open.set(next ? withSpring(1, { damping: 22, stiffness: 210, overshootClamping: true }, done) : withTiming(0, { duration: CAPTION_MS, easing: Easing.out(Easing.cubic) }, done));
   };
+  // The sheet follows a downward drag; let go past a quarter (or flick) and it closes.
+  const sheetPan = Gesture.Pan()
+    .activeOffsetY(6)
+    .failOffsetX([-14, 14])
+    .onUpdate((e) => {
+      open.set(Math.min(1, Math.max(0, 1 - e.translationY / Math.max(1, height - sheetTopRef))));
+    })
+    .onEnd((e) => {
+      if (open.get() < 0.75 || e.velocityY > 800) {
+        open.set(withTiming(0, { duration: 220, easing: Easing.out(Easing.cubic) }));
+        runOnJS(setExpanded)(false);
+      } else open.set(withSpring(1, { damping: 22, stiffness: 210 }));
+    });
   const [settled, setSettled] = useState(0); // re-snapshot once the sheet has finished moving
   const [photoReady, setPhotoReady] = useState(false);
   const [avatarReady, setAvatarReady] = useState(!story.author.avatar);
@@ -577,7 +594,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
   const photoH = photoHeight(story, width);
   const photoTop = insets.top + (390 - 47) - photoH / 2;
   const cardTop = insets.top + 1;
-  const sheetTop = insets.top + (305 - 47);
+  const sheetTop = sheetTopRef;
   // the full-screen photo flies into the card: uniform scale on its centre, then the card takes over
   const photoStyle = useAnimatedStyle(() => {
     const k = open.get();
@@ -690,6 +707,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
           <Image source={story.image} fadeDuration={0} resizeMode="contain" style={styles.cardPhoto} />
         </Pressable>
       </Animated.View>
+      <GestureDetector gesture={sheetPan}>
       <Animated.View pointerEvents={expanded ? 'auto' : 'none'} style={[styles.sheet, { top: sheetTop }, sheetStyle]}>
         <Pressable onPress={toggleCaption} hitSlop={12} style={styles.handleHit} accessibilityLabel="Close caption">
           <View style={styles.handle} />
@@ -703,6 +721,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
         </ScrollView>
         <Text style={[styles.sheetTime, { marginBottom: Math.max(insets.bottom - 7.6, 12) }]}>{story.timeAgo}</Text>
       </Animated.View>
+      </GestureDetector>
     </Animated.View>
   );
 }

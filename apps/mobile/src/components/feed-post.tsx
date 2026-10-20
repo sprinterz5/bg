@@ -7,7 +7,9 @@ import type { Post } from '@/mock/data';
 import { colors } from '@/theme';
 import { AuthorAvatar } from './author-row';
 import { Icon } from './icon';
+import { PopIcon } from './pop-icon';
 import { PostActions } from './post-actions';
+import { RollingLabel } from './rolling-label';
 import { PressableScale } from './pressable-scale';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
@@ -86,9 +88,14 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
 
         <View style={styles.actions}>
           <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
-            <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={21} height={18.5} tintColor={liked ? undefined : INK} />
+            <PopIcon active={liked}>
+              <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={21} height={18.5} tintColor={liked ? undefined : INK} />
+            </PopIcon>
           </PressableScale>
-          <Text style={[styles.count, styles.likeCount, liked && styles.countActive]}>{formatCount(post.likes + (liked ? 1 : 0))}</Text>
+          {/* the count rolls to its new value */}
+          <View style={[styles.countBox, styles.likeCount]}>
+            <RollingLabel text={formatCount(post.likes + (liked ? 1 : 0))} style={styles.countText} />
+          </View>
           <PressableScale onPress={openArticle} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
             <Icon name="feedComment" width={16.4} height={16.4} tintColor={INK} />
           </PressableScale>
@@ -98,7 +105,9 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </View>
           <Text style={[styles.count, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
-            <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmark'} width={14.5} height={16.1} tintColor={saved ? undefined : INK} />
+            <PopIcon active={saved}>
+              <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmark'} width={14.5} height={16.1} tintColor={saved ? undefined : INK} />
+            </PopIcon>
           </PressableScale>
           <PressableScale onPress={share} hitSlop={10} accessibilityLabel="Share" style={styles.share}>
             <Icon name="feedShare" width={15.5} height={15.5} tintColor={INK} />
@@ -145,7 +154,8 @@ const styles = StyleSheet.create({
   share: { position: 'absolute', left: 302.3, top: 1.2 },
   count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 12.1, lineHeight: 15, color: INK },
   caption: { color: GRAY },
-  countActive: { color: colors.text },
+  countBox: { position: 'absolute', top: 2.4, height: 15, overflow: 'hidden' },
+  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.1, lineHeight: 15, color: INK },
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
   viewsCount: { left: 201.46 },

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
+import { RollingLabel } from '@/components/rolling-label';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { back, openProfile } from '@/lib/nav';
 import { NOTIFICATIONS, type Notice } from '@/mock/data';
@@ -83,7 +84,7 @@ function Row({ item, muted, following, onToggle }: { item: Notice; muted?: boole
         <Image source={item.thumb} style={styles.thumb} transition={150} />
       ) : item.follow !== undefined ? (
         <PressableScale haptic onPress={onToggle} scaleTo={0.94} style={[styles.button, following ? styles.buttonOff : styles.buttonOn]}>
-          <Text style={[styles.buttonText, following && styles.buttonTextOff]}>{following ? 'Following' : 'Follow'}</Text>
+          <RollingLabel text={following ? 'Following' : 'Follow'} style={[styles.buttonText, following && styles.buttonTextOff]} />
         </PressableScale>
       ) : null}
     </View>
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
   whoSuggestion: { fontFamily: INTER_FAMILIES['400'], fontSize: 14.1 },
   whatSuggestion: { fontFamily: INTER_FAMILIES['300'], fontSize: 12.5, color: MUTED },
   thumb: { width: 74, height: 45, borderRadius: 5, marginLeft: 12 },
-  button: { width: 103, height: 28, borderRadius: 7, marginLeft: 12, marginTop: 3, alignItems: 'center', justifyContent: 'center' },
+  button: { width: 103, height: 28, borderRadius: 7, overflow: 'hidden', marginLeft: 12, marginTop: 3, alignItems: 'center', justifyContent: 'center' },
   buttonOn: { backgroundColor: '#000000' },
   buttonOff: { borderWidth: 1, borderColor: '#D9D9D9' },
   buttonText: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.4, lineHeight: 16, color: '#FFFFFF' },
