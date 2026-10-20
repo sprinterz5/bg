@@ -2,7 +2,7 @@ import { useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Easing, FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -38,25 +38,12 @@ export default function Home() {
   const BAR = top;
   const prevY = useSharedValue(0);
   const hide = useSharedValue(0);
-  const tabsY = useSharedValue(0); // the tabs' place in the list content
-  // The logo row's own hide: on the way back up it slides out again as the tabs and stories come into view (eased), so the stories
-  // never show under it; it comes back only with the top of the page (it scrolls in with the content).
-  const topHide = useSharedValue(0);
-  const nearTop = useSharedValue(false);
   const onScroll = useAnimatedScrollHandler((e) => {
     const yy = e.contentOffset.y;
     const dy = yy - prevY.get();
     prevY.set(yy);
     hide.set(yy <= 0 ? 0 : Math.min(BAR, Math.max(0, hide.get() + dy)));
     homeChromeHidden.set(hide.get() / BAR);
-    // near the top (the tabs' bottom below the logo row's) the row ducks out on its own, eased, not tied to the finger
-    const near = yy > 0 && !!tabsY.get() && yy < tabsY.get() + TABS_H - top;
-    if (near !== nearTop.get()) {
-      nearTop.set(near);
-      topHide.set(withTiming(near ? BAR : hide.get(), { duration: 220, easing: Easing.out(Easing.cubic) }));
-    } else if (!near) {
-      topHide.set(hide.get());
-    }
     y.set(yy);
   });
   useFocusEffect(
@@ -66,7 +53,7 @@ export default function Home() {
   );
   // The logo row scrolls away with the list near the top; further down it follows `hide` (whichever is lower).
   const headerLineStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, (y.get() - BAR) / 12)) }));
-  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -topHide.get()) }] }));
+  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -hide.get()) }] }));
 
   // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
   const swap = useSharedValue(1);
@@ -113,7 +100,7 @@ export default function Home() {
 
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
   // The status-bar cover is for posts passing under the status bar: it goes as the top bar comes back over it.
-  const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.min(Math.max(y.get(), 0), topHide.get()) / top) }));
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.min(Math.max(y.get(), 0), hide.get()) / top) }));
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
   const listRef = useRef<FlatList<Post>>(null);
@@ -177,7 +164,7 @@ export default function Home() {
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
               <HomeStories stories={HOME_STORIES} />
             </Animated.View>
-            <View onLayout={(e) => tabsY.set(top + e.nativeEvent.layout.y)}>
+            <View>
               <FeedTabs onChange={onTab} />
             </View>
             {publishing ? (
@@ -232,7 +219,6 @@ function Swap({ value, children }: { value: SharedValue<number>; children: React
 
 const IOS = Platform.OS === 'ios';
 const HEADER_H = 60;
-const TABS_H = 51.5;
 // Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
 const THRESHOLD = 64;
 const HOLD = 52;
