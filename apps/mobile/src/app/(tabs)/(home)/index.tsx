@@ -1,12 +1,13 @@
 import { useFocusEffect, useScrollToTop } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { FeedPost, FeedSeparator } from '@/components/feed-post';
+import { FeedTabs } from '@/components/feed-tabs';
 import { Collapse, GrowIn } from '@/components/grow-in';
 import { PostingRow } from '@/components/posting-row';
 import { PressableScale } from '@/components/pressable-scale';
@@ -33,12 +34,12 @@ export default function Home() {
   const top = headerTop + HEADER_H;
   const y = useSharedValue(0);
   // X-style chrome: the logo row and the tab bar slide away while scrolling down and come back as soon as the feed is
-  // scrolled up. `hide` is how many points of the logo row are tucked away (0…BAR).
+  // scrolled up. `hide` is how many points of the logo row are tucked away (0…BAR). The feed tabs stay in the page.
   const BAR = top;
   const prevY = useSharedValue(0);
   const hide = useSharedValue(0);
-  const storiesEnd = useSharedValue(0); // where the stories end in the list content
-  // The logo row's own hide: on the way back up it slides out again as the stories come into view, so the stories
+  const tabsY = useSharedValue(0); // the tabs' place in the list content
+  // The logo row's own hide: on the way back up it slides out again as the tabs and stories come into view, so the stories
   // never show under it; it comes back only with the top of the page (it scrolls in with the content).
   const topHide = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -47,8 +48,8 @@ export default function Home() {
     prevY.set(yy);
     hide.set(yy <= 0 ? 0 : Math.min(BAR, Math.max(0, hide.get() + dy)));
     homeChromeHidden.set(hide.get() / BAR);
-    const settle = storiesEnd.get() - top; // scroll offset at which the stories' bottom reaches the logo row's
-    topHide.set(yy <= 0 || !storiesEnd.get() ? hide.get() : Math.max(hide.get(), Math.min(BAR, BAR - (yy - settle))));
+    const settle = tabsY.get() + TABS_H - top; // scroll offset at which the tabs' bottom reaches the logo row's
+    topHide.set(yy <= 0 || !tabsY.get() ? hide.get() : Math.max(hide.get(), Math.min(BAR, BAR - (yy - settle))));
     y.set(yy);
   });
   useFocusEffect(
@@ -59,6 +60,11 @@ export default function Home() {
   // The logo row scrolls away with the list near the top; further down it follows `hide` (whichever is lower).
   const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -topHide.get()) }] }));
 
+  // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
+  const swap = useSharedValue(1);
+  const onTab = useCallback(() => {
+    swap.set(withSequence(withTiming(0, { duration: 120 }), withTiming(1, { duration: 260 })));
+  }, [swap]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -131,10 +137,12 @@ export default function Home() {
     const entering = first && intro ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : undefined;
     return (
       <Animated.View collapsable={false} entering={entering}>
-        <FeedPost post={item} onHide={hidePost} />
+        <Swap value={swap}>
+          <FeedPost post={item} onHide={hidePost} />
+        </Swap>
       </Animated.View>
     );
-  }, [hidePost]);
+  }, [hidePost, swap]);
 
   return (
     <View style={styles.root}>
@@ -161,8 +169,9 @@ export default function Home() {
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
               <HomeStories stories={HOME_STORIES} />
             </Animated.View>
-            {/* Not designed (the feed tabs were removed): a full-width hairline between the stories and the posts */}
-            <View style={styles.storiesLine} onLayout={(e) => storiesEnd.set(top + e.nativeEvent.layout.y)} />
+            <View onLayout={(e) => tabsY.set(top + e.nativeEvent.layout.y)}>
+              <FeedTabs onChange={onTab} />
+            </View>
             {publishing ? (
               <Collapse closed={!!publishing.done}>
                 <PostingRow coverUri={publishing.coverUri} />
@@ -206,8 +215,14 @@ export default function Home() {
   );
 }
 
+function Swap({ value, children }: { value: SharedValue<number>; children: ReactNode }) {
+  const style = useAnimatedStyle(() => ({ opacity: value.get(), transform: [{ translateY: (1 - value.get()) * 10 }] }));
+  return <Animated.View style={style}>{children}</Animated.View>;
+}
+
 const IOS = Platform.OS === 'ios';
 const HEADER_H = 60;
+const TABS_H = 51.5;
 // Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
 const THRESHOLD = 64;
 const HOLD = 52;
@@ -233,7 +248,7 @@ const styles = StyleSheet.create({
   fade: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: colors.bg },
   fadeLine: { position: 'absolute', left: 0, right: 0, bottom: -0.75, height: 0.75, backgroundColor: '#E9E9E9' },
   content: { paddingBottom: 24 },
-  storiesLine: { marginTop: 12, height: 0.75, backgroundColor: '#E9E9E9' },
+  // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   storiesGap: { marginBottom: -1.3 },
   stories: { marginTop: -2, marginLeft: -1.5 },
