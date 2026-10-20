@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   text: { marginTop: 1.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.9, lineHeight: 21.7, color: colors.text },
   media: { marginTop: 14.3, marginLeft: 0.7, width: 323.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
-  actions: { height: 18.5, marginTop: 8.9, marginLeft: 1 },
+  actions: { height: 18.5, marginTop: 10.9, marginLeft: 1 },
   like: { position: 'absolute', left: -1.5, top: 0 },
   comment: { position: 'absolute', left: 91.9, top: 0.7 },
   views: { position: 'absolute', left: 180.3, top: 0.85 },
