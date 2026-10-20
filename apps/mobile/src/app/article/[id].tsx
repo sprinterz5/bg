@@ -441,10 +441,10 @@ function Reader({ article }: { article: Article }) {
           collapsable={false}
           pointerEvents="none"
           onLayout={measurePicture}
-          style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 24.96 : 30.7 }, pictureVisible]}>
+          style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 28.96 : 39.7 }, pictureVisible]}>
           <Image source={article.cover} style={styles.fill} contentFit="cover" onLoad={(e) => e.source.width && e.source.height && setCoverAspect(e.source.width / e.source.height)} />
         </Animated.View>
-        <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 50 }, chromeStyle]}>
+        <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 46 }, chromeStyle]}>
           <PressableScale onPress={() => setSharing(true)} hitSlop={8} accessibilityLabel="Share" style={styles.previewShare}>
             <Icon name="readerShare" width={18.4} height={18.4} />
             <Text style={styles.previewCount}>{article.shares}</Text>
@@ -648,8 +648,8 @@ const styles = StyleSheet.create({
   previewMore: { position: 'absolute', right: 17.8, top: 17.8, flexDirection: 'row', gap: 3.67 },
   moreDot: { width: 3.33, height: 3.33, borderRadius: 1.67, backgroundColor: '#000000' },
   previewTitle: { marginTop: 48.07, marginLeft: 15, width: 360, fontFamily: INTER_FAMILIES['800'], fontSize: 34.75, lineHeight: 43.7, letterSpacing: -1.39, color: colors.text },
-  previewMeta: { marginTop: 26.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['400'], fontSize: 12.75, lineHeight: 15, letterSpacing: 0.1275, color: colors.text },
-  previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 16.75, lineHeight: 26.4, letterSpacing: 0.1675, color: colors.text },
+  previewMeta: { marginTop: 21.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['400'], fontSize: 12.75, lineHeight: 15, letterSpacing: 0.1275, color: colors.text },
+  previewSubtitle: { marginTop: 10.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 16.75, lineHeight: 26.4, letterSpacing: 0.1675, color: colors.text },
   picture: { marginLeft: 15, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   previewBar: { position: 'absolute', left: 0, right: 0, height: 22 },
   previewShare: { position: 'absolute', left: 21.05, top: 1.8, flexDirection: 'row', alignItems: 'center', gap: 13.5 },
