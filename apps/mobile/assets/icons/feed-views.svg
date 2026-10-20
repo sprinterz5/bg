@@ -1,7 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="17.5" viewBox="0 0 16 17.5" fill="none"><defs><path id="stroke3_4472_2169" d="M242.25 654.487H244.25V668.05H242.25V654.487ZM246.25 656.425H248.25V668.05H246.25V656.425ZM250.25 652.55H252.25V668.05H250.25V660.3V652.55ZM238.25 660.3H240.25V668.05H238.25V660.3Z" />
-<mask id="stroke4_4472_2169" fill="white">
-<use xlink:href="#stroke3_4472_2169" />
-</mask>
-</defs><g transform="translate(-237.2 -651.5)"><use xlink:href="#stroke3_4472_2169" fill="#999999" />
-<path d="M242.25 654.487H244.25V668.05H242.25V654.487ZM246.25 656.425H248.25V668.05H246.25V656.425ZM250.25 652.55H252.25V668.05H250.25V660.3V652.55ZM238.25 660.3H240.25V668.05H238.25V660.3Z" stroke-width="0.4" stroke="white" mask="url(#stroke4_4472_2169)" />
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="48" height="52.5" viewBox="0 0 16 17.5" fill="none"><defs><path id="stroke3_4472_2169" d="M242.25 654.487H244.25V668.05H242.25V654.487ZM246.25 656.425H248.25V668.05H246.25V656.425ZM250.25 652.55H252.25V668.05H250.25V660.3V652.55ZM238.25 660.3H240.25V668.05H238.25V660.3Z" />
+
+</defs><g transform="translate(-237.2 -651.5)"><use xlink:href="#stroke3_4472_2169" fill="#0F1419" />
+
 </g></svg>

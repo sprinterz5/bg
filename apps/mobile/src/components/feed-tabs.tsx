@@ -69,8 +69,8 @@ function TabLabel({ label, index, sel }: { label: string; index: number; sel: Sh
 
 const styles = StyleSheet.create({
   root: { height: 51.5 },
-  tab: { position: 'absolute', top: 19.15 },
-  label: { fontFamily: INTER_FAMILIES['500'], fontSize: 14.1, lineHeight: 17, color: '#999999' },
+  tab: { position: 'absolute', top: 18.15 },
+  label: { fontFamily: INTER_FAMILIES['500'], fontSize: 15.75, lineHeight: 19, color: '#999999' },
   line: { position: 'absolute', left: 2.5, right: 0, bottom: 0, height: 0.75, backgroundColor: '#E9E9E9' },
   bar: { position: 'absolute', left: 0, bottom: 0.25, width: BAR, height: 2, borderRadius: 1, backgroundColor: '#2A2121' },
 });

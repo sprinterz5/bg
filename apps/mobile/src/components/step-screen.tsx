@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type TextStyle } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/theme';
@@ -60,7 +60,7 @@ export function StepScreen({
         </View>
       ) : null}
 
-      <Animated.View collapsable={false} style={titleShift ? { marginTop: titleShift } : undefined} entering={FadeInDown.duration(380).withInitialValues({ transform: [{ translateY: 10 }] })}>
+      <Animated.View collapsable={false} style={titleShift ? { marginTop: titleShift } : undefined} entering={FadeIn.delay(80).duration(260)}>
         <Text style={[styles.title, centered && styles.centerText, titleStyle]}>{title}</Text>
         {subtitle ? <Text style={[styles.subtitle, centered && styles.centerText, subtitleStyle]}>{subtitle}</Text> : null}
       </Animated.View>

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colors, layout, motion } from '@/theme';
+import { colors, layout } from '@/theme';
 import { PressableScale } from './pressable-scale';
 import { AnimatedText } from '@/components/text';
 
@@ -24,7 +24,8 @@ export function PrimaryButton({ title, onPress, enabled = true, loading = false,
   const active = useSharedValue(enabled ? 1 : 0);
 
   useEffect(() => {
-    active.set(withTiming(enabled ? 1 : 0, { duration: motion.base }));
+    // quick: the button should be black as soon as the step is valid
+    active.set(withTiming(enabled ? 1 : 0, { duration: 140 }));
   }, [enabled, active]);
 
   const outline = variant === 'outline';

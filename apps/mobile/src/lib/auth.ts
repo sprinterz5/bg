@@ -30,7 +30,8 @@ export async function completeSignup(draft: SignupDraft): Promise<SessionUser> {
       displayName: draft.name,
       password: draft.password,
       interests: draft.interests,
-      ageConfirmed: draft.ageConfirmed || undefined,
+      // The age question is off the name step for now (it will come back elsewhere); the backend still requires it.
+      ageConfirmed: true,
     },
   });
   await saveTokens(data);

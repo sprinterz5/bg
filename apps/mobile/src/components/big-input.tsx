@@ -1,13 +1,23 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { StyleSheet, type TextInputProps } from 'react-native';
 
 import { colors } from '@/theme';
 import { INTER_FAMILIES, TextInput } from '@/components/text';
 
-export const BigInput = forwardRef<TextInput, TextInputProps>(function BigInput({ style, ...props }, ref) {
+// autoFocus waits for the screen's slide-in: the keyboard rising during the push made the step jerk in.
+const FOCUS_DELAY = 380;
+
+export const BigInput = forwardRef<TextInput, TextInputProps>(function BigInput({ style, autoFocus, ...props }, ref) {
+  const inner = useRef<TextInput>(null);
+  useImperativeHandle(ref, () => inner.current as TextInput);
+  useEffect(() => {
+    if (!autoFocus) return;
+    const t = setTimeout(() => inner.current?.focus(), FOCUS_DELAY);
+    return () => clearTimeout(t);
+  }, [autoFocus]);
   return (
     <TextInput
-      ref={ref}
+      ref={inner}
       placeholderTextColor={colors.disabled}
       cursorColor={colors.text}
       autoCorrect={false}

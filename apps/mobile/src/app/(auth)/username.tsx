@@ -13,6 +13,8 @@ import { push } from '@/lib/nav';
 
 type Status = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
+const AVAILABLE = new Map<string, boolean>();
+
 export default function UsernameStep() {
   const { draft, updateDraft } = useSession();
   const [username, setUsername] = useState(draft.username);
@@ -23,13 +25,17 @@ export default function UsernameStep() {
     if (!username) return setStatus('idle');
     if (!USERNAME_PATTERN.test(username)) return setStatus('invalid');
 
+    // answers are cached, and the request goes out 120ms after the last keystroke (was 300)
+    const cached = AVAILABLE.get(username);
+    if (cached !== undefined) return setStatus(cached ? 'available' : 'taken');
     setStatus('checking');
     const id = ++requestId.current;
     const timer = setTimeout(async () => {
       const available = await checkUsernameAvailable(username).catch(() => null);
+      if (available !== null) AVAILABLE.set(username, available);
       if (id !== requestId.current) return;
       setStatus(available === null ? 'idle' : available ? 'available' : 'taken');
-    }, 300);
+    }, 120);
     return () => clearTimeout(timer);
   }, [username]);
 

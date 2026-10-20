@@ -73,7 +73,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         </Pressable>
 
         <Pressable onPress={openArticle} accessibilityRole="button">
-          {/* TH: the title in #0F1419, the caption after a blank line in #999 */}
+          {/* title and caption (after a blank line) both #0F1419 */}
           <Text style={styles.text}>
             {post.title}
             {post.caption ? <Text style={styles.caption}>{`\n\n${post.caption}`}</Text> : null}
@@ -89,7 +89,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         <View style={styles.actions}>
           <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
             <PopIcon active={liked}>
-              <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={21} height={18.5} tintColor={liked ? undefined : INK} />
+              <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={21} height={18.5} />
             </PopIcon>
           </PressableScale>
           {/* the count rolls to its new value */}
@@ -97,20 +97,20 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
             <RollingLabel text={formatCount(post.likes + (liked ? 1 : 0))} style={styles.countText} />
           </View>
           <PressableScale onPress={openArticle} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
-            <Icon name="feedComment" width={16.4} height={16.4} tintColor={INK} />
+            <Icon name="feedComment" width={16.4} height={16.4} />
           </PressableScale>
           <Text style={[styles.count, styles.commentCount]}>{formatCount(post.comments)}</Text>
           <View style={styles.views}>
-            <Icon name="feedViews" width={16} height={17.5} tintColor={INK} />
+            <Icon name="feedViews" width={16} height={17.5} />
           </View>
           <Text style={[styles.count, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
             <PopIcon active={saved}>
-              <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmark'} width={14.5} height={16.1} tintColor={saved ? undefined : INK} />
+              <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmark'} width={14.5} height={16.1} />
             </PopIcon>
           </PressableScale>
           <PressableScale onPress={share} hitSlop={10} accessibilityLabel="Share" style={styles.share}>
-            <Icon name="feedShare" width={15.5} height={15.5} tintColor={INK} />
+            <Icon name="feedShare" width={15.5} height={15.5} />
           </PressableScale>
         </View>
       </View>
@@ -138,12 +138,12 @@ const styles = StyleSheet.create({
   root: { paddingTop: 10.91, paddingBottom: 19.8 },
   avatar: { position: 'absolute', left: 7.5, top: 13.05 },
   column: { marginLeft: 58.5 },
-  head: { height: 18, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
-  name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 14.7, lineHeight: 18, color: colors.text },
-  handle: { flexShrink: 2, marginLeft: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 14.6, lineHeight: 18, color: GRAY, opacity: 0.95 },
+  head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
+  name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 15.5, lineHeight: 19, color: colors.text },
+  handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.5, lineHeight: 19, color: GRAY, opacity: 0.95 },
   dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
-  age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 14.6, lineHeight: 18, color: GRAY, opacity: 0.95 },
-  text: { marginTop: 1.94, width: 305, fontFamily: INTER_FAMILIES['400'], fontSize: 13.8, lineHeight: 20.5, color: colors.text },
+  age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 15.5, lineHeight: 19, color: GRAY, opacity: 0.95 },
+  text: { marginTop: 1.94, width: 305, fontFamily: INTER_FAMILIES['400'], fontSize: 14.9, lineHeight: 22, color: colors.text },
   media: { marginTop: 14.3, marginLeft: 0.7, width: 325.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   actions: { height: 18.5, marginTop: 7.9, marginLeft: 1 },
@@ -152,10 +152,10 @@ const styles = StyleSheet.create({
   views: { position: 'absolute', left: 179.7, top: 0 },
   bookmark: { position: 'absolute', left: 266.3, top: 0.6 },
   share: { position: 'absolute', left: 302.3, top: 1.2 },
-  count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 12.1, lineHeight: 15, color: INK },
-  caption: { color: GRAY },
-  countBox: { position: 'absolute', top: 2.4, height: 15, overflow: 'hidden' },
-  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.1, lineHeight: 15, color: INK },
+  count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
+  caption: { color: colors.text },
+  countBox: { position: 'absolute', top: 1.9, height: 16, overflow: 'hidden' },
+  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
   viewsCount: { left: 201.46 },
