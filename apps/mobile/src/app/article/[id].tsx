@@ -441,7 +441,7 @@ function Reader({ article }: { article: Article }) {
           collapsable={false}
           pointerEvents="none"
           onLayout={measurePicture}
-          style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 28.96 : 39.7 }, pictureVisible]}>
+          style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 31.96 : 42.7 }, pictureVisible]}>
           <Image source={article.cover} style={styles.fill} contentFit="cover" onLoad={(e) => e.source.width && e.source.height && setCoverAspect(e.source.width / e.source.height)} />
         </Animated.View>
         <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 60 }, chromeStyle]}>
