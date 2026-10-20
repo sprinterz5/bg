@@ -65,6 +65,7 @@ export default function Home() {
     }, [hide, BAR]),
   );
   // The logo row scrolls away with the list near the top; further down it follows `hide` (whichever is lower).
+  const headerLineStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, (y.get() - BAR) / 12)) }));
   const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -topHide.get()) }] }));
 
   // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
@@ -201,6 +202,8 @@ export default function Home() {
             {/* white behind the status bar too, for when the bar comes back over the feed */}
             <View style={[styles.headerCap, { top: -headerTop, height: headerTop }]} />
             <View style={styles.headerBg} />
+            {/* over the feed (not at the top of the page): a hairline under the logo row */}
+            <Animated.View style={[styles.headerLine, headerLineStyle]} />
             <View style={styles.header}>
               <PressableScale haptic onPress={pickStoryPhoto} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
                 <Icon name="homePlus" width={20} height={20} />
@@ -245,6 +248,7 @@ const styles = StyleSheet.create({
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   // stops 4 short of the header's bottom: the story rings start 2 above it and their tops were cut off
   headerBg: { position: 'absolute', left: 0, right: 0, top: 0, height: HEADER_H - 4, backgroundColor: colors.bg },
+  headerLine: { position: 'absolute', left: 0, right: 0, top: HEADER_H - 4, height: 0.75, backgroundColor: '#E9E9E9' },
   header: { height: HEADER_H, alignItems: 'center' },
   // AutoLayouted-34 (BG(2)): plus at (22.5, 61.5), bell at (343.5, 61) incl. their strokes; logo ink 107.3 wide from
   // 140.6 × 59.9; story rings 94 at x 12 + 113n, y 104.5.
