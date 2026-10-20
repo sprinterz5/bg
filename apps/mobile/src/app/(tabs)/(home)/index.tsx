@@ -40,12 +40,18 @@ export default function Home() {
   const BAR = top - COMPACT_GAP + TABS_H;
   const prevY = useSharedValue(0);
   const hide = useSharedValue(0);
+  const tabsY = useSharedValue(0); // the tabs' place in the list content
+  // The logo row's own hide: on the way back up it slides out again as the tabs settle into their place, so the stories
+  // never show under it; it comes back only with the top of the page (it scrolls in with the content).
+  const topHide = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
     const yy = e.contentOffset.y;
     const dy = yy - prevY.get();
     prevY.set(yy);
     hide.set(yy <= 0 ? 0 : Math.min(BAR, Math.max(0, hide.get() + dy)));
     homeChromeHidden.set(hide.get() / BAR);
+    const settle = tabsY.get() - top + COMPACT_GAP; // scroll offset at which the tabs are back in their place
+    topHide.set(yy <= 0 || !tabsY.get() ? hide.get() : Math.max(hide.get(), Math.min(BAR, BAR - (yy - settle))));
     y.set(yy);
   });
   useFocusEffect(
@@ -54,7 +60,7 @@ export default function Home() {
     }, [hide, BAR]),
   );
   // The logo row scrolls away with the list near the top; further down it follows `hide` (whichever is lower).
-  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -hide.get()) }] }));
+  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -topHide.get()) }] }));
 
   // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
   const swap = useSharedValue(1);
@@ -100,13 +106,12 @@ export default function Home() {
   const native = Gesture.Native();
 
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
-  const tabsY = useSharedValue(0); // the tabs' place in the list content
   // The status-bar cover is for posts passing under the status bar: it goes as the top bar comes back over it.
-  const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.min(Math.max(y.get(), 0), hide.get()) / top) }));
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.min(Math.max(y.get(), 0), topHide.get()) / top) }));
   // Feed tabs: in their place under the stories, or right under the logo row while the top bar is out.
   const tabsStyle = useAnimatedStyle(() => {
     const at = tabsY.get() - y.get() + (IOS ? 0 : drag.value);
-    return { opacity: tabsY.get() ? 1 : 0, transform: [{ translateY: Math.max(at, top - COMPACT_GAP - hide.get()) }] };
+    return { opacity: tabsY.get() ? 1 : 0, transform: [{ translateY: Math.max(at, top - COMPACT_GAP - topHide.get()) }] };
   });
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
