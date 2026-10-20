@@ -12,7 +12,7 @@ export type FeedTab = (typeof TABS)[number];
 // AutoLayouted-34 (BG(2)): labels Inter Medium 14.1 (active black, others #999) starting at x 18.7 / 114.3 / 231.5 /
 // 326.9, cap tops 239.6; under the active one a 59×2 #2A2121 bar (r 1) at 265.5 (x 16 under "For you"), over a
 // full-width 0.75 #E9E9E9 line at 267 (from x 2.5).
-const LEFTS = [18.7, 114.3, 231.5, 326.9];
+const LEFTS = [19.7, 115.3, 232.5, 327.9]; // +1 asked for
 const BAR = 67; // 59 in the frame, +4 each side asked for
 
 /** Not designed: the tabs only switch the highlighted label for now (the feed is the same mock for each). */
@@ -20,8 +20,8 @@ export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
   const [active, setActive] = useState(0);
   // label centres, measured on layout (a JS ref: writing a shared value from several onLayout calls lost updates and
   // left 0s, which sent the bar off to the left)
-  const centers = useRef<number[]>([45.5, 0, 0, 0]);
-  const x = useSharedValue(12);
+  const centers = useRef<number[]>([46.5, 0, 0, 0]);
+  const x = useSharedValue(13);
   const sel = useSharedValue(0); // active index, animated: the labels cross-fade their colour
   const barStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
 
