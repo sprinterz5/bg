@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   person: { width: 75, height: 121, marginRight: -75 },
   avatar: { width: 75, height: 75, borderRadius: 37.5, backgroundColor: colors.surfaceSoft },
   check: { position: 'absolute', left: 55.5, top: 53.5 },
-  name: { marginTop: 6.48, marginHorizontal: -20, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 12.2, lineHeight: 15, color: '#000000' },
+  name: { marginTop: 6.48, marginHorizontal: -20, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 12.2, lineHeight: 15, color: colors.text },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingTop: 10.5, backgroundColor: '#FFFFFF', borderTopWidth: 0.5, borderTopColor: '#EFF3F4' },
   send: { marginHorizontal: 28, height: 38, borderRadius: 7, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   sendOff: { backgroundColor: '#B3B3B3' },

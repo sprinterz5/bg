@@ -3,7 +3,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View, ScrollView } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Animated, { Easing, Extrapolation, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
@@ -45,6 +45,9 @@ const AVATAR_PLACEHOLDER = require('@/assets/icons/avatar-placeholder.png');
 const MORE_CHARS = 8;
 const CAPTION_LH = 15.65;
 const CAPTION_SLACK = 3;
+// Autolayouted-7 / -8: the card the photo shrinks into, at (104.5, 48)
+const CARD_W = 178;
+const CARD_H = 247;
 const CAPTION_MS = 320;
 // Open / close (not in the design): the viewer grows out of the story's photo on Home and shrinks back into it.
 const OPEN_MS = 420;
@@ -550,29 +553,18 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
   const ref = useRef<View>(null);
   const [expanded, setExpanded] = useState(false);
   const [cut, setCut] = useState<string | null>(null);
-  // "...more": the caption box grows line by line and, anchored at the bottom, lifts the author and the text up.
-  const [lines, setLines] = useState(0);
-  const [showFull, setShowFull] = useState(false);
-  const [settled, setSettled] = useState(0); // re-snapshot once the caption has finished moving
+  // "...more" (Autolayouted-7 / -8): the photo shrinks into a card at the top and a dark sheet with the whole
+  // caption rises from the bottom; tapping the card or the handle puts it back.
   const open = useSharedValue(0);
-  const onCaptionSettled = useCallback((isOpen: boolean) => {
-    if (!isOpen) setShowFull(false);
-    setSettled((n) => n + 1);
-  }, []);
   const toggleCaption = () => {
-    if (cut === null) return; // fits in two lines
+    if (cut === null && !expanded) return; // fits in two lines
     const next = !expanded;
     setExpanded(next);
-    if (next) setShowFull(true);
     open.set(withTiming(next ? 1 : 0, { duration: CAPTION_MS, easing: Easing.out(Easing.cubic) }, (fin) => {
-      if (fin) runOnJS(onCaptionSettled)(next);
+      if (fin) runOnJS(setSettled)((n: number) => n + 1);
     }));
   };
-  const captionStyle = useAnimatedStyle(() => {
-    if (!lines) return {};
-    const shut = Math.min(lines, 2);
-    return { height: CAPTION_LH * (shut + (lines - shut) * open.get()) + CAPTION_SLACK };
-  });
+  const [settled, setSettled] = useState(0); // re-snapshot once the sheet has finished moving
   const [photoReady, setPhotoReady] = useState(false);
   const [avatarReady, setAvatarReady] = useState(!story.author.avatar);
   // Snapshot anyway if a picture never reports onLoad (seen on Android for pages under the top one).
@@ -584,6 +576,18 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
 
   const photoH = photoHeight(story, width);
   const photoTop = insets.top + (390 - 47) - photoH / 2;
+  const cardTop = insets.top + 1;
+  const sheetTop = insets.top + (305 - 47);
+  // the full-screen photo flies into the card: uniform scale on its centre, then the card takes over
+  const photoStyle = useAnimatedStyle(() => {
+    const k = open.get();
+    const s = 1 + (CARD_W / width - 1) * k;
+    const dy = (cardTop + CARD_H / 2 - (photoTop + photoH / 2)) * k;
+    return { opacity: 1 - interpolate(k, [0.7, 1], [0, 1], Extrapolation.CLAMP), transform: [{ translateY: dy }, { scale: s }] };
+  });
+  const cardStyle = useAnimatedStyle(() => ({ opacity: interpolate(open.get(), [0.6, 1], [0, 1], Extrapolation.CLAMP) }));
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: (height - sheetTop) * (1 - open.get()) }] }));
+  const infoStyle = useAnimatedStyle(() => ({ opacity: 1 - open.get() }));
 
   // Snapshot for the page turn once the pictures are on screen, and again after the caption opens or closes.
   const ready = (photoReady && avatarReady) || timedOut;
@@ -622,20 +626,22 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
       accessibilityElementsHidden={!top}
       importantForAccessibility={top ? 'auto' : 'no-hide-descendants'}
       style={[styles.page, hideStyle]}>
-      <Image
-        source={story.image}
-        fadeDuration={0}
-        onLoad={() => {
-          setPhotoReady(true);
-          onPhoto?.();
-        }}
-        resizeMode="cover"
-        style={{ position: 'absolute', top: photoTop, width, height: photoH }}
-      />
+      <Animated.View style={[{ position: 'absolute', top: photoTop, width, height: photoH }, photoStyle]}>
+        <Image
+          source={story.image}
+          fadeDuration={0}
+          onLoad={() => {
+            setPhotoReady(true);
+            onPhoto?.();
+          }}
+          resizeMode="cover"
+          style={{ width, height: photoH }}
+        />
+      </Animated.View>
       <Pressable style={[styles.half, { left: 0, width: width / 2, height }]} onPress={() => onTap(-1)} accessibilityLabel="Previous story" />
       <Pressable style={[styles.half, { left: width / 2, width: width / 2, height }]} onPress={() => onTap(1)} accessibilityLabel="Next story" />
 
-      <View style={[styles.info, { bottom: barH }]} pointerEvents="box-none">
+      <Animated.View style={[styles.info, { bottom: barH }, infoStyle]} pointerEvents={expanded ? 'none' : 'box-none'}>
         <View style={styles.author}>
           {story.author.avatar ? (
             <Image source={story.author.avatar} fadeDuration={0} onLoad={() => setAvatarReady(true)} style={styles.avatar} />
@@ -660,13 +666,12 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
               const l = e.nativeEvent.lines;
               const next = l.length > 2 ? (l[0].text + l[1].text).slice(0, -MORE_CHARS).trimEnd() : null;
               setCut((c) => (c === next ? c : next));
-              setLines(l.length);
             }}>
             {story.caption}
           </Text>
-          <Animated.View collapsable={false} style={[styles.captionBox, captionStyle]}>
-            <Text style={styles.captionText} numberOfLines={showFull ? undefined : 2}>
-              {showFull || cut === null ? (
+          <View style={styles.captionBox}>
+            <Text style={styles.captionText} numberOfLines={2}>
+              {cut === null ? (
                 story.caption
               ) : (
                 <>
@@ -674,9 +679,30 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
                 </>
               )}
             </Text>
-          </Animated.View>
+          </View>
         </Pressable>
-      </View>
+      </Animated.View>
+
+      {/* the open caption: card + sheet; a tap anywhere else closes it instead of turning the story */}
+      {expanded ? <Pressable style={StyleSheet.absoluteFill} onPress={toggleCaption} accessibilityLabel="Close caption" /> : null}
+      <Animated.View pointerEvents={expanded ? 'auto' : 'none'} style={[styles.card, { top: cardTop }, cardStyle]}>
+        <Pressable onPress={toggleCaption} style={StyleSheet.absoluteFill} accessibilityLabel="Close caption">
+          <Image source={story.image} fadeDuration={0} resizeMode="contain" style={styles.cardPhoto} />
+        </Pressable>
+      </Animated.View>
+      <Animated.View pointerEvents={expanded ? 'auto' : 'none'} style={[styles.sheet, { top: sheetTop }, sheetStyle]}>
+        <Pressable onPress={toggleCaption} hitSlop={12} style={styles.handleHit} accessibilityLabel="Close caption">
+          <View style={styles.handle} />
+        </Pressable>
+        <View style={styles.sheetAuthor}>
+          <Image source={story.author.avatar ?? AVATAR_PLACEHOLDER} fadeDuration={0} style={styles.sheetAvatar} />
+          <Text style={styles.sheetName}>{story.author.username}</Text>
+        </View>
+        <ScrollView style={styles.sheetScroll} contentContainerStyle={styles.sheetScrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={styles.sheetText}>{story.caption}</Text>
+        </ScrollView>
+        <Text style={[styles.sheetTime, { marginBottom: Math.max(insets.bottom - 7.6, 12) }]}>{story.timeAgo}</Text>
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -701,6 +727,20 @@ const styles = StyleSheet.create({
   caption: { marginTop: 18.9, marginBottom: 14.1, fontFamily: INTER_FAMILIES['400'], fontSize: 12.65, lineHeight: 15.65, color: '#FFFFFF' },
   measure: { position: 'absolute', left: 0, right: 0, opacity: 0 },
   // Same box as `caption`; the slack below the last line keeps descenders from being clipped while it animates.
+  card: { position: 'absolute', left: 104.5, width: CARD_W, height: CARD_H, borderRadius: 10, overflow: 'hidden', backgroundColor: '#0F1419' },
+  cardPhoto: { width: CARD_W, height: CARD_H },
+  // sheet #181C1F (r 40) from y 305: handle 53×2 #8E8E93 13 down, avatar 27 at x 18 38 down, name Inter Bold 12.9 white;
+  // caption Inter 12.85 / 22 white from 80 down, 20 in; "2h ago" Inter 12.2 #999 at the bottom
+  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 40, borderTopRightRadius: 40, backgroundColor: '#181C1F' },
+  handleHit: { alignSelf: 'center', paddingTop: 13, paddingBottom: 10 },
+  handle: { width: 53, height: 2, borderRadius: 1, backgroundColor: '#8E8E93' },
+  sheetAuthor: { flexDirection: 'row', alignItems: 'center', marginTop: 3, marginLeft: 18 },
+  sheetAvatar: { width: 27, height: 27, borderRadius: 13.5 },
+  sheetName: { marginLeft: 12.7, fontFamily: INTER_FAMILIES['700'], fontSize: 12.9, lineHeight: 16, color: '#FFFFFF' },
+  sheetScroll: { flex: 1, marginTop: 15.2 },
+  sheetScrollContent: { paddingLeft: 19.6, paddingRight: 18, paddingBottom: 16 },
+  sheetText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.85, lineHeight: 22, color: '#FFFFFF' },
+  sheetTime: { marginLeft: 19.8, fontFamily: INTER_FAMILIES['400'], fontSize: 12.2, lineHeight: 15, color: MUTED },
   captionBox: { marginTop: 18.9, marginBottom: 14.1 - CAPTION_SLACK, overflow: 'hidden' },
   captionText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.65, lineHeight: CAPTION_LH, color: '#FFFFFF' },
   more: { color: MUTED },

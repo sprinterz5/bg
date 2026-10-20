@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 23,
     letterSpacing: -0.04,
-    color: '#000000',
+    color: colors.text,
     padding: 0,
     minHeight: 46,
   },

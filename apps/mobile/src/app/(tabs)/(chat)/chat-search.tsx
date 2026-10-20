@@ -260,14 +260,14 @@ const styles = StyleSheet.create({
   tabs: { height: 47.75, borderBottomWidth: 0.75, borderBottomColor: LINE },
   tab: { position: 'absolute', top: 14.41 },
   tabText: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.5, lineHeight: 17, color: MUTED },
-  tabActive: { color: '#000000' },
+  tabActive: { color: colors.text },
   underline: { position: 'absolute', left: 0, bottom: -0.75, width: UNDERLINE_W, height: 0.75, backgroundColor: '#000000' },
   row: { height: 75, flexDirection: 'row', paddingLeft: 11, paddingRight: 16 },
   avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.surfaceSoft },
   names: { flex: 1, marginLeft: 12.3, paddingTop: 7.06 },
-  name: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.4, lineHeight: 16, color: '#000000' },
+  name: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.4, lineHeight: 16, color: colors.text },
   sub: { marginTop: 2.86, fontFamily: INTER_FAMILIES['400'], fontSize: 13.4, lineHeight: 16, color: MUTED },
-  match: { color: '#000000' },
+  match: { color: colors.text },
   // Circle 127 at (125.5, 203) and the line at 360.6 — both centred on x 189–191 in the design; centred here.
   // AutoLayouted 22: the circle sits 6 left of centre in the frame, the line under it in #999
   empty: { alignItems: 'center', paddingTop: 36.25 },

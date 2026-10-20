@@ -110,9 +110,13 @@ export function ProfileButton({
   useEffect(() => {
     on.set(withTiming(primary ? 1 : 0, EASE));
   }, [primary, on]);
-  const off = large ? '#F2F2F2' : GRAY;
+  // TH: the light header buttons are white with a #D9D9D9 outline (were #F2F2F2 fills)
+  const off = large ? colors.bg : GRAY;
   const accent = large ? colors.text : colors.primary;
-  const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [off, accent]) }));
+  const bg = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(on.value, [0, 1], [off, accent]),
+    ...(large ? { borderColor: interpolateColor(on.value, [0, 1], ['#D9D9D9', accent]) } : null),
+  }));
   const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.text, '#FFFFFF']) }));
 
   return (
@@ -209,7 +213,7 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', marginTop: 22.42, paddingLeft: 13, paddingRight: 17, gap: 16 },
   buttonWrap: { flex: 1 },
   button: { borderRadius: 7, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  buttonLarge: { height: 42, borderRadius: 20 },
+  buttonLarge: { height: 42, borderRadius: 20, borderWidth: 1 },
   buttonText: { fontSize: 13, lineHeight: 16, fontWeight: '600' },
   buttonTextLarge: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.6, lineHeight: 17 },
 

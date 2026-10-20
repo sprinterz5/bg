@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   row: { height: 78, flexDirection: 'row', paddingLeft: 14, paddingRight: 15 },
   avatar: { width: 53, height: 53, borderRadius: 26.5, backgroundColor: colors.surfaceSoft },
   names: { flex: 1, marginLeft: 13.1, marginRight: 12, paddingTop: 10 },
-  name: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: '#000000' },
+  name: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: colors.text },
   unread: { fontFamily: INTER_FAMILIES['600'] },
   subRow: { marginTop: 2, flexDirection: 'row' },
   sub: { flexShrink: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 17, color: SUBTLE },

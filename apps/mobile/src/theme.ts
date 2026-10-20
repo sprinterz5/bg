@@ -1,8 +1,9 @@
 import { Platform } from 'react-native';
 
 export const colors = {
-  bg: '#FAFAFA',
-  text: '#000000',
+  bg: '#FFFFFF',
+  // TH export: text is #0F1419 everywhere (icons stay black)
+  text: '#0F1419',
   textMuted: '#8C8C8C',
   textSubtle: '#999999',
   textGray: '#6F6F71',

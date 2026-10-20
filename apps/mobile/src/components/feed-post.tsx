@@ -14,6 +14,8 @@ import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 
 const GRAY = '#999999';
+// TH: the action row went from #999 to the text colour
+const INK = colors.text;
 const RADIUS = 13.2;
 
 function formatCount(n: number) {
@@ -69,7 +71,11 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         </Pressable>
 
         <Pressable onPress={openArticle} accessibilityRole="button">
-          <Text style={styles.text}>{post.caption ? `${post.title}\n\n${post.caption}` : post.title}</Text>
+          {/* TH: the title in #0F1419, the caption after a blank line in #999 */}
+          <Text style={styles.text}>
+            {post.title}
+            {post.caption ? <Text style={styles.caption}>{`\n\n${post.caption}`}</Text> : null}
+          </Text>
         </Pressable>
 
         <PressableScale onPress={openArticle} scaleTo={0.98} accessibilityRole="button" accessibilityLabel={post.title} style={styles.media}>
@@ -80,22 +86,22 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
 
         <View style={styles.actions}>
           <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
-            <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={21} height={18.5} />
+            <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={21} height={18.5} tintColor={liked ? undefined : INK} />
           </PressableScale>
           <Text style={[styles.count, styles.likeCount, liked && styles.countActive]}>{formatCount(post.likes + (liked ? 1 : 0))}</Text>
           <PressableScale onPress={openArticle} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
-            <Icon name="feedComment" width={16.4} height={16.4} />
+            <Icon name="feedComment" width={16.4} height={16.4} tintColor={INK} />
           </PressableScale>
           <Text style={[styles.count, styles.commentCount]}>{formatCount(post.comments)}</Text>
           <View style={styles.views}>
-            <Icon name="feedViews" width={16} height={17.5} />
+            <Icon name="feedViews" width={16} height={17.5} tintColor={INK} />
           </View>
           <Text style={[styles.count, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
-            <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmark'} width={14.5} height={16.1} />
+            <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmark'} width={14.5} height={16.1} tintColor={saved ? undefined : INK} />
           </PressableScale>
           <PressableScale onPress={share} hitSlop={10} accessibilityLabel="Share" style={styles.share}>
-            <Icon name="feedShare" width={15.5} height={15.5} />
+            <Icon name="feedShare" width={15.5} height={15.5} tintColor={INK} />
           </PressableScale>
         </View>
       </View>
@@ -120,9 +126,9 @@ export const FeedSeparator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
-  root: { paddingTop: 10.91, paddingBottom: 16.3 },
+  root: { paddingTop: 10.91, paddingBottom: 19.8 },
   avatar: { position: 'absolute', left: 7.5, top: 13.05 },
-  column: { marginLeft: 57.5 },
+  column: { marginLeft: 58.5 },
   head: { height: 18, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 14.7, lineHeight: 18, color: colors.text },
   handle: { flexShrink: 2, marginLeft: 1, fontFamily: INTER_FAMILIES['400'], fontSize: 14.6, lineHeight: 18, color: GRAY, opacity: 0.95 },
@@ -131,13 +137,14 @@ const styles = StyleSheet.create({
   text: { marginTop: 1.94, width: 305, fontFamily: INTER_FAMILIES['400'], fontSize: 13.8, lineHeight: 20.5, color: colors.text },
   media: { marginTop: 14.3, marginLeft: 0.7, width: 325.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
-  actions: { height: 18.5, marginTop: 10.4 },
+  actions: { height: 18.5, marginTop: 7.9, marginLeft: 1 },
   like: { position: 'absolute', left: -1.5, top: 0 },
   comment: { position: 'absolute', left: 91.9, top: 0.7 },
   views: { position: 'absolute', left: 179.7, top: 0 },
   bookmark: { position: 'absolute', left: 266.3, top: 0.6 },
   share: { position: 'absolute', left: 302.3, top: 1.2 },
-  count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 12.1, lineHeight: 15, color: GRAY },
+  count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 12.1, lineHeight: 15, color: INK },
+  caption: { color: GRAY },
   countActive: { color: colors.text },
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },

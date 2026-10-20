@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { INTER_FAMILIES, Text } from '@/components/text';
+import { colors } from '@/theme';
 
 const TABS = ['For you', 'Following', 'Learn', 'Grow'] as const;
 export type FeedTab = (typeof TABS)[number];
@@ -55,10 +56,10 @@ export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
 }
 
 const styles = StyleSheet.create({
-  root: { height: 51 },
-  tab: { position: 'absolute', top: 18.65 },
+  root: { height: 51.5 },
+  tab: { position: 'absolute', top: 19.15 },
   label: { fontFamily: INTER_FAMILIES['500'], fontSize: 14.1, lineHeight: 17, color: '#999999' },
-  labelActive: { color: '#000000' },
+  labelActive: { color: colors.text },
   line: { position: 'absolute', left: 2.5, right: 0, bottom: 0, height: 0.75, backgroundColor: '#E9E9E9' },
   bar: { position: 'absolute', left: 0, bottom: 0.25, width: BAR, height: 2, borderRadius: 1, backgroundColor: '#2A2121' },
 });

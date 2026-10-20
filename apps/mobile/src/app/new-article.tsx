@@ -18,7 +18,7 @@ import { back } from '@/lib/nav';
 // AutoLayouted-16 … -19 (BG(2)), y − 47 under the status bar. Header: chevron at (15.5, 55.5), "New Article" Inter
 // Bold 14.2 centred (ink 61.7), ⋯ three 3.3 dots from x 354.8 at 66.3, a 1px #E9E9E9 line at 92. Below it, fixed
 // places: the title (Inter Bold 31.9, -0.03em, lines 42 apart, #0F1419) with its ink from 146.5, "3 pages · 223 words"
-// (Inter 12.3) at 297, the subtitle (Inter 15.6 / 26, #6B6B6B) from 322, the picture 360×272 (r 1) at (15, 419);
+// (Inter 12.3) at 297, the subtitle (Inter 15.6 / 26, #0F1419 since TH) from 322, the picture 360×272 (r 1) at (15, 419);
 // Post 360×38 (r 7) 15 above the home indicator / 10 above the keyboard.
 const LINE_Y = 93; // under the header line
 const WORDS_PER_PAGE = 75; // "3 pages · 223 words"
@@ -94,7 +94,7 @@ export default function NewArticle() {
           value={draft.subtitle}
           onChangeText={(subtitle) => updateDraft({ subtitle: subtitle.replace(/\n/g, ' ') })}
           placeholder="Subtitle..."
-          placeholderTextColor="#6B6B6B"
+          placeholderTextColor={colors.text}
           multiline
           maxLength={140}
           submitBehavior="blurAndSubmit"
@@ -146,10 +146,10 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   titleInput: { position: 'absolute', left: 15.6, width: 350, padding: 0, fontFamily: INTER_FAMILIES['700'], fontSize: 31.9, lineHeight: 42, letterSpacing: -0.96, color: '#0F1419' },
   meta: { position: 'absolute', left: 16.4, flexDirection: 'row', alignItems: 'center' },
-  metaText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.3, lineHeight: 15, color: '#000000' },
+  metaText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.3, lineHeight: 15, color: colors.text },
   metaDot: { width: 1.8, height: 1.8, borderRadius: 0.9, marginLeft: 5.8, marginTop: 1.5, backgroundColor: '#0F1419' },
   metaWords: { marginLeft: 5.1 },
-  subtitleInput: { position: 'absolute', left: 16.3, width: 340, padding: 0, fontFamily: INTER_FAMILIES['400'], fontSize: 15.6, lineHeight: 26, color: '#6B6B6B' },
+  subtitleInput: { position: 'absolute', left: 16.3, width: 340, padding: 0, fontFamily: INTER_FAMILIES['400'], fontSize: 15.6, lineHeight: 26, color: colors.text },
   picture: { position: 'absolute', left: 15, width: 360, height: 272, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   fill: { width: '100%', height: '100%' },
   footer: { paddingHorizontal: 15 },

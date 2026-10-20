@@ -634,25 +634,25 @@ const styles = StyleSheet.create({
   fill: { width: '100%', height: '100%' },
   pageText: { position: 'absolute', left: TEXT_SIDE },
   // ~17.8 / 26.5 in AutoLayouted 17 (cap 12.3).
-  body: { fontFamily: fonts.reading, fontSize: 17.8, lineHeight: LINE_HEIGHT, letterSpacing: -0.04, color: '#000000' },
+  body: { fontFamily: fonts.reading, fontSize: 17.8, lineHeight: LINE_HEIGHT, letterSpacing: -0.04, color: colors.text },
 
   // Preview (AutoLayouted-18): header 45 to a 1px #E9E9E9 rule; title Inter ExtraBold 31 / 43.7 (−0.75) at 93;
-  // "N pages · N min read" Inter Medium 12.3 27 under it; subtitle Inter 16.3 / 26.4 #6B6B6B; the picture 360x272 at
+  // "N pages · N min read" Inter Medium 12.3 27 under it; subtitle Inter 16.3 / 26.4 #0F1419 (TH); the picture 360x272 at
   // x 15, 25 under the subtitle; share (18.4) + count and bookmark 50 above the safe area.
   preview: { backgroundColor: colors.bg },
   previewHead: { height: 45, borderBottomWidth: 1, borderBottomColor: '#E9E9E9' },
   previewBack: { position: 'absolute', left: 15.5, top: 8.5 },
   previewAuthor: { position: 'absolute', left: 60, right: 60, top: 8, flexDirection: 'row', justifyContent: 'center', transform: [{ translateX: -5.6 }] },
-  previewName: { marginLeft: 9.2, marginTop: 3.85, fontFamily: INTER_FAMILIES['600'], fontSize: 15.4, lineHeight: 18, color: '#000000' },
+  previewName: { marginLeft: 9.2, marginTop: 3.85, fontFamily: INTER_FAMILIES['600'], fontSize: 15.4, lineHeight: 18, color: colors.text },
   previewMore: { position: 'absolute', right: 17.8, top: 17.8, flexDirection: 'row', gap: 3.67 },
   moreDot: { width: 3.33, height: 3.33, borderRadius: 1.67, backgroundColor: '#000000' },
-  previewTitle: { marginTop: 48.07, marginLeft: 15, width: 360, fontFamily: INTER_FAMILIES['800'], fontSize: 31, lineHeight: 43.7, letterSpacing: -0.75, color: '#000000' },
-  previewMeta: { marginTop: 26.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['500'], fontSize: 12.3, lineHeight: 15, color: '#000000' },
-  previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 16.3, lineHeight: 26.4, color: '#6B6B6B' },
+  previewTitle: { marginTop: 48.07, marginLeft: 15, width: 360, fontFamily: INTER_FAMILIES['800'], fontSize: 31, lineHeight: 43.7, letterSpacing: -0.75, color: colors.text },
+  previewMeta: { marginTop: 26.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['500'], fontSize: 12.3, lineHeight: 15, color: colors.text },
+  previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 16.3, lineHeight: 26.4, color: colors.text },
   picture: { marginLeft: 15, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   previewBar: { position: 'absolute', left: 0, right: 0, height: 22 },
   previewShare: { position: 'absolute', left: 21.05, top: 1.8, flexDirection: 'row', alignItems: 'center', gap: 13.5 },
-  previewCount: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.3, lineHeight: 16, color: '#000000' },
+  previewCount: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.3, lineHeight: 16, color: colors.text },
   previewBookmark: { position: 'absolute', left: 348, top: -0.25 },
 
   // Text pages (AutoLayouted 17): card 354x48 at (16.5, 23.5), radius 13.5; avatar 32 at (6.5, 7.5), name Inter Bold

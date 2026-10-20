@@ -21,21 +21,21 @@ export default function Welcome() {
   return (
     <View style={styles.root}>
       <View style={styles.main}>
-        <AnimatedText entering={FadeIn.duration(700)} style={[styles.logo, { top: insets.top + 185.9 }]}>
+        <AnimatedText entering={FadeIn.duration(700)} style={[styles.logo, { top: insets.top + 209.9 }]}>
           {' Thoughts '}
         </AnimatedText>
-        <AnimatedText entering={FadeIn.delay(150).duration(700)} style={[styles.tagline, { top: insets.top + 328.6 }]}>
+        <AnimatedText entering={FadeIn.delay(150).duration(700)} style={[styles.tagline, { top: insets.top + 352.6 }]}>
           Get smarter with friends.
         </AnimatedText>
 
-        <Animated.View collapsable={false} entering={FadeInDown.delay(250).duration(500)} style={[styles.create, { top: insets.top + 570.1 }]}>
+        <Animated.View collapsable={false} entering={FadeInDown.delay(250).duration(500)} style={[styles.create, { top: insets.top + 587.1 }]}>
           <PressableScale haptic scaleTo={0.97} onPress={createAccount} accessibilityRole="button" style={styles.createButton}>
             <Text style={styles.createText}>Create an account</Text>
           </PressableScale>
         </Animated.View>
       </View>
 
-      <Animated.View collapsable={false} entering={FadeIn.delay(400).duration(500)} style={[styles.bottom, { paddingBottom: insets.bottom + 10.9 }]}>
+      <Animated.View collapsable={false} entering={FadeIn.delay(400).duration(500)} style={[styles.bottom, { paddingBottom: insets.bottom + 12.9 }]}>
         <PressableScale onPress={() => push('/login')} style={styles.usernameLink} accessibilityRole="button">
           <Text style={styles.at}>@</Text>
           <Text style={styles.usernameText}>Log in by username</Text>
@@ -46,7 +46,7 @@ export default function Welcome() {
   );
 }
 
-// AutoLayouted (BG(2)), white, y − 47 under the status bar:
+// AutoLayouted (BG(2), TH moved the logo/tagline 24 and the button 17 lower, the bar 2 higher), white, y − 47:
 // "Thoughts" Caveat 88.4, ink 57.9…327.4 × 258.6; "Get smarter with friends." Inter SemiBold 20.1 #0F1419, ink from 71.6 × 379.9;
 // black pill 364×56 (r 28) at 13 × 617.1 with "Create an account" Inter SemiBold 16.3 white (ink 638.2);
 // #F5F5F5 bar from 762.1 with "@ Log in by username ›" (#999, Inter SemiBold 15.2 / 15.45), ink tops 784.1 / 783.3, arrow at 282.
