@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.4, lineHeight: 19, color: GRAY, opacity: 0.95 },
   dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
   age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 15.4, lineHeight: 19, color: GRAY, opacity: 0.95 },
-  text: { marginTop: 1.94, width: 305, fontFamily: INTER_FAMILIES['400'], fontSize: 14.8, lineHeight: 21.7, color: colors.text },
+  text: { marginTop: 1.94, width: 305, fontFamily: INTER_FAMILIES['400'], fontSize: 14.9, lineHeight: 21.7, color: colors.text },
   media: { marginTop: 15.3, marginLeft: 0.7, width: 325.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   actions: { height: 18.5, marginTop: 7.9, marginLeft: 1 },
