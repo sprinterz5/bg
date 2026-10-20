@@ -159,5 +159,5 @@ const styles = StyleSheet.create({
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
   viewsCount: { left: 201.46 },
-  separator: { height: 0.75, marginLeft: 2.5, backgroundColor: '#E9E9E9' },
+  separator: { height: 0.75, backgroundColor: '#E9E9E9' },
 });
