@@ -247,6 +247,6 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 24 },
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
-  storiesGap: { marginBottom: -1.3 },
+  storiesGap: { marginBottom: -0.3 },
   stories: { marginTop: -2, marginLeft: -1.5 },
 });
