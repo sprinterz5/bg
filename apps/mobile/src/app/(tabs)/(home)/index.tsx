@@ -35,8 +35,8 @@ export default function Home() {
   const y = useSharedValue(0);
   // X-style chrome: the top bar (logo row + feed tabs) and the tab bar slide away while scrolling down and come back
   // as soon as the feed is scrolled up. `hide` is how many points of the top bar are tucked away (0…BAR).
-  // when the bar comes back over the feed, the tabs sit 7 closer to the logo row than in the page
-  const COMPACT_GAP = 7;
+  // when the bar comes back over the feed, the tabs sit 9 closer to the logo row than in the page
+  const COMPACT_GAP = 9;
   const BAR = top - COMPACT_GAP + TABS_H;
   const prevY = useSharedValue(0);
   const hide = useSharedValue(0);
