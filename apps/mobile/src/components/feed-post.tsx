@@ -57,7 +57,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   return (
     <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={styles.root}>
       <Pressable onPress={() => openProfile(post.author.username)} hitSlop={4} accessibilityRole="link" accessibilityLabel={`${post.author.username} profile`} style={styles.avatar}>
-        <AuthorAvatar author={post.author} size={42} />
+        <AuthorAvatar author={post.author} size={41} />
       </Pressable>
 
       <View style={styles.column}>
