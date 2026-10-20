@@ -2,7 +2,7 @@ import { useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -39,17 +39,24 @@ export default function Home() {
   const prevY = useSharedValue(0);
   const hide = useSharedValue(0);
   const tabsY = useSharedValue(0); // the tabs' place in the list content
-  // The logo row's own hide: on the way back up it slides out again as the tabs and stories come into view, so the stories
+  // The logo row's own hide: on the way back up it slides out again as the tabs and stories come into view (eased), so the stories
   // never show under it; it comes back only with the top of the page (it scrolls in with the content).
   const topHide = useSharedValue(0);
+  const nearTop = useSharedValue(false);
   const onScroll = useAnimatedScrollHandler((e) => {
     const yy = e.contentOffset.y;
     const dy = yy - prevY.get();
     prevY.set(yy);
     hide.set(yy <= 0 ? 0 : Math.min(BAR, Math.max(0, hide.get() + dy)));
     homeChromeHidden.set(hide.get() / BAR);
-    const settle = tabsY.get() + TABS_H - top; // scroll offset at which the tabs' bottom reaches the logo row's
-    topHide.set(yy <= 0 || !tabsY.get() ? hide.get() : Math.max(hide.get(), Math.min(BAR, BAR - (yy - settle))));
+    // near the top (the tabs' bottom below the logo row's) the row ducks out on its own, eased, not tied to the finger
+    const near = yy > 0 && !!tabsY.get() && yy < tabsY.get() + TABS_H - top;
+    if (near !== nearTop.get()) {
+      nearTop.set(near);
+      topHide.set(withTiming(near ? BAR : hide.get(), { duration: 220, easing: Easing.out(Easing.cubic) }));
+    } else if (!near) {
+      topHide.set(hide.get());
+    }
     y.set(yy);
   });
   useFocusEffect(
