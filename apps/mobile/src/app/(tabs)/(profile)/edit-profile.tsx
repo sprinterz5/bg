@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,7 +9,7 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { INTER_FAMILIES, Text, TextInput } from '@/components/text';
 import { setAvatar } from '@/lib/auth';
-import { back, push } from '@/lib/nav';
+import { back } from '@/lib/nav';
 import { fetchProfile, takeSavedBio, updateMe } from '@/lib/users';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
@@ -24,6 +24,7 @@ export default function EditProfile() {
   const { user, updateUser } = useSession();
   const [name, setName] = useState(user?.name ?? '');
   const [bio, setBio] = useState<string | null>(null);
+  const savedBio = useRef<string | null>(null); // the bio the server has
   const username = user?.username;
 
   useFocusEffect(
@@ -33,7 +34,11 @@ export default function EditProfile() {
       if (!username) return;
       let alive = true;
       fetchProfile(username)
-        .then((p) => alive && saved === null && setBio(p.bio ?? ''))
+        .then((p) => {
+          if (!alive) return;
+          savedBio.current = p.bio ?? '';
+          if (saved === null) setBio(p.bio ?? '');
+        })
         .catch(() => {});
       return () => {
         alive = false;
@@ -51,6 +56,17 @@ export default function EditProfile() {
       updateUser({ name: user.name });
       setName(user.name);
       Alert.alert("Couldn't save the name", 'Check the connection and try again.');
+    });
+  };
+
+  const saveBio = () => {
+    const next = (bio ?? '').trim();
+    if (next === (savedBio.current ?? '')) return;
+    const before = savedBio.current;
+    savedBio.current = next;
+    updateMe({ bio: next }).catch(() => {
+      savedBio.current = before;
+      Alert.alert("Couldn't save the bio", 'Check the connection and try again.');
     });
   };
 
@@ -112,17 +128,23 @@ export default function EditProfile() {
             </Text>
             <View style={styles.underline} />
           </View>
-          <PressableScale onPress={() => push('/edit-bio')} scaleTo={0.99} style={styles.row} accessibilityRole="button" accessibilityLabel="Bio">
+          {/* Bio edited right here (asked for instead of the separate Edit bio screen); saved when the field loses focus */}
+          <View style={styles.bioRow}>
             <Text style={styles.label}>Bio</Text>
-            {bio ? (
-              <Text style={styles.bio} numberOfLines={2}>
-                {bio}
-              </Text>
-            ) : (
-              <Text style={[styles.value, { color: MUTED }]}>Enter</Text>
-            )}
-            <View style={[styles.underline, styles.bioUnderline]} />
-          </PressableScale>
+            <TextInput
+              value={bio ?? ''}
+              onChangeText={setBio}
+              onBlur={saveBio}
+              placeholder="Enter"
+              placeholderTextColor={MUTED}
+              multiline
+              maxLength={150}
+              cursorColor={colors.text}
+              style={styles.bioInput}
+              accessibilityLabel="Bio"
+            />
+            <View style={[styles.bioLine, styles.bioUnderline]} />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -146,4 +168,7 @@ const styles = StyleSheet.create({
   bio: { position: 'absolute', left: 128.1, right: 21, top: 16.3, fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 17.5, letterSpacing: 0.55, color: colors.text },
   underline: { position: 'absolute', left: 125.5, width: 243, top: 57, height: 1, backgroundColor: LINE },
   bioUnderline: { left: 126.5 },
+  bioRow: { minHeight: 58, paddingTop: 27.75, paddingBottom: 12 },
+  bioInput: { marginLeft: 124.7, marginRight: 21.5, padding: 0, paddingTop: 0, fontFamily: INTER_FAMILIES['400'], fontSize: 15, lineHeight: 20, color: colors.text },
+  bioLine: { position: 'absolute', bottom: 0, width: 243, height: 1, backgroundColor: LINE },
 });

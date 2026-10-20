@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
 import { AnimatedText, INTER_FAMILIES } from '@/components/text';
 import { colors } from '@/theme';
@@ -18,7 +18,9 @@ const BAR = 59;
 /** Not designed: the tabs only switch the highlighted label for now (the feed is the same mock for each). */
 export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
   const [active, setActive] = useState(0);
-  const centers = useSharedValue<number[]>([45.5, 0, 0, 0]);
+  // label centres, measured on layout (a JS ref: writing a shared value from several onLayout calls lost updates and
+  // left 0s, which sent the bar off to the left)
+  const centers = useRef<number[]>([45.5, 0, 0, 0]);
   const x = useSharedValue(16);
   const sel = useSharedValue(0); // active index, animated: the labels cross-fade their colour
   const barStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
@@ -27,7 +29,8 @@ export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
     if (i === active) return;
     Haptics.selectionAsync();
     setActive(i);
-    x.set(withSpring(centers.get()[i] - BAR / 2, { damping: 20, stiffness: 220 }));
+    // eased, no spring: the bar slides and stops without wobbling
+    x.set(withTiming(centers.current[i] - BAR / 2, { duration: 260, easing: Easing.out(Easing.cubic) }));
     sel.set(withTiming(i, { duration: 220 }));
     onChange?.(TABS[i]);
   };
@@ -45,7 +48,7 @@ export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
             const { x: lx, width } = e.nativeEvent.layout;
             // "For you" keeps the frame's bar position; the others centre the bar under their label the same way
             const c = lx + width / 2 + 2;
-            centers.set(centers.get().map((v, j) => (j === i && i > 0 ? c : v)));
+            if (i > 0) centers.current[i] = c;
           }}
           style={[styles.tab, { left: LEFTS[i] }]}>
           <TabLabel label={label} index={i} sel={sel} />

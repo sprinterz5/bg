@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View, ScrollView } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, { Easing, Extrapolation, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, Extrapolation, interpolateColor, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -452,6 +452,20 @@ function StoryViewer() {
   const gestures = Gesture.Race(pan, dismiss);
 
   const [replying, setReplying] = useState(false);
+  // The field widens from the 286 pill to the typing width (16…W−22) as the keyboard comes up, and back.
+  const typing = useSharedValue(0);
+  useEffect(() => {
+    typing.set(withTiming(replying ? 1 : 0, { duration: 260, easing: Easing.out(Easing.cubic) }));
+  }, [replying, typing]);
+  const pillGrow = useAnimatedStyle(() => {
+    const k = typing.get();
+    return {
+      left: 14 + 2 * k,
+      width: 286 + (width - 38 - 286) * k,
+      backgroundColor: interpolateColor(k, [0, 1], ['#181C1F', 'rgba(24,28,31,0)']),
+      borderColor: interpolateColor(k, [0, 1], ['rgba(255,255,255,0)', '#FFFFFF']),
+    };
+  });
   const [reply, setReply] = useState('');
   // Story replies have no backend yet: the text is cleared and the keyboard closes.
   const sendReply = () => {
@@ -490,7 +504,7 @@ function StoryViewer() {
         </Animated.View>
       ) : null}
       <KeyboardStickyView style={[styles.bar, { height: barH }, replying && styles.barTyping]} offset={{ closed: 0, opened: barH - 65 }}>
-        <View style={[styles.pill, replying && [styles.pillTyping, { bottom: barH - 53 }]]}>
+        <Animated.View style={[styles.pill, replying && [styles.pillTyping, { bottom: barH - 53 }], pillGrow]}>
           <TextInput
             value={reply}
             onChangeText={setReply}
@@ -511,7 +525,7 @@ function StoryViewer() {
               </PressableScale>
             </Animated.View>
           ) : null}
-        </View>
+        </Animated.View>
         {replying ? null : (
           <PressableScale haptic hitSlop={10} accessibilityLabel="Like story" style={styles.heart}>
             <Icon name="storyHeart" width={27} height={24} />
@@ -776,6 +790,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 22.2,
     paddingRight: 16,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   input: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.4, color: '#FFFFFF', padding: 0 },
   dim: { backgroundColor: 'rgba(0,0,0,0.8)' },
@@ -783,15 +798,9 @@ const styles = StyleSheet.create({
   // Field while typing: x 16..368, its bottom 12 above the keyboard, ≥45.75 tall, radius 22.9, thin white border.
   pillTyping: {
     top: undefined,
-    left: 16,
-    width: undefined,
-    right: 22,
     height: undefined,
     minHeight: 45.75,
     borderRadius: 22.9,
-    backgroundColor: 'transparent',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#FFFFFF',
     justifyContent: 'flex-end',
     paddingLeft: 17,
     paddingRight: 16,
