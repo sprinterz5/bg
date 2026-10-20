@@ -246,9 +246,9 @@ const styles = StyleSheet.create({
   // AutoLayouted-12: "Thoughts" (Caveat 37.2) ink centred on x 192.3 (Caveat's ink sits 4.7 right of its advance), ink top at y 62.4; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
   // first avatar at 240.5.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
-  // stops 4 short of the header's bottom: the story rings start 2 above it and their tops were cut off
-  headerBg: { position: 'absolute', left: 0, right: 0, top: 0, height: HEADER_H - 4, backgroundColor: colors.bg },
-  headerLine: { position: 'absolute', left: 0, right: 0, top: HEADER_H - 4, height: 0.75, backgroundColor: '#E9E9E9' },
+  // stops 7 short of the header's bottom: the story rings start 2 above it and their tops were cut off
+  headerBg: { position: 'absolute', left: 0, right: 0, top: 0, height: HEADER_H - 7, backgroundColor: colors.bg },
+  headerLine: { position: 'absolute', left: 0, right: 0, top: HEADER_H - 7, height: 0.75, backgroundColor: '#E9E9E9' },
   header: { height: HEADER_H, alignItems: 'center' },
   // AutoLayouted-34 (BG(2)): plus at (22.5, 61.5), bell at (343.5, 61) incl. their strokes; logo ink 107.3 wide from
   // 140.6 × 59.9; story rings 94 at x 12 + 113n, y 104.5.
