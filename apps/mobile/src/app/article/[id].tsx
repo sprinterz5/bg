@@ -33,6 +33,7 @@ import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
 import { RollingLabel } from '@/components/rolling-label';
 import { ShareSheet } from '@/components/share-sheet';
+import { titleCase } from '@/lib/title-case';
 import { paginateLines } from '@/lib/paginate';
 import type { Article } from '@/mock/data';
 import { useFeed } from '@/state/feed';
@@ -429,7 +430,7 @@ function Reader({ article }: { article: Article }) {
           </PressableScale>
         </Animated.View>
         <Animated.View collapsable={false} pointerEvents="none" style={chromeStyle}>
-          <Text style={styles.previewTitle}>{article.title}</Text>
+          <Text style={styles.previewTitle}>{titleCase(article.title)}</Text>
           <Text style={styles.previewMeta}>
             {pages ? `${pages.length} ${pages.length === 1 ? 'page' : 'pages'} · ` : ''}
             {minutes} min read
