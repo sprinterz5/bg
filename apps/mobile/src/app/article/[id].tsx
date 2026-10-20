@@ -444,7 +444,7 @@ function Reader({ article }: { article: Article }) {
           style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 28.96 : 39.7 }, pictureVisible]}>
           <Image source={article.cover} style={styles.fill} contentFit="cover" onLoad={(e) => e.source.width && e.source.height && setCoverAspect(e.source.width / e.source.height)} />
         </Animated.View>
-        <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 55 }, chromeStyle]}>
+        <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 60 }, chromeStyle]}>
           <PressableScale onPress={() => setSharing(true)} hitSlop={8} accessibilityLabel="Share" style={styles.previewShare}>
             <Icon name="readerShare" width={18.4} height={18.4} />
             <Text style={styles.previewCount}>{article.shares}</Text>
