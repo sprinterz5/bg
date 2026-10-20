@@ -34,7 +34,7 @@ export default function Home() {
   const top = headerTop + HEADER_H;
   const y = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
-    y.set(e.contentOffset.y + (IOS ? top : 0));
+    y.set(e.contentOffset.y);
   });
   // Clamped once it is off screen, so scrolling further down doesn't push a style update every frame.
   const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.min(Math.max(y.value, 0), top) }] }));
@@ -83,12 +83,21 @@ export default function Home() {
   const native = Gesture.Native();
 
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
+  const tabsY = useSharedValue(0); // the tabs' place in the list content
+  const tabsStyle = useAnimatedStyle(() => {
+    const at = tabsY.get() - y.get() + (IOS ? 0 : drag.value);
+    return { opacity: tabsY.get() ? 1 : 0, transform: [{ translateY: Math.max(insets.top, at) }] };
+  });
+  const capStyle = useAnimatedStyle(() => {
+    const at = tabsY.get() - y.get() + (IOS ? 0 : drag.value);
+    return { opacity: at <= insets.top ? 1 : 0 };
+  });
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
   const listRef = useRef<FlatList<Post>>(null);
   const scrollTarget = useMemo(
-    () => ({ current: { scrollToTop: () => listRef.current?.scrollToOffset({ offset: IOS ? -top : 0, animated: true }) } }),
-    [top],
+    () => ({ current: { scrollToTop: () => listRef.current?.scrollToOffset({ offset: 0, animated: true }) } }),
+    [],
   );
   useScrollToTop(scrollTarget);
 
@@ -146,7 +155,8 @@ export default function Home() {
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
               <HomeStories stories={HOME_STORIES} />
             </Animated.View>
-            <FeedTabs onChange={onTab} />
+            {/* room for the tabs, drawn over the list so they can stick to the top */}
+            <View style={styles.tabsSpace} onLayout={(e) => tabsY.set(top + e.nativeEvent.layout.y)} />
             {publishing ? (
               <Collapse closed={!!publishing.done}>
                 <PostingRow coverUri={publishing.coverUri} />
@@ -156,10 +166,9 @@ export default function Home() {
         }
         ItemSeparatorComponent={FeedSeparator}
         ListHeaderComponentStyle={styles.storiesGap}
-        contentInset={IOS ? { top } : undefined}
-        contentOffset={IOS ? { x: 0, y: -top } : undefined}
-        scrollIndicatorInsets={IOS ? { top } : undefined}
-        contentContainerStyle={[styles.content, IOS ? null : { paddingTop: top }]}
+        // Plain top padding on both platforms: with contentInset iOS sometimes came back short of the top after a
+        // long scroll and the story rings stayed half under the header.
+        contentContainerStyle={[styles.content, { paddingTop: top }]}
         showsVerticalScrollIndicator={false}
         refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
       />
@@ -185,6 +194,12 @@ export default function Home() {
         contentFit="fill"
         style={[styles.fade, { height: insets.top + 22 }]}
       />
+      {/* Feed tabs: scroll with the list and stick under the status bar (over the top fade) once they reach it */}
+      <Animated.View collapsable={false} style={[styles.tabsWrap, tabsStyle]}>
+        {/* once stuck, white goes up behind the status bar too */}
+        <Animated.View pointerEvents="none" style={[styles.tabsCap, { top: -insets.top, height: insets.top }, capStyle]} />
+        <FeedTabs onChange={onTab} />
+      </Animated.View>
     </View>
   );
 }
@@ -219,6 +234,9 @@ const styles = StyleSheet.create({
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   content: { paddingBottom: 24 },
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
+  tabsWrap: { position: 'absolute', left: 0, right: 0, top: 0, backgroundColor: colors.bg },
+  tabsSpace: { height: 51.5 },
+  tabsCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   storiesGap: { marginBottom: -1.3 },
   stories: { marginTop: -2, marginLeft: -1.5 },
 });
