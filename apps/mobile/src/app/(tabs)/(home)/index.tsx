@@ -1,13 +1,12 @@
 import { useFocusEffect, useScrollToTop } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { FeedPost, FeedSeparator } from '@/components/feed-post';
-import { FeedTabs } from '@/components/feed-tabs';
 import { Collapse, GrowIn } from '@/components/grow-in';
 import { PostingRow } from '@/components/posting-row';
 import { PressableScale } from '@/components/pressable-scale';
@@ -33,15 +32,13 @@ export default function Home() {
   const headerTop = insets.top - 1;
   const top = headerTop + HEADER_H;
   const y = useSharedValue(0);
-  // X-style chrome: the top bar (logo row + feed tabs) and the tab bar slide away while scrolling down and come back
-  // as soon as the feed is scrolled up. `hide` is how many points of the top bar are tucked away (0…BAR).
-  // when the bar comes back over the feed, the tabs sit 8 closer to the logo row than in the page
-  const COMPACT_GAP = 8;
-  const BAR = top - COMPACT_GAP + TABS_H;
+  // X-style chrome: the logo row and the tab bar slide away while scrolling down and come back as soon as the feed is
+  // scrolled up. `hide` is how many points of the logo row are tucked away (0…BAR).
+  const BAR = top;
   const prevY = useSharedValue(0);
   const hide = useSharedValue(0);
-  const tabsY = useSharedValue(0); // the tabs' place in the list content
-  // The logo row's own hide: on the way back up it slides out again as the tabs settle into their place, so the stories
+  const storiesEnd = useSharedValue(0); // where the stories end in the list content
+  // The logo row's own hide: on the way back up it slides out again as the stories come into view, so the stories
   // never show under it; it comes back only with the top of the page (it scrolls in with the content).
   const topHide = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -50,8 +47,8 @@ export default function Home() {
     prevY.set(yy);
     hide.set(yy <= 0 ? 0 : Math.min(BAR, Math.max(0, hide.get() + dy)));
     homeChromeHidden.set(hide.get() / BAR);
-    const settle = tabsY.get() - top + COMPACT_GAP; // scroll offset at which the tabs are back in their place
-    topHide.set(yy <= 0 || !tabsY.get() ? hide.get() : Math.max(hide.get(), Math.min(BAR, BAR - (yy - settle))));
+    const settle = storiesEnd.get() - top; // scroll offset at which the stories' bottom reaches the logo row's
+    topHide.set(yy <= 0 || !storiesEnd.get() ? hide.get() : Math.max(hide.get(), Math.min(BAR, BAR - (yy - settle))));
     y.set(yy);
   });
   useFocusEffect(
@@ -62,11 +59,6 @@ export default function Home() {
   // The logo row scrolls away with the list near the top; further down it follows `hide` (whichever is lower).
   const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -topHide.get()) }] }));
 
-  // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
-  const swap = useSharedValue(1);
-  const onTab = useCallback(() => {
-    swap.set(withSequence(withTiming(0, { duration: 120 }), withTiming(1, { duration: 260 })));
-  }, [swap]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -108,11 +100,6 @@ export default function Home() {
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
   // The status-bar cover is for posts passing under the status bar: it goes as the top bar comes back over it.
   const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.min(Math.max(y.get(), 0), topHide.get()) / top) }));
-  // Feed tabs: in their place under the stories, or right under the logo row while the top bar is out.
-  const tabsStyle = useAnimatedStyle(() => {
-    const at = tabsY.get() - y.get() + (IOS ? 0 : drag.value);
-    return { opacity: tabsY.get() ? 1 : 0, transform: [{ translateY: Math.max(at, top - COMPACT_GAP - topHide.get()) }] };
-  });
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
   const listRef = useRef<FlatList<Post>>(null);
@@ -144,12 +131,10 @@ export default function Home() {
     const entering = first && intro ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : undefined;
     return (
       <Animated.View collapsable={false} entering={entering}>
-        <Swap value={swap}>
-          <FeedPost post={item} onHide={hidePost} />
-        </Swap>
+        <FeedPost post={item} onHide={hidePost} />
       </Animated.View>
     );
-  }, [hidePost, swap]);
+  }, [hidePost]);
 
   return (
     <View style={styles.root}>
@@ -176,8 +161,8 @@ export default function Home() {
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
               <HomeStories stories={HOME_STORIES} />
             </Animated.View>
-            {/* room for the tabs, drawn over the list so they can stick to the top */}
-            <View style={styles.tabsSpace} onLayout={(e) => tabsY.set(top + e.nativeEvent.layout.y)} />
+            {/* Not designed (the feed tabs were removed): a full-width hairline between the stories and the posts */}
+            <View style={styles.storiesLine} onLayout={(e) => storiesEnd.set(top + e.nativeEvent.layout.y)} />
             {publishing ? (
               <Collapse closed={!!publishing.done}>
                 <PostingRow coverUri={publishing.coverUri} />
@@ -217,22 +202,12 @@ export default function Home() {
       <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 2 }, fadeStyle]}>
         <View style={styles.fadeLine} />
       </Animated.View>
-      {/* Feed tabs: scroll with the list; further down they ride under the logo row (X-style) */}
-      <Animated.View collapsable={false} style={[styles.tabsWrap, tabsStyle]}>
-        <FeedTabs onChange={onTab} />
-      </Animated.View>
     </View>
   );
 }
 
-function Swap({ value, children }: { value: SharedValue<number>; children: ReactNode }) {
-  const style = useAnimatedStyle(() => ({ opacity: value.get(), transform: [{ translateY: (1 - value.get()) * 10 }] }));
-  return <Animated.View style={style}>{children}</Animated.View>;
-}
-
 const IOS = Platform.OS === 'ios';
 const HEADER_H = 60;
-const TABS_H = 51.5;
 // Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
 const THRESHOLD = 64;
 const HOLD = 52;
@@ -258,9 +233,7 @@ const styles = StyleSheet.create({
   fade: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: colors.bg },
   fadeLine: { position: 'absolute', left: 0, right: 0, bottom: -0.75, height: 0.75, backgroundColor: '#E9E9E9' },
   content: { paddingBottom: 24 },
-  // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
-  tabsWrap: { position: 'absolute', left: 0, right: 0, top: 0, backgroundColor: colors.bg },
-  tabsSpace: { height: TABS_H },
+  storiesLine: { marginTop: 12, height: 0.75, backgroundColor: '#E9E9E9' },
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   storiesGap: { marginBottom: -1.3 },
   stories: { marginTop: -2, marginLeft: -1.5 },
