@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
   picture: { marginLeft: 15, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   previewBar: { position: 'absolute', left: 0, right: 0, height: 22 },
   previewShare: { position: 'absolute', left: 21.05, top: 1.8, flexDirection: 'row', alignItems: 'center', gap: 13.5 },
-  previewCount: { fontFamily: INTER_FAMILIES['500'], fontSize: 13.3, lineHeight: 16, color: colors.text },
+  previewCount: { fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 16, color: colors.text },
   previewBookmark: { position: 'absolute', left: 348, top: -0.25 },
 
   // Text pages (AutoLayouted 17): card 354x48 at (16.5, 23.5), radius 13.5; avatar 32 at (6.5, 7.5), name Inter Bold
