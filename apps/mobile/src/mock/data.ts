@@ -67,7 +67,7 @@ export type Article = {
   shares: number;
 };
 
-const bookgram: Author = { username: 'smarts', avatar: require('@/assets/mock/avatar-bookgram.jpg'), subtitle: 'Smarts', verified: true };
+const bookgram: Author = { username: 'smarts', avatar: require('@/assets/mock/avatar-bookgram.jpg'), subtitle: 'Thoughts', verified: true };
 const sam: Author = { username: 'sam_altman', avatar: require('@/assets/mock/avatar-sam.png'), subtitle: 'Recommended' };
 const nori: Author = { username: 'j_nori_k', avatar: require('@/assets/mock/avatar-nori-2.jpg'), subtitle: 'Recommended' };
 

@@ -1,4 +1,4 @@
-# Smarts — mobile
+# Thoughts — mobile
 
 React Native app on Expo SDK 57 (RN 0.86, React 19, expo-router with typed routes, React Compiler, Reanimated 4). iOS + Android. Auth, profiles, media uploads and chat go to the backend; feed, search and stories still use mock data.
 

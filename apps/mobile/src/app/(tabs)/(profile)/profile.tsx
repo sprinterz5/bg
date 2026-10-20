@@ -63,7 +63,7 @@ export default function Profile() {
   // The export goes out through the share sheet (save to Files, mail it, ...).
   const downloadData = () =>
     exportMyData()
-      .then((data) => Share.share({ title: 'My Smarts data', message: JSON.stringify(data, null, 2) }))
+      .then((data) => Share.share({ title: 'My Thoughts data', message: JSON.stringify(data, null, 2) }))
       .catch(() => Alert.alert("Couldn't export your data", 'Check the connection and try again.'));
 
   // No settings screen in the design yet: the gear opens a bottom sheet with Log out, the data export and
