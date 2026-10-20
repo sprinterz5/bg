@@ -35,7 +35,9 @@ export default function Home() {
   const y = useSharedValue(0);
   // X-style chrome: the top bar (logo row + feed tabs) and the tab bar slide away while scrolling down and come back
   // as soon as the feed is scrolled up. `hide` is how many points of the top bar are tucked away (0…BAR).
-  const BAR = top + TABS_H;
+  // when the bar comes back over the feed, the tabs sit 7 closer to the logo row than in the page
+  const COMPACT_GAP = 7;
+  const BAR = top - COMPACT_GAP + TABS_H;
   const prevY = useSharedValue(0);
   const hide = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -104,7 +106,7 @@ export default function Home() {
   // Feed tabs: in their place under the stories, or right under the logo row while the top bar is out.
   const tabsStyle = useAnimatedStyle(() => {
     const at = tabsY.get() - y.get() + (IOS ? 0 : drag.value);
-    return { opacity: tabsY.get() ? 1 : 0, transform: [{ translateY: Math.max(at, top - hide.get()) }] };
+    return { opacity: tabsY.get() ? 1 : 0, transform: [{ translateY: Math.max(at, top - COMPACT_GAP - hide.get()) }] };
   });
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).

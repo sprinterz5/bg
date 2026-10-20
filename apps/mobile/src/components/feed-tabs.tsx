@@ -13,7 +13,7 @@ export type FeedTab = (typeof TABS)[number];
 // 326.9, cap tops 239.6; under the active one a 59×2 #2A2121 bar (r 1) at 265.5 (x 16 under "For you"), over a
 // full-width 0.75 #E9E9E9 line at 267 (from x 2.5).
 const LEFTS = [18.7, 114.3, 231.5, 326.9];
-const BAR = 59;
+const BAR = 67; // 59 in the frame, +4 each side asked for
 
 /** Not designed: the tabs only switch the highlighted label for now (the feed is the same mock for each). */
 export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
@@ -21,7 +21,7 @@ export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
   // label centres, measured on layout (a JS ref: writing a shared value from several onLayout calls lost updates and
   // left 0s, which sent the bar off to the left)
   const centers = useRef<number[]>([45.5, 0, 0, 0]);
-  const x = useSharedValue(16);
+  const x = useSharedValue(12);
   const sel = useSharedValue(0); // active index, animated: the labels cross-fade their colour
   const barStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
 
@@ -72,5 +72,5 @@ const styles = StyleSheet.create({
   tab: { position: 'absolute', top: 18.15 },
   label: { fontFamily: INTER_FAMILIES['500'], fontSize: 15, lineHeight: 19, color: '#999999' },
   line: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 0.75, backgroundColor: '#E9E9E9' },
-  bar: { position: 'absolute', left: 0, bottom: 0.25, width: BAR, height: 2, borderRadius: 1, backgroundColor: '#2A2121' },
+  bar: { position: 'absolute', left: 0, bottom: 0.25, width: BAR, height: 2.5, borderRadius: 1.25, backgroundColor: '#2A2121' },
 });
