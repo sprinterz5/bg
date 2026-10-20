@@ -1,9 +1,10 @@
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useEffect } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { homeChromeHidden } from '@/lib/chrome';
 import { colors, motion } from '@/theme';
 import { Icon, type IconName } from './icon';
 import { PressableScale } from './pressable-scale';
@@ -53,8 +54,13 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   // iPhone: the 34px home indicator inset. Android 3-button nav reports 0–48; keep a small gap either way.
   const bottom = Platform.OS === 'ios' ? insets.bottom : Math.max(insets.bottom, 12);
 
+  // On Home the bar floats over the feed and slides away with the top bar while scrolling down (lib/chrome).
+  const onHome = state.routes[state.index]?.name === '(home)';
+  const height = BAR_H + bottom;
+  const slide = useAnimatedStyle(() => (onHome ? { transform: [{ translateY: homeChromeHidden.get() * (height + 1) }] } : {}));
+
   return (
-    <View style={[styles.bar, { height: BAR_H + bottom }]}>
+    <Animated.View style={[styles.bar, { height }, onHome && styles.floating, slide]}>
       {state.routes.map((route, index) => {
         const meta = TABS[route.name];
         if (!meta) return null;
@@ -80,7 +86,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
           </PressableScale>
         );
       })}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -113,6 +119,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.35,
     borderTopColor: '#E5E5E5',
   },
+  floating: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   tab: { position: 'absolute', top: 0, width: TAB_W, height: BAR_H },
   layer: { position: 'absolute' },
 });

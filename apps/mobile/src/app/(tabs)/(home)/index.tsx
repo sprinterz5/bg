@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useScrollToTop } from 'expo-router';
+import { useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -18,6 +18,7 @@ import { HOME_STORIES, type Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { Text } from '@/components/text';
+import { homeChromeHidden } from '@/lib/chrome';
 import { push } from '@/lib/nav';
 import { pickStoryPhoto } from '@/lib/pick-cover';
 
@@ -33,11 +34,26 @@ export default function Home() {
   const headerTop = insets.top - 1;
   const top = headerTop + HEADER_H;
   const y = useSharedValue(0);
+  // X-style chrome: the top bar (logo row + feed tabs) and the tab bar slide away while scrolling down and come back
+  // as soon as the feed is scrolled up. `hide` is how many points of the top bar are tucked away (0…BAR).
+  const BAR = top + TABS_H;
+  const prevY = useSharedValue(0);
+  const hide = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
-    y.set(e.contentOffset.y);
+    const yy = e.contentOffset.y;
+    const dy = yy - prevY.get();
+    prevY.set(yy);
+    hide.set(yy <= 0 ? 0 : Math.min(BAR, Math.max(0, hide.get() + dy)));
+    homeChromeHidden.set(hide.get() / BAR);
+    y.set(yy);
   });
-  // Clamped once it is off screen, so scrolling further down doesn't push a style update every frame.
-  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.min(Math.max(y.value, 0), top) }] }));
+  useFocusEffect(
+    useCallback(() => {
+      homeChromeHidden.set(hide.get() / BAR);
+    }, [hide, BAR]),
+  );
+  // The logo row scrolls away with the list near the top; further down it follows `hide` (whichever is lower).
+  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -hide.get()) }] }));
 
   // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
   const swap = useSharedValue(1);
@@ -84,13 +100,12 @@ export default function Home() {
 
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
   const tabsY = useSharedValue(0); // the tabs' place in the list content
+  // The top fade is for posts passing under the status bar: it goes as the top bar comes back over it.
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.min(Math.max(y.get(), 0), hide.get()) / top) }));
+  // Feed tabs: in their place under the stories, or right under the logo row while the top bar is out.
   const tabsStyle = useAnimatedStyle(() => {
     const at = tabsY.get() - y.get() + (IOS ? 0 : drag.value);
-    return { opacity: tabsY.get() ? 1 : 0, transform: [{ translateY: Math.max(insets.top, at) }] };
-  });
-  const capStyle = useAnimatedStyle(() => {
-    const at = tabsY.get() - y.get() + (IOS ? 0 : drag.value);
-    return { opacity: at <= insets.top ? 1 : 0 };
+    return { opacity: tabsY.get() ? 1 : 0, transform: [{ translateY: Math.max(at, top - hide.get()) }] };
   });
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
@@ -168,13 +183,16 @@ export default function Home() {
         ListHeaderComponentStyle={styles.storiesGap}
         // Plain top padding on both platforms: with contentInset iOS sometimes came back short of the top after a
         // long scroll and the story rings stayed half under the header.
-        contentContainerStyle={[styles.content, { paddingTop: top }]}
+        // the tab bar floats over Home (it slides away), so the feed leaves room for it at the end
+        contentContainerStyle={[styles.content, { paddingTop: top, paddingBottom: 24 + 47 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
         refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
       />
       </GestureDetector>
       </Animated.View>
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.headerWrap, { top: headerTop }, headerStyle]}>
+            {/* white behind the status bar too, for when the bar comes back over the feed */}
+            <View style={[styles.headerCap, { top: -headerTop, height: headerTop }]} />
             <View style={styles.header}>
               <PressableScale haptic onPress={pickStoryPhoto} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
                 <Icon name="homePlus" width={20} height={20} />
@@ -188,16 +206,16 @@ export default function Home() {
       </Animated.View>
       {/* Content scrolls under the status bar and fades out there (69px in the frame = status bar + 22). */}
       {/* SVG gradient via expo-image: expo-linear-gradient is not in the Android dev build. */}
+      <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top + 22 }, fadeStyle]}>
       <Image
         pointerEvents="none"
         source={require('@/assets/fade-top.svg')}
         contentFit="fill"
-        style={[styles.fade, { height: insets.top + 22 }]}
+        style={StyleSheet.absoluteFill}
       />
-      {/* Feed tabs: scroll with the list and stick under the status bar (over the top fade) once they reach it */}
+      </Animated.View>
+      {/* Feed tabs: scroll with the list; further down they ride under the logo row (X-style) */}
       <Animated.View collapsable={false} style={[styles.tabsWrap, tabsStyle]}>
-        {/* once stuck, white goes up behind the status bar too */}
-        <Animated.View pointerEvents="none" style={[styles.tabsCap, { top: -insets.top, height: insets.top }, capStyle]} />
         <FeedTabs onChange={onTab} />
       </Animated.View>
     </View>
@@ -211,6 +229,7 @@ function Swap({ value, children }: { value: SharedValue<number>; children: React
 
 const IOS = Platform.OS === 'ios';
 const HEADER_H = 60;
+const TABS_H = 51.5;
 // Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
 const THRESHOLD = 64;
 const HOLD = 52;
@@ -223,7 +242,7 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   // AutoLayouted-12: "Thoughts" (Caveat 37.2) ink centred on x 192.3 (Caveat's ink sits 4.7 right of its advance), ink top at y 62.4; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
   // first avatar at 240.5.
-  headerWrap: { position: 'absolute', left: 0, right: 0 },
+  headerWrap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   header: { height: HEADER_H, alignItems: 'center' },
   // AutoLayouted-34 (BG(2)): plus at (22.5, 61.5), bell at (343.5, 61) incl. their strokes; logo ink 107.3 wide from
   // 140.6 × 59.9; story rings 94 at x 12 + 113n, y 104.5.
@@ -235,8 +254,8 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 24 },
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   tabsWrap: { position: 'absolute', left: 0, right: 0, top: 0, backgroundColor: colors.bg },
-  tabsSpace: { height: 51.5 },
-  tabsCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
+  tabsSpace: { height: TABS_H },
+  headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   storiesGap: { marginBottom: -1.3 },
   stories: { marginTop: -2, marginLeft: -1.5 },
 });
