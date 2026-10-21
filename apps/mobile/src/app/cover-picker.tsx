@@ -258,7 +258,7 @@ function CoverGrid({ assets, selected, setSelected, tileW, album, openAlbums, al
       renderItem={({ item }) => (
         <Pressable onPress={() => setSelected(selected?.id === item.id ? null : item)} style={{ width: tileW, height: tileW }} accessibilityRole="imagebutton" accessibilityState={{ selected: selected?.id === item.id }}>
           <Image source={{ uri: item.uri }} recyclingKey={item.id} style={StyleSheet.absoluteFill} contentFit="cover" transition={120} />
-          {selected?.id === item.id ? <View style={styles.veil} /> : null}
+          {selected?.id === item.id ? <Animated.View collapsable={false} entering={FadeIn.duration(160)} exiting={FadeOut.duration(160)} style={styles.veil} /> : null}
         </Pressable>
       )}
     />
@@ -274,12 +274,12 @@ function Tile({ asset, width, height, selected, onPress }: { asset: MediaLibrary
       <Icon name="coverTileFade" width={width} height={128 * s} style={[styles.fade, { top: 102 * s }]} />
       <Image source={{ uri: asset.uri }} recyclingKey={asset.id} style={StyleSheet.absoluteFill} contentFit="contain" transition={120} />
       {selected ? (
-        <>
+        <Animated.View collapsable={false} entering={FadeIn.duration(160)} exiting={FadeOut.duration(160)} style={StyleSheet.absoluteFill}>
           <View style={styles.dim} />
           <View style={[styles.check, { left: 98.5 * s, top: 5 * s }]}>
             <Icon name="coverCheck" width={12.7} height={9.47} />
           </View>
-        </>
+        </Animated.View>
       ) : null}
     </Pressable>
   );

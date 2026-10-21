@@ -5,6 +5,7 @@ import { BackHandler, FlatList, Pressable, RefreshControl, StyleSheet, useWindow
 import Animated, { Easing, FadeIn, FadeOut, interpolate, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { appear } from '@/lib/appear';
 import { ExploreCard } from '@/components/explore-card';
 import { ExploreRow } from '@/components/explore-row';
 import { Icon } from '@/components/icon';
@@ -301,8 +302,17 @@ export default function Search() {
   );
 }
 
-const renderRow = ({ item }: { item: ExplorePost }) => <ExploreRow post={item} />;
-const renderCard = ({ item }: { item: ExplorePost }) => <ExploreCard post={item} />;
+// rows and cards rise in one after another when a list shows up
+const renderRow = ({ item, index }: { item: ExplorePost; index: number }) => (
+  <Animated.View collapsable={false} entering={appear(index)}>
+    <ExploreRow post={item} />
+  </Animated.View>
+);
+const renderCard = ({ item, index }: { item: ExplorePost; index: number }) => (
+  <Animated.View collapsable={false} entering={appear(index)}>
+    <ExploreCard post={item} />
+  </Animated.View>
+);
 
 /** Text tabs with a 36-wide underline that slides to the selected one (the slide is not in the design). */
 function Tabs({ labels, xs, selected, onSelect }: { labels: readonly string[]; xs: number[]; selected: number; onSelect: (i: number) => void }) {

@@ -2,7 +2,8 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -46,13 +47,24 @@ export default function EditProfile() {
     }, [username]),
   );
 
+  // Not designed: "Saved" fades in at the top right for a moment after a change reaches the server, and the picture
+  // is dimmed under a spinner while it uploads.
+  const [savedFlash, setSavedFlash] = useState(0);
+  const [uploading, setUploading] = useState(false);
+
   if (!user) return null;
+
+  const flash = () => {
+    const n = Date.now();
+    setSavedFlash(n);
+    setTimeout(() => setSavedFlash((v) => (v === n ? 0 : v)), 1400);
+  };
 
   const saveName = () => {
     const next = name.trim();
     if (!next || next === user.name) return setName(user.name);
     updateUser({ name: next });
-    updateMe({ displayName: next }).catch(() => {
+    updateMe({ displayName: next }).then(flash, () => {
       updateUser({ name: user.name });
       setName(user.name);
       Alert.alert("Couldn't save the name", 'Check the connection and try again.');
@@ -64,7 +76,7 @@ export default function EditProfile() {
     if (next === (savedBio.current ?? '')) return;
     const before = savedBio.current;
     savedBio.current = next;
-    updateMe({ bio: next }).catch(() => {
+    updateMe({ bio: next }).then(flash, () => {
       savedBio.current = before;
       Alert.alert("Couldn't save the bio", 'Check the connection and try again.');
     });
@@ -76,12 +88,17 @@ export default function EditProfile() {
     if (!uri) return;
     const before = user.avatarUri;
     updateUser({ avatarUri: uri });
+    setUploading(true);
     setAvatar(uri)
-      .then((url) => url && updateUser({ avatarUri: url }))
+      .then((url) => {
+        if (url) updateUser({ avatarUri: url });
+        flash();
+      })
       .catch(() => {
         updateUser({ avatarUri: before });
         Alert.alert("Couldn't change the picture", 'Check the connection and try again.');
-      });
+      })
+      .finally(() => setUploading(false));
   };
 
   return (
@@ -91,15 +108,27 @@ export default function EditProfile() {
           <Icon name="searchBack" width={11} height={20} />
         </PressableScale>
         <Text style={styles.title}>Edit profile</Text>
+        {savedFlash ? (
+          <Animated.View key={savedFlash} collapsable={false} entering={FadeIn.duration(180)} exiting={FadeOut.duration(300)} style={styles.saved}>
+            <Text style={styles.savedText}>Saved</Text>
+          </Animated.View>
+        ) : null}
       </View>
 
       <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: 24 }}>
         <PressableScale onPress={pickPicture} scaleTo={0.97} style={styles.picture} accessibilityRole="button" accessibilityLabel="Edit picture">
+          <View>
           {user.avatarUri ? (
-            <Image source={{ uri: user.avatarUri }} style={styles.avatar} transition={150} />
+            <Image source={{ uri: user.avatarUri }} style={styles.avatar} transition={250} />
           ) : (
             <Icon name="avatarPlaceholder" width={98} style={styles.avatar} />
           )}
+          {uploading ? (
+            <Animated.View collapsable={false} entering={FadeIn.duration(150)} exiting={FadeOut.duration(250)} style={styles.uploading}>
+              <ActivityIndicator color="#FFFFFF" />
+            </Animated.View>
+          ) : null}
+          </View>
           <Text style={styles.edit}>Edit picture</Text>
         </PressableScale>
         <View style={styles.rule} />
@@ -158,6 +187,9 @@ const styles = StyleSheet.create({
   title: { position: 'absolute', left: 0, right: 6, top: 17.67, textAlign: 'center', fontFamily: INTER_FAMILIES['700'], fontSize: 17, lineHeight: 21, color: colors.text },
   picture: { alignItems: 'center', paddingTop: 25 },
   avatar: { width: 98, height: 98, borderRadius: 49, marginRight: 6 },
+  uploading: { position: 'absolute', top: 0, left: 0, width: 98, height: 98, borderRadius: 49, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
+  saved: { position: 'absolute', right: 18, top: 0, bottom: 0, justifyContent: 'center' },
+  savedText: { fontFamily: INTER_FAMILIES['500'], fontSize: 14, lineHeight: 17, color: MUTED },
   edit: { marginTop: 19.91, marginBottom: 8.59, marginLeft: -2, fontFamily: INTER_FAMILIES['600'], fontSize: 14, lineHeight: 17, color: colors.text },
   rule: { height: 1, backgroundColor: LINE },
   rows: { marginTop: 1 },
