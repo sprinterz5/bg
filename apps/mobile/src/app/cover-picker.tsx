@@ -16,7 +16,11 @@ import { deliverCover, pickCoverWithSystemPicker } from '@/lib/pick-cover';
 // Frame 1198 "Choose a cover": black screen, ✕ and the title on top, the album ("Recents ›") over a 3-column
 // grid of 129x230 tiles 1.5 apart (the photo fitted in the middle over a dark band and a grey-to-black fade),
 // the chosen tile dimmed with a blue check, and a round → button (grey until a photo is chosen) at the bottom
-// right. y values are from the bottom of the status bar (design y - 47).
+// right. y values are from the bottom of the status bar (design y - 47). That layout stays for "Create a story"
+// (AutoLayouted-9, TH(2): the → circle 53 at (309, 759), arrow stroke 3).
+// "Choose a cover" (AutoLayouted-35 / -36, TH(2)): a 4-column grid of squares 1 apart, the chosen one under a 60%
+// white veil and shown large on top (389×294 at (1, 112)) with "Recents ›" under it; the → is a white circle 44 in
+// the header at (333, 52).
 const TILE_W = 129;
 const TILE_H = 230;
 const GAP = 1.5;
@@ -30,7 +34,8 @@ export default function CoverPicker() {
   const insets = useSafeAreaInsets();
   const { title } = useLocalSearchParams<{ title?: string }>();
   const { width } = useWindowDimensions();
-  const tileW = (width - GAP * 2) / 3;
+  const story = !!title;
+  const tileW = story ? (width - GAP * 2) / 3 : (width - 3) / 4;
   const tileH = (TILE_H * tileW) / TILE_W;
   const [assets, setAssets] = useState<MediaLibrary.Asset[]>([]);
   const [selected, setSelected] = useState<MediaLibrary.Asset | null>(null);
@@ -115,20 +120,27 @@ export default function CoverPicker() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <StatusBar style="light" />
       <View style={styles.header}>
-        <PressableScale onPress={() => backWhenReady()} hitSlop={14} scaleTo={0.85} accessibilityLabel="Close" style={styles.close}>
+        <PressableScale onPress={() => backWhenReady()} hitSlop={14} scaleTo={0.85} accessibilityLabel="Close" style={story ? styles.close : styles.closeCover}>
           <Icon name="coverClose" width={18} />
         </PressableScale>
         <Text style={styles.title}>{title || 'Choose a cover'}</Text>
+        {story ? null : (
+          <PressableScale onPress={next} scaleTo={0.92} accessibilityRole="button" accessibilityLabel="Use this cover" accessibilityState={{ disabled: !selected }} style={styles.nextTop}>
+            <Icon name="coverNext" width={17.9} height={16.1} tintColor="#000000" />
+          </PressableScale>
+        )}
       </View>
 
-      <Pressable onPress={openAlbums} hitSlop={10} style={[styles.album, { top: insets.top + 96.1 }]} accessibilityRole="button" accessibilityLabel={`Album: ${album.title}`}>
+      {story ? null : <CoverGrid {...{ assets, selected, setSelected, tileW, album, openAlbums, albumsOpen, bottom: insets.bottom, onEnd: () => load(album.id, false).catch(() => {}) }} />}
+
+      {story ? <Pressable onPress={openAlbums} hitSlop={10} style={[styles.album, { top: insets.top + 96.1 }]} accessibilityRole="button" accessibilityLabel={`Album: ${album.title}`}>
         <Text style={styles.albumText} numberOfLines={1}>
           {album.title}
         </Text>
         <Icon name="coverChevron" width={7} height={14} style={[styles.chevron, albumsOpen && styles.chevronOpen]} />
-      </Pressable>
+      </Pressable> : null}
 
-      {ready ? (
+      {ready && story ? (
         <FlatList
           style={styles.grid}
           data={assets}
@@ -162,16 +174,65 @@ export default function CoverPicker() {
         </Animated.View>
       ) : null}
 
-      <PressableScale
+      {story ? <PressableScale
         onPress={next}
         disabled={!selected}
         scaleTo={0.92}
         accessibilityRole="button"
         accessibilityLabel="Use this cover"
-        style={[styles.next, selected && styles.nextOn, { bottom: Platform.OS === 'android' ? insets.bottom + 16 : 26 }]}>
-        <Icon name="coverNext" width={20.8} height={18.66} tintColor={selected ? '#000000' : '#8C8C8C'} />
-      </PressableScale>
+        style={[styles.next, selected && styles.nextOn, { bottom: Platform.OS === 'android' ? insets.bottom + 22 : 32 }]}>
+        <Icon name="storyNext" width={23.2} height={21} tintColor={selected ? '#000000' : '#8C8C8C'} />
+      </PressableScale> : null}
     </View>
+  );
+}
+
+type GridProps = {
+  assets: MediaLibrary.Asset[];
+  selected: MediaLibrary.Asset | null;
+  setSelected: (a: MediaLibrary.Asset | null) => void;
+  tileW: number;
+  album: Album;
+  openAlbums: () => void;
+  albumsOpen: boolean;
+  bottom: number;
+  onEnd: () => void;
+};
+
+function CoverGrid({ assets, selected, setSelected, tileW, album, openAlbums, albumsOpen, bottom, onEnd }: GridProps) {
+  return (
+    <FlatList
+      style={styles.coverGrid}
+      data={assets}
+      keyExtractor={(a) => a.id}
+      numColumns={4}
+      columnWrapperStyle={styles.coverRow}
+      contentContainerStyle={{ gap: 1, paddingBottom: bottom + 40 }}
+      onEndReached={onEnd}
+      onEndReachedThreshold={1}
+      initialNumToRender={24}
+      ListHeaderComponent={
+        <View>
+          {selected ? (
+            <Animated.View collapsable={false} entering={FadeIn.duration(200)} style={styles.preview}>
+              <Image source={{ uri: selected.uri }} recyclingKey={selected.id} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+            </Animated.View>
+          ) : null}
+          <Pressable onPress={openAlbums} hitSlop={10} style={[styles.coverAlbum, !selected && styles.coverAlbumTop]} accessibilityRole="button" accessibilityLabel={`Album: ${album.title}`}>
+            <Text style={styles.albumText} numberOfLines={1}>
+              {album.title}
+            </Text>
+            <Icon name="coverChevron" width={7} height={14} style={[styles.coverChevron, albumsOpen && styles.chevronOpen]} />
+          </Pressable>
+        </View>
+      }
+      renderItem={({ item }) => (
+        <Pressable onPress={() => setSelected(selected?.id === item.id ? null : item)} style={{ width: tileW, height: tileW }} accessibilityRole="imagebutton" accessibilityState={{ selected: selected?.id === item.id }}>
+          <Image source={{ uri: item.uri }} recyclingKey={item.id} style={StyleSheet.absoluteFill} contentFit="cover" transition={120} />
+          {selected?.id === item.id ? <View style={styles.veil} /> : null}
+        </Pressable>
+      )}
+    />
   );
 }
 
@@ -217,7 +278,19 @@ const styles = StyleSheet.create({
   albumRowPressed: { backgroundColor: '#2C2C2E' },
   albumRowText: { fontSize: 15, lineHeight: 20, color: '#FFFFFF' },
   albumRowActive: { fontWeight: '700' },
-  // 51 round at x 315: #DDDDDD with a grey arrow until a photo is chosen, then white with a black one.
-  next: { position: 'absolute', right: 24, width: 51, height: 51, borderRadius: 25.5, backgroundColor: '#DDDDDD', alignItems: 'center', justifyContent: 'center' },
+  // #DDDDDD with a grey arrow until a photo is chosen, then white with a black one.
+  next: { position: 'absolute', right: 28, width: 53, height: 53, borderRadius: 26.5, backgroundColor: '#DDDDDD', alignItems: 'center', justifyContent: 'center' },
   nextOn: { backgroundColor: '#FFFFFF' },
+  // AutoLayouted-9: 53 round, its centre at (335.5, 785.5)
+  // cover mode: ✕ 16 (+2 stroke) at (16, 65); the → circle 44 centred on (355, 74)
+  closeCover: { position: 'absolute', left: 16, top: 18 },
+  nextTop: { position: 'absolute', left: 333, top: 5, width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  coverGrid: { marginTop: 50 - 60 },
+  coverRow: { gap: 1 },
+  preview: { marginTop: 15, marginLeft: 1, width: 389, height: 294, borderRadius: 1, overflow: 'hidden', backgroundColor: '#1C1C1E' },
+  // "Recents" ink 430.3 (24.3 under the picture), the grid 461
+  coverAlbum: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginLeft: 14.1, marginTop: 20, marginBottom: 15 },
+  coverAlbumTop: { marginTop: 28.7 },
+  coverChevron: { marginLeft: 16.5 },
+  veil: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,255,255,0.6)' },
 });

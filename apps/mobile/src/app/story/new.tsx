@@ -79,6 +79,8 @@ export default function NewStory() {
         accessibilityLabel="Caption"
       />
 
+      {/* TH(2): a hairline 23 above Share */}
+      <View style={[styles.line, { bottom: insets.bottom + 67.5 }]} />
       <PressableScale
         haptic
         onPress={share}
@@ -113,5 +115,6 @@ const styles = StyleSheet.create({
   },
   share: { position: 'absolute', left: 21, right: 21, height: 38, borderRadius: 7, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   shareOff: { backgroundColor: '#B3B3B3' },
+  line: { position: 'absolute', left: 0, right: 0, height: 0.5, backgroundColor: '#E9E9E9' },
   shareText: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.2, lineHeight: 17, color: '#FFFFFF' },
 });
