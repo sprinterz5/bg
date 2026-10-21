@@ -12,7 +12,7 @@ import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton 
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { push } from '@/lib/nav';
 import { pickStoryPhoto } from '@/lib/pick-cover';
-import { deleteAccount, exportMyData, loadProfile } from '@/lib/users';
+import { deleteAccount, exportMyData, loadProfile, shareProfile } from '@/lib/users';
 import type { Profile as ProfileData } from '@/mock/data';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
@@ -108,7 +108,7 @@ export default function Profile() {
           following={data?.following ?? 0}
         />
         <ProfileButtons>
-          <ProfileButton large label="Share" />
+          <ProfileButton large label="Share" onPress={() => user && shareProfile(user.name, user.username)} />
           <ProfileButton large label="Edit profile" onPress={() => push('/edit-profile')} />
         </ProfileButtons>
         <ProfileBio bio={data?.bio ?? []} />

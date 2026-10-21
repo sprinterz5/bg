@@ -1,6 +1,8 @@
 import type { Profile } from '@/mock/data';
 import type { ApiConnection, ApiProfile, ApiUserArticle, ApiUserSearch, Page } from '@api/api';
 
+import { Share } from 'react-native';
+
 import { api, ApiError } from './api';
 import { CAPTURE } from './capture';
 
@@ -104,3 +106,7 @@ export const searchUsers = (q: string) =>
       avatar: u.avatarUrl ? { uri: u.avatarUrl } : null,
     })),
   );
+
+/** The system share sheet with a profile: name, @username and a link that opens it in the app (installed builds). */
+export const shareProfile = (name: string, username: string) =>
+  Share.share({ message: `${name} (@${username}) on Thoughts\nbookgram://u/${username}` }).catch(() => {});

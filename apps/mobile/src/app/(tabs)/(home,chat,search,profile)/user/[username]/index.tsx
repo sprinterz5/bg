@@ -1,6 +1,6 @@
 import { useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, Share, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,7 +10,7 @@ import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileBio, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
 import { getProfile, type Profile } from '@/mock/data';
-import { formatCount, loadProfile, setFollow } from '@/lib/users';
+import { formatCount, loadProfile, setFollow, shareProfile } from '@/lib/users';
 import { colors } from '@/theme';
 import { back, push } from '@/lib/nav';
 import { openDirect } from '@/lib/chat';
@@ -129,7 +129,7 @@ export default function UserProfile() {
         visible={menu}
         onClose={() => setMenu(false)}
         actions={[
-          { label: 'Share profile', onPress: () => Share.share({ message: `${profile.name} (@${profile.username}) on Thoughts` }).catch(() => {}) },
+          { label: 'Share profile', onPress: () => shareProfile(profile.name, profile.username) },
           ...(userId
             ? [
                 {
