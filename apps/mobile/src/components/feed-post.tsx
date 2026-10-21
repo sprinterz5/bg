@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { memo, useRef, useState } from 'react';
-import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import type { Post } from '@/mock/data';
 import { colors } from '@/theme';
@@ -15,6 +15,7 @@ import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 import { useReaction } from '@/lib/reactions';
+import { openShare } from '@/components/share-host';
 
 const GRAY = '#999999';
 const INK = GRAY; // action icons and counts (asked for #999 again)
@@ -51,7 +52,8 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     save();
   };
-  const share = () => Share.share({ message: post.title }).catch(() => {});
+  // to people in the app (a card in their chat); the sheet's ⋯ / system share stays in the reader
+  const share = () => openShare({ id: post.articleId, title: post.title });
 
   return (
     <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={styles.root}>

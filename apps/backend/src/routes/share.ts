@@ -5,6 +5,7 @@ import { recordFeedEventScoreImpact } from "../services/scoreBufferService.js";
 import { incrementContentCounter } from "../services/counterService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { withIdempotency } from "../services/idempotencyService.js";
+import { withSharedArticles } from "../services/sharedContentService.js";
 
 const shareSchema = z.object({
   targetType: z.enum(["ARTICLE", "REVIEW", "BOOK"]),
@@ -118,6 +119,7 @@ export const shareRoutes: FastifyPluginAsync = async (app) => {
         return created;
       });
 
+      message = (await withSharedArticles(app, [message]))[0];
       app.io.to(`conversation:${body.conversationId}`).emit("message:new", message);
       await Promise.all(
         recipients.map((recipient) =>

@@ -498,6 +498,10 @@ describe("Puzzle API integration", () => {
     });
     expect(message.response.statusCode).toBe(201);
     expect(message.payload.type).toBe("SHARE_ARTICLE");
+    // the chat shows the shared post as a card
+    expect(message.payload.sharedArticle.id).toBe(article.payload.id);
+    const chatPage = await json(app, { method: "GET", url: `/conversations/${conversation.payload.id}/messages`, token: bobToken });
+    expect(chatPage.payload.data.find((m: { id: string }) => m.id === message.payload.id).sharedArticle.title).toBe(article.payload.title);
 
     // Bob (a follower) replies to Alice's story in their chat; Alice can't "reply" to her own story.
     const aliceStory = await app.prisma.story.create({

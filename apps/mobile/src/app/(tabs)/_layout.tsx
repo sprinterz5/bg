@@ -3,6 +3,7 @@ import { Redirect } from 'expo-router';
 import { useEffect } from 'react';
 import { Tabs } from 'expo-router/js-tabs';
 
+import { ShareHost } from '@/components/share-host';
 import { TabBar } from '@/components/tab-bar';
 import { EXPLORE_FEED } from '@/mock/data';
 import { useSession } from '@/state/session';
@@ -22,6 +23,7 @@ export default function TabsLayout() {
   if (!user) return <Redirect href="/welcome" />;
 
   return (
+    <>
     <Tabs
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{
@@ -35,5 +37,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="(search)" />
       <Tabs.Screen name="(profile)" />
     </Tabs>
+    <ShareHost />
+    </>
   );
 }

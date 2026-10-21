@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createNotification } from "../services/notificationService.js";
 import { getBlockedIds } from "../services/blockService.js";
 import { withIdempotency } from "../services/idempotencyService.js";
+import { withSharedArticles } from "../services/sharedContentService.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
 import { asApi, type ApiChatMessage, type ApiConversation, type ApiConversationBase, type Page } from "../contracts/api.js";
 
@@ -204,7 +205,8 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    return asApi<Page<ApiChatMessage>>(pageResult(messages, limit));
+    const page = pageResult(messages, limit);
+    return asApi<Page<ApiChatMessage>>({ ...page, data: await withSharedArticles(app, page.data) });
   });
 
   app.post("/conversations/:id/messages", { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -260,7 +262,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
-    const message = await app.prisma.$transaction(async (tx) => {
+    const created = await app.prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
         data: {
           conversationId: id,
@@ -287,6 +289,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
       return created;
     });
 
+    const message = (await withSharedArticles(app, [created]))[0]!;
     app.io.to(`conversation:${id}`).emit("message:new", message);
 
     const recipients = await app.prisma.conversationMember.findMany({

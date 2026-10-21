@@ -60,7 +60,9 @@ export function chatStatus(c: Conversation, meId: string): { text: string; time:
     const read = c.members.find((m) => m.userId !== meId)?.lastReadAt;
     return { text: read && read >= last.createdAt ? `seen ${shortAge(read)} ago` : `sent ${shortAge(last.createdAt)} ago`, time: null };
   }
-  return { text: last.body ?? '', time: c.unreadCount ? null : shortAge(last.createdAt) };
+  // a shared post with no text says so instead of an empty line
+  const text = last.body || (last.type === 'SHARE_ARTICLE' ? 'Sent a post' : last.replyToStory ? 'Replied to your story' : '');
+  return { text, time: c.unreadCount ? null : shortAge(last.createdAt) };
 }
 
 // One shared Socket.IO connection. The server sits behind the /api prefix on the VPS, so the path follows API_URL.

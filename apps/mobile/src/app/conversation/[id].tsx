@@ -11,7 +11,7 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { INTER_FAMILIES, Text, TextInput } from '@/components/text';
 import { chatSocket, fetchMessages, markRead, sendMessage, type ChatMessage } from '@/lib/chat';
-import { back, openProfile } from '@/lib/nav';
+import { back, openProfile, push } from '@/lib/nav';
 import { fetchProfile } from '@/lib/users';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
@@ -199,7 +199,8 @@ export default function Conversation() {
               <Animated.View entering={fresh.current.has(key) ? FadeInDown.duration(240) : undefined}>
                 {stamp ? <Text style={styles.stamp}>{formatStamp(item.createdAt)}</Text> : null}
                 {item.replyToStory ? <StoryReply mine={mine} story={item.replyToStory} /> : null}
-                <Bubble mine={mine} body={item.body ?? ''} style={[!stamp ? { marginTop: older?.senderId === item.senderId ? 7 : 12 } : undefined, waiting && !item.failed ? styles.pending : undefined]} />
+                {item.type === 'SHARE_ARTICLE' ? <SharedPost mine={mine} post={item.sharedArticle ?? null} first={!stamp && older?.senderId !== item.senderId} /> : null}
+                {item.type === 'SHARE_ARTICLE' && !item.body ? null : <Bubble mine={mine} body={item.body ?? ''} style={[!stamp ? { marginTop: older?.senderId === item.senderId ? 7 : 12 } : undefined, waiting && !item.failed ? styles.pending : undefined]} />}
                 {item.failed ? (
                   <Pressable onPress={() => deliver(key, item.body ?? '')} hitSlop={8} accessibilityRole="button">
                     <Text style={styles.failed}>Not sent · Tap to retry</Text>
@@ -282,6 +283,36 @@ function StoryReply({ mine, story }: { mine: boolean; story: NonNullable<ChatMes
   );
 }
 
+// Not designed: a shared post is a card (cover, title, author) on the sender's side; a tap opens the post. When the
+// post is gone, a grey card says so.
+function SharedPost({ mine, post, first }: { mine: boolean; post: NonNullable<ChatMessage['sharedArticle']> | null; first: boolean }) {
+  return (
+    <PressableScale
+      onPress={post ? () => push(`/article/${post.id}`) : undefined}
+      disabled={!post}
+      scaleTo={0.97}
+      accessibilityRole="button"
+      accessibilityLabel={post ? `Post: ${post.title}` : 'Post unavailable'}
+      style={[styles.post, mine ? styles.postMine : styles.postTheirs, { marginTop: first ? 12 : 7 }]}>
+      {post ? (
+        <>
+          {post.coverImageUrl ? <Image source={{ uri: post.coverImageUrl }} style={styles.postCover} contentFit="cover" transition={150} /> : null}
+          <View style={styles.postBody}>
+            <Text style={styles.postAuthor} numberOfLines={1}>
+              {post.author.displayName ?? post.author.username}
+            </Text>
+            <Text style={styles.postTitle} numberOfLines={2}>
+              {post.title}
+            </Text>
+          </View>
+        </>
+      ) : (
+        <Text style={[styles.replyGoneText, styles.postGone]}>Post unavailable</Text>
+      )}
+    </PressableScale>
+  );
+}
+
 function Bubble({ mine, body, style }: { mine: boolean; body: string; style?: StyleProp<ViewStyle> }) {
   const [multi, setMulti] = useState(false);
   return (
@@ -329,6 +360,14 @@ const styles = StyleSheet.create({
   replyTheirs: { alignItems: 'flex-start' },
   replyLabel: { marginBottom: 6, fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 15, color: SUBTLE },
   replyStory: { width: 96, height: 170, borderRadius: 12, backgroundColor: BUBBLE },
+  post: { width: 240, borderRadius: 16, backgroundColor: BUBBLE, overflow: 'hidden' },
+  postMine: { alignSelf: 'flex-end' },
+  postTheirs: { alignSelf: 'flex-start' },
+  postCover: { width: 240, height: 150 },
+  postBody: { paddingHorizontal: 12, paddingTop: 9, paddingBottom: 11 },
+  postAuthor: { fontFamily: INTER_FAMILIES['500'], fontSize: 12, lineHeight: 15, color: SUBTLE },
+  postTitle: { marginTop: 2, fontFamily: INTER_FAMILIES['600'], fontSize: 14.5, lineHeight: 19, color: colors.text },
+  postGone: { paddingVertical: 18, paddingHorizontal: 14 },
   replyGone: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   replyGoneText: { textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 15, color: SUBTLE },
 
