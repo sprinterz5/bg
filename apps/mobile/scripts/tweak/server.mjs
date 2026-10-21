@@ -245,7 +245,7 @@ createServer(async (req, res) => {
   try {
     if (p === '/') return reply(res, 200, readFileSync(join(here, 'index.html')), 'text/html; charset=utf-8');
     if (p === '/api/screens')
-      return reply(res, 200, walk(SRC).map((rel) => ({ rel, name: screen(rel), count: scan(rel).length })).filter((f) => f.count).sort((a, b) => (a.name.includes('/') - b.name.includes('/')) || a.name.localeCompare(b.name)));
+      return reply(res, 200, walk(SRC).map((rel) => ({ rel, name: screen(rel), count: scan(rel).length })).filter((f) => f.count).sort((a, b) => (SCREENS[b.rel.slice(12)] ? 1 : 0) - (SCREENS[a.rel.slice(12)] ? 1 : 0) || a.name.localeCompare(b.name)));
     if (p === '/api/values') return reply(res, 200, scan(safe(url.searchParams.get('file'))));
     if (p === '/api/search') {
       const q = (url.searchParams.get('q') || '').toLowerCase();
