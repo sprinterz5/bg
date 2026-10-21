@@ -6,7 +6,14 @@ import { makeSlug } from "../utils/slug.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
 import { withIdempotency } from "../services/idempotencyService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
-import { asApi, type ApiArticleCreated } from "../contracts/api.js";
+import { asApi, type ApiArticle, type ApiArticleCreated } from "../contracts/api.js";
+import { env } from "../config/env.js";
+
+// Without moderators a published article is approved at once (env ARTICLES_AUTO_APPROVE).
+const publishedModeration = () =>
+  env.ARTICLES_AUTO_APPROVE
+    ? { moderationStatus: "APPROVED" as const, action: ModerationAction.APPROVED }
+    : { moderationStatus: "PENDING" as const, action: ModerationAction.SUBMITTED };
 
 const articleCreateSchema = z.object({
   // The app measures titles against the Explore card (2 lines); this is only a hard cap.
@@ -46,11 +53,11 @@ export const articleRoutes: FastifyPluginAsync = async (app) => {
             coverImageUrl: body.coverImageUrl,
             tags: body.tags,
             readingTimeMinutes: readingTimeMinutes(body.body),
-            ...(publish ? { status: "PUBLISHED" as const, moderationStatus: "PENDING" as const, publishedAt: new Date() } : {})
+            ...(publish ? { status: "PUBLISHED" as const, moderationStatus: publishedModeration().moderationStatus, publishedAt: new Date() } : {})
           }
         });
         if (publish) {
-          await tx.moderationEvent.create({ data: { targetType: "ARTICLE", targetId: created.id, action: ModerationAction.SUBMITTED } });
+          await tx.moderationEvent.create({ data: { targetType: "ARTICLE", targetId: created.id, action: publishedModeration().action } });
         }
         return created;
       });
@@ -107,7 +114,7 @@ export const articleRoutes: FastifyPluginAsync = async (app) => {
       throw reply.notFound("Article not found");
     }
 
-    return article;
+    return asApi<ApiArticle>(article);
   });
 
   app.patch("/articles/:id", { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -153,7 +160,7 @@ export const articleRoutes: FastifyPluginAsync = async (app) => {
         where: { id },
         data: {
           status: "PUBLISHED",
-          moderationStatus: "PENDING",
+          moderationStatus: publishedModeration().moderationStatus,
           publishedAt: article.publishedAt ?? new Date()
         }
       });
@@ -162,7 +169,7 @@ export const articleRoutes: FastifyPluginAsync = async (app) => {
         data: {
           targetType: "ARTICLE",
           targetId: id,
-          action: ModerationAction.SUBMITTED
+          action: publishedModeration().action
         }
       });
 

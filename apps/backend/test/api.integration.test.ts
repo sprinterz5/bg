@@ -13,6 +13,8 @@ function setIntegrationEnv() {
   process.env.MEDIA_STORAGE_DIR = "storage/uploads";
   process.env.MEDIA_STORAGE_PROVIDER = "LOCAL";
   process.env.PUBLIC_MEDIA_URL = "http://localhost:4000/media";
+  // keeps the moderation path (PENDING → moderator approves) under test
+  process.env.ARTICLES_AUTO_APPROVE = "false";
   process.env.AI_ENABLED = "true";
   process.env.AI_PROVIDER = "LOCAL_HASH";
   process.env.AI_EMBEDDING_MODEL = "bookgram-test-local-hash-v1";

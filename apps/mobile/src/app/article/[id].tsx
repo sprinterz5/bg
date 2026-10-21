@@ -63,9 +63,14 @@ const CLOSE_EASING = Easing.bezier(0.4, 0, 0.2, 1);
 
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { articles } = useFeed();
+  const { articles, ensureArticle } = useFeed();
   const article = id ? articles[id] : undefined;
-  if (!article) return <PlaceholderScreen title="Article not found" showBack />;
+  // Posts from the server come without their text: it's fetched here (a white page meanwhile).
+  const [missing, setMissing] = useState(false);
+  useEffect(() => {
+    if (id && !article) ensureArticle(id).then((ok) => setMissing(!ok));
+  }, [id, article, ensureArticle]);
+  if (!article) return missing ? <PlaceholderScreen title="Article not found" showBack /> : <View style={styles.loading} />;
   // Own gesture root: the reader is a native modal (transparentModal), which on iOS sits outside the app's root view,
   // so without it the pages / swipe-down pans never receive touches.
   return (
@@ -621,6 +626,7 @@ function BarItem({ icon, w, h, label, x, iconTop, onPress }: { icon: IconName; w
 }
 
 const styles = StyleSheet.create({
+  loading: { flex: 1, backgroundColor: '#FFFFFF' },
   bigHeart: { position: 'absolute', width: HEART_W, height: HEART_H },
   // Transparent: the list stays visible while the reader opens and closes over it.
   root: { flex: 1 },

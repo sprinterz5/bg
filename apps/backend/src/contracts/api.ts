@@ -47,6 +47,32 @@ export type ApiArticleCreated = {
   publishedAt: string | null;
 };
 
+/** GET /articles/:idOrSlug. */
+export type ApiArticle = {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  body: string;
+  coverImageUrl: string | null;
+  publishedAt: string | null;
+  author: ApiUserSummary;
+};
+
+/** GET /feed (articles): a page of ranked posts with the viewer's like / bookmark and the counters. */
+export type ApiFeedItem = {
+  id: string;
+  targetType: "ARTICLE" | "REVIEW";
+  targetId: string;
+  title: string;
+  subtitle?: string | null;
+  coverImageUrl?: string | null;
+  author: ApiUserSummary;
+  publishedAt: string;
+  viewer: { liked: boolean; bookmarked: boolean };
+  counts: { likes: number; comments: number; bookmarks: number; shares: number };
+};
+export type ApiFeedPage = { data: ApiFeedItem[]; nextCursor: string | null };
+
 /** GET /users/:username/articles (page). */
 export type ApiUserArticle = {
   id: string;

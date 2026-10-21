@@ -29,6 +29,7 @@ function articleToFeedItem(article: ArticleWithAuthor) {
     targetId: article.id,
     authorId: article.authorId,
     title: article.title,
+    subtitle: article.subtitle,
     excerpt: article.excerpt,
     coverImageUrl: article.coverImageUrl,
     tags: article.tags,

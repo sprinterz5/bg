@@ -5,7 +5,9 @@ import type { ImageSourcePropType } from 'react-native';
 
 import { api } from '@/lib/api';
 import { CAPTURE, captureParam } from '@/lib/capture';
+import { fetchArticle, fetchFeed } from '@/lib/feed-api';
 import { uploadImage } from '@/lib/media';
+import { useSession } from '@/state/session';
 import { ARTICLES, FEED, type Article, type Author, type Post } from '@/mock/data';
 
 /** How long the "Posted" card stays before folding away. */
@@ -41,8 +43,12 @@ type FeedContextValue = {
   retryPublish: () => void;
   /** After an error: drop the card and put the post back into the composer. */
   cancelPublish: () => void;
-  /** Next page of the feed (mock: the same posts again under new ids, so long scrolling can be tested). */
+  /** Next page: the server's posts first, then the mock ones (the same posts again under new ids). */
   loadMore: () => void;
+  /** Pull-to-refresh: the server's first page again. */
+  refresh: () => Promise<void>;
+  /** Loads a post's text into `articles` when it isn't there (posts from the server, profiles). */
+  ensureArticle: (id: string) => Promise<boolean>;
   /** "Not interested": drops the post from the feed. */
   hidePost: (id: string) => void;
 };
@@ -70,7 +76,11 @@ const FeedContext = createContext<FeedContextValue | null>(null);
 const SeenContext = createContext<SeenContextValue | null>(null);
 
 export function FeedProvider({ children }: { children: ReactNode }) {
+  const { user } = useSession();
+  // Mock posts and the user's own just-published ones (local); the server's ranked posts go above the mock ones.
   const [posts, setPosts] = useState<Post[]>(FEED);
+  const [server, setServer] = useState<Post[]>([]);
+  const cursor = useRef<{ next: string | null; loading: boolean; done: boolean }>({ next: null, loading: false, done: true });
   const [articles, setArticles] = useState<Record<string, Article>>(ARTICLES);
   const [draft, setDraft] = useState<ArticleDraft>(emptyDraft);
   // ?capture&posting=upload|post|posted|error shows the card in that state (design checks).
@@ -157,12 +167,71 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     setPublishing(null);
   }, []);
 
-  const hidePost = useCallback((id: string) => setPosts((p) => p.filter((post) => post.id !== id)), []);
-  const loadMore = useCallback(() => setPosts((p) => (p.length >= MOCK_MAX ? p : [...p, ...mockPage(p.length)])), []);
+  const hidePost = useCallback((id: string) => {
+    setPosts((p) => p.filter((post) => post.id !== id));
+    setServer((p) => p.filter((post) => post.id !== id));
+  }, []);
+
+  const refresh = useCallback(async () => {
+    if (CAPTURE || !user) return;
+    const c = cursor.current;
+    c.loading = true;
+    try {
+      const page = await fetchFeed();
+      setServer(page.posts);
+      cursor.current = { next: page.nextCursor, loading: false, done: !page.nextCursor };
+    } catch {
+      c.loading = false;
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) refresh();
+  }, [user, refresh]);
+
+  const loadMore = useCallback(() => {
+    const c = cursor.current;
+    if (!c.done) {
+      if (c.loading) return;
+      c.loading = true;
+      fetchFeed(c.next)
+        .then((page) => {
+          setServer((s) => [...s, ...page.posts.filter((p) => !s.some((x) => x.id === p.id))]);
+          cursor.current = { next: page.nextCursor, loading: false, done: !page.nextCursor };
+        })
+        .catch(() => (c.loading = false));
+      return;
+    }
+    setPosts((p) => (p.length >= MOCK_MAX ? p : [...p, ...mockPage(p.length)]));
+  }, []);
+
+  const articlesRef = useRef(articles);
+  useEffect(() => {
+    articlesRef.current = articles;
+  }, [articles]);
+  const ensureArticle = useCallback(async (id: string) => {
+    if (articlesRef.current[id]) return true;
+    try {
+      const a = await fetchArticle(id);
+      setArticles((m) => ({ ...m, [id]: a }));
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // The user's own new posts (not yet in a server page) on top, then the server's, then the mock feed.
+  const merged = useMemo(() => {
+    const fromServer = new Set(server.map((p) => p.articleId));
+    // after signing out the previous account's server posts are left out (the next sign-in refreshes them)
+    const mine = posts.filter((p) => p.id.startsWith('p_') && !fromServer.has(p.articleId));
+    const rest = posts.filter((p) => !p.id.startsWith('p_'));
+    return [...mine, ...(user ? server : []), ...rest];
+  }, [posts, server, user]);
 
   const value = useMemo(
-    () => ({ posts, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, hidePost }),
-    [posts, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, hidePost],
+    () => ({ posts: merged, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost }),
+    [merged, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost],
   );
 
   return (

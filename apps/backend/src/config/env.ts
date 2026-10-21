@@ -53,6 +53,9 @@ const envSchema = z.object({
   MEDIA_PUBLIC_BASE_URL: z.string().url().optional().default(""),
   MEDIA_MODERATION_PROVIDER: z.enum(["DISABLED", "LOCAL_STUB", "OPENAI", "GOOGLE_VISION", "AWS_REKOGNITION", "HIVE"]).default("DISABLED"),
   MEDIA_MODERATION_DEFAULT_STATUS: z.enum(["APPROVED", "PENDING"]).default("APPROVED"),
+  // Published articles go straight to the feeds (APPROVED) instead of waiting for a moderator. On while there is no
+  // moderation team; reports and moderator removal still work.
+  ARTICLES_AUTO_APPROVE: z.enum(["true", "false"]).default("true").transform((v) => v === "true"),
   MEDIA_MODERATION_REVIEW_THRESHOLD: z.coerce.number().min(0).max(1).default(0.65),
   MEDIA_MODERATION_REJECT_THRESHOLD: z.coerce.number().min(0).max(1).default(0.9),
   JOB_CLEANUP_INTERVAL_MINUTES: z.coerce.number().int().positive().default(360),
