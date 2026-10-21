@@ -47,6 +47,19 @@ export type ApiArticleCreated = {
   publishedAt: string | null;
 };
 
+/** GET /stories/friends: active stories of followed users, unseen first. The caption comes once viewed. */
+export type ApiFriendStory = {
+  id: string;
+  user: ApiUserSummary;
+  mediaUrl: string;
+  caption: string | null;
+  viewed: boolean;
+  createdAt: string;
+};
+
+/** POST /stories/:id/view: the story with its caption. */
+export type ApiViewedStory = { id: string; caption: string | null };
+
 /** GET /articles/:idOrSlug. */
 export type ApiArticle = {
   id: string;
@@ -94,6 +107,8 @@ export type ApiChatMessage = {
   senderId: string;
   body: string | null;
   createdAt: string;
+  /** Set when the message answers a story; null once the story is deleted. */
+  replyToStory?: { id: string; mediaUrl: string; expiresAt: string } | null;
 };
 
 export type ApiConversationMember = { userId: string; lastReadAt: string | null; user: ApiUserSummary };

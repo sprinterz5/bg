@@ -37,6 +37,10 @@ export type Story = {
   timeAgo: string;
   /** Already watched: grey ring on the home row. */
   seen?: boolean;
+  /** Stories from the server: the author's account id (a reply goes to their chat); mock ones have none. */
+  authorId?: string;
+  /** Server story: the caption only comes once it's viewed (POST /stories/:id/view). */
+  remote?: boolean;
 };
 
 export type Post = {

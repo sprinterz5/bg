@@ -14,7 +14,7 @@ import { ContactsBlock } from '@/components/contacts-block';
 import { PressableScale } from '@/components/pressable-scale';
 import { HomeStories } from '@/components/home-stories';
 import { PullSpinner } from '@/components/pull-spinner';
-import { HOME_STORIES, type Post } from '@/mock/data';
+import type { Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { Text } from '@/components/text';
@@ -25,7 +25,7 @@ import { pickStoryPhoto } from '@/lib/pick-cover';
 export default function Home() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const { posts, publishing, retryPublish, cancelPublish, loadMore, refresh, hidePost } = useFeed();
+  const { posts, stories, publishing, retryPublish, cancelPublish, loadMore, refresh, hidePost } = useFeed();
   // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
   // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
   // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
@@ -168,7 +168,7 @@ export default function Home() {
         ListHeaderComponent={
           <>
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
-              <HomeStories stories={HOME_STORIES} />
+              <HomeStories stories={stories} />
             </Animated.View>
             <View>
               <FeedTabs onChange={onTab} />

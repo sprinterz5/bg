@@ -8,7 +8,8 @@ import { CAPTURE, captureParam } from '@/lib/capture';
 import { fetchArticle, fetchFeed } from '@/lib/feed-api';
 import { uploadImage } from '@/lib/media';
 import { useSession } from '@/state/session';
-import { ARTICLES, FEED, type Article, type Author, type Post } from '@/mock/data';
+import { ARTICLES, FEED, HOME_STORIES, type Article, type Author, type Post, type Story } from '@/mock/data';
+import { fetchFriendStories, viewStory } from '@/lib/stories';
 
 /** How long the "Posted" card stays before folding away. */
 const POSTED_MS = 1600;
@@ -45,7 +46,12 @@ type FeedContextValue = {
   cancelPublish: () => void;
   /** Next page: the server's posts first, then the mock ones (the same posts again under new ids). */
   loadMore: () => void;
-  /** Pull-to-refresh: the server's first page again. */
+  /** Stories row: the followed users' stories from the server, then the mock ones. */
+  stories: Story[];
+  /** The viewer opened a server story: marks it watched on the server and gives its caption (kept by the viewer, so
+   *  the stories row under it doesn't re-render while it's open). */
+  openedStory: (id: string) => Promise<string | null>;
+  /** Pull-to-refresh: the server's first page again (and the stories). */
   refresh: () => Promise<void>;
   /** Loads a post's text into `articles` when it isn't there (posts from the server, profiles). */
   ensureArticle: (id: string) => Promise<boolean>;
@@ -80,6 +86,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   // Mock posts and the user's own just-published ones (local); the server's ranked posts go above the mock ones.
   const [posts, setPosts] = useState<Post[]>(FEED);
   const [server, setServer] = useState<Post[]>([]);
+  const [serverStories, setServerStories] = useState<Story[]>([]);
   const cursor = useRef<{ next: string | null; loading: boolean; done: boolean }>({ next: null, loading: false, done: true });
   const [articles, setArticles] = useState<Record<string, Article>>(ARTICLES);
   const [draft, setDraft] = useState<ArticleDraft>(emptyDraft);
@@ -176,6 +183,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     if (CAPTURE || !user) return;
     const c = cursor.current;
     c.loading = true;
+    fetchFriendStories().then(setServerStories, () => {});
     try {
       const page = await fetchFeed();
       setServer(page.posts);
@@ -220,6 +228,9 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const stories = useMemo(() => [...(user ? serverStories : []), ...HOME_STORIES], [serverStories, user]);
+  const openedStory = useCallback((id: string) => viewStory(id).then((v) => v.caption, () => null), []);
+
   // The user's own new posts (not yet in a server page) on top, then the server's, then the mock feed.
   const merged = useMemo(() => {
     const fromServer = new Set(server.map((p) => p.articleId));
@@ -230,8 +241,8 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   }, [posts, server, user]);
 
   const value = useMemo(
-    () => ({ posts: merged, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost }),
-    [merged, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost],
+    () => ({ posts: merged, stories, openedStory, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost }),
+    [merged, stories, openedStory, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost],
   );
 
   return (

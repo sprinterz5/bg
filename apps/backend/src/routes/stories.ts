@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getBlockedIds } from "../services/blockService.js";
 import { searchBookCandidates } from "../services/bookService.js";
 import { withIdempotency } from "../services/idempotencyService.js";
+import { asApi, type ApiFriendStory, type ApiViewedStory } from "../contracts/api.js";
 
 const storyCreateSchema = z.object({
   bookId: z.string().uuid().optional(),
@@ -150,7 +151,7 @@ export const storyRoutes: FastifyPluginAsync = async (app) => {
     const mutualIds = new Set(mutualRows.map((row) => row.followerId));
     const myBookIds = new Set(shelfRows.map((row) => row.bookId));
 
-    return stories.map((story) => {
+    return asApi<ApiFriendStory[]>(stories.map((story) => {
       const viewed = story.views.length > 0;
       const recencyHours = Math.max((Date.now() - story.createdAt.getTime()) / 36e5, 0);
       const orderingScore =
@@ -171,7 +172,7 @@ export const storyRoutes: FastifyPluginAsync = async (app) => {
         createdAt: story.createdAt,
         expiresAt: story.expiresAt
       };
-    }).sort((a, b) => b.orderingScore - a.orderingScore);
+    }).sort((a, b) => b.orderingScore - a.orderingScore));
   });
 
   app.post("/stories/:id/view", { preHandler: [app.authenticate] }, async (request, reply) => {
@@ -232,10 +233,7 @@ export const storyRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    return {
-      ...story,
-      viewed: true,
-      ringState: "seen"
-    };
+    const viewedStory = { ...story, viewed: true, ringState: "seen" };
+    return asApi<ApiViewedStory>(viewedStory);
   });
 };

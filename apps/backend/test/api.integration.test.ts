@@ -50,6 +50,8 @@ describe("Puzzle API integration", () => {
     const { buildApp } = await import("../src/app.js");
     app = await buildApp();
     await app.ready();
+    // Earlier runs' accounts (and, by cascade, their posts) would crowd this run's posts out of ranked lists.
+    await app.prisma.user.deleteMany({ where: { username: { startsWith: "it_" } } });
   });
 
   afterAll(async () => {
@@ -485,6 +487,26 @@ describe("Puzzle API integration", () => {
     });
     expect(message.response.statusCode).toBe(201);
     expect(message.payload.type).toBe("SHARE_ARTICLE");
+
+    // Bob (a follower) replies to Alice's story in their chat; Alice can't "reply" to her own story.
+    const aliceStory = await app.prisma.story.create({
+      data: { userId: aliceId, mediaUrl: "http://localhost:4000/media/story.jpg", mediaMimeType: "image/jpeg", expiresAt: new Date(Date.now() + 3600_000) }
+    });
+    const storyReply = await json(app, {
+      method: "POST",
+      url: `/conversations/${conversation.payload.id}/messages`,
+      token: bobToken,
+      body: { body: "Nice!", replyToStoryId: aliceStory.id }
+    });
+    expect(storyReply.response.statusCode).toBe(201);
+    expect(storyReply.payload.replyToStory.id).toBe(aliceStory.id);
+    const ownStoryReply = await json(app, {
+      method: "POST",
+      url: `/conversations/${conversation.payload.id}/messages`,
+      token: aliceToken,
+      body: { body: "Me", replyToStoryId: aliceStory.id }
+    });
+    expect(ownStoryReply.response.statusCode).toBe(400);
 
     const sharedViaEndpoint = await json(app, {
       method: "POST",

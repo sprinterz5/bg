@@ -490,6 +490,7 @@ model Story {
   user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   book  Book?       @relation(fields: [bookId], references: [id], onDelete: SetNull)
   views StoryView[]
+  replies Message[]
 
   @@index([userId, createdAt])
   @@index([status, expiresAt])
@@ -559,6 +560,8 @@ model Message {
   sharedBookId    String?     @db.Uuid
   sharedArticleId String?     @db.Uuid
   sharedReviewId  String?     @db.Uuid
+  // A reply to a story: the story stays linked while it exists (the chat shows it above the text).
+  replyToStoryId  String?     @db.Uuid
   createdAt       DateTime    @default(now())
   editedAt        DateTime?
   deletedAt       DateTime?
@@ -566,6 +569,7 @@ model Message {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
   sharedBook   Book?        @relation(fields: [sharedBookId], references: [id], onDelete: SetNull)
+  replyToStory Story?       @relation(fields: [replyToStoryId], references: [id], onDelete: SetNull)
 
   @@index([conversationId, createdAt])
   @@index([senderId, createdAt])

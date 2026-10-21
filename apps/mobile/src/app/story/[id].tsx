@@ -3,7 +3,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View, ScrollView } from 'react-native';
+import { Alert, BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View, ScrollView } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Animated, { Easing, Extrapolation, interpolateColor, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
@@ -15,8 +15,9 @@ import { PressableScale } from '@/components/pressable-scale';
 import { Text, TextInput, INTER_FAMILIES } from '@/components/text';
 import { backWhenReady } from '@/lib/nav';
 import { storiesClosing, storyOrigin } from '@/lib/story-origin';
-import { HOME_STORIES, type Story } from '@/mock/data';
-import { useSeenStories } from '@/state/feed';
+import type { Story } from '@/mock/data';
+import { replyToStory } from '@/lib/stories';
+import { useFeed, useSeenStories } from '@/state/feed';
 
 // Autolayouted (design status bar 47, home indicator 34). Photo centred on design y 390, up to 540 tall; author
 // row 92 and caption 46 above the bottom bar; bar 50 + indicator, #0D1015.
@@ -28,7 +29,8 @@ const MAX_H = 540;
 function photoHeight(story: Story, width: number) {
   // resolveAssetSource is native-only (react-native-web lacks it)
   const src = Image.resolveAssetSource?.(story.image as number);
-  return Math.min(MAX_H, src ? (width * src.height) / src.width : MAX_H);
+  // a photo from the server has no size here: the full box (the photo covers it)
+  return Math.min(MAX_H, src?.width && src.height ? (width * src.height) / src.width : MAX_H);
 }
 
 // Page turn between stories (not in the design): swipe or tap the right/left half. The previous, current and
@@ -71,6 +73,9 @@ function StoryViewer() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { stories, openedStory } = useFeed();
+  // The list as it was when the viewer opened: a refresh behind it must not shift the pages.
+  const [HOME_STORIES] = useState(stories);
   const [index, setIndex] = useState(() => Math.max(0, HOME_STORIES.findIndex((s) => s.id === id)));
   const story = HOME_STORIES[index];
   const prev: Story | undefined = HOME_STORIES[index - 1];
@@ -117,9 +122,13 @@ function StoryViewer() {
   // opens: marking re-renders the stories row under it.
   const { markStoriesSeen } = useSeenStories();
   const watched = useRef(new Set<string>());
+  // Server stories: the caption arrives with the "viewed" call.
+  const [captions, setCaptions] = useState<Record<string, string>>({});
   useEffect(() => {
+    if (watched.current.has(story.id)) return;
     watched.current.add(story.id);
-  }, [story.id]);
+    if (story.remote) openedStory(story.id).then((c) => c && setCaptions((m) => ({ ...m, [story.id]: c })));
+  }, [story.id, story.remote, openedStory]);
   useEffect(() => () => markStoriesSeen([...watched.current]), [markStoriesSeen]);
 
   const closing = useRef(false);
@@ -284,7 +293,7 @@ function StoryViewer() {
       return dropped ? out : s;
     });
     return () => cancelAnimationFrame(raf);
-  }, [index, active, under, hidden, progress, mode]);
+  }, [index, active, under, hidden, progress, mode, HOME_STORIES]);
 
   const canForward = CURL_SUPPORTED && !!next && !!snaps[story.id];
   const nextSnapped = !!next && !!snaps[next.id];
@@ -467,10 +476,26 @@ function StoryViewer() {
     };
   });
   const [reply, setReply] = useState('');
-  // Story replies have no backend yet: the text is cleared and the keyboard closes.
+  // Not designed: the reply goes to the author's chat, linked to the story; "Sent" shows for a moment in the field's
+  // place. Mock stories (no account behind them) only clear the field.
+  const [sent, setSent] = useState(false);
   const sendReply = () => {
+    const text = reply.trim();
+    if (!text) return;
     setReply('');
     Keyboard.dismiss();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    if (!story.authorId) return;
+    replyToStory(story, text).then(
+      () => {
+        setSent(true);
+        setTimeout(() => setSent(false), 1500);
+      },
+      () => {
+        setReply(text);
+        Alert.alert("Couldn't send", 'Check the connection and try again.');
+      },
+    );
   };
   const pages = (settled ? [prev, next, story] : [story]).filter((s): s is Story => !!s);
   const layers = pages.filter((s) => !!snaps[s.id]).map((s) => ({ id: s.id, image: snaps[s.id] }));
@@ -484,7 +509,7 @@ function StoryViewer() {
         {/* Not flattened on Android, or the pan has no view to attach to. */}
         <View collapsable={false} style={StyleSheet.absoluteFill}>
           {pages.map((s) => (
-            <StoryPage key={s.id} story={s} top={s.id === story.id} onPhoto={s.id === story.id ? onTopPhoto : undefined} snapshot={settled} closing={closing} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+            <StoryPage key={s.id} story={captions[s.id] ? { ...s, caption: captions[s.id] } : s} top={s.id === story.id} onPhoto={s.id === story.id ? onTopPhoto : undefined} snapshot={settled} closing={closing} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
           ))}
           {/* Inside the gesture view: on Android the gesture handler hit-tests views itself and stops at the
               first leaf view under the finger (the canvas), so a canvas above it would swallow the swipe. */}
@@ -511,7 +536,7 @@ function StoryViewer() {
             onFocus={() => setReplying(true)}
             onBlur={() => setReplying(false)}
             multiline={replying}
-            placeholder="Send message..."
+            placeholder={sent ? 'Sent' : 'Send message...'}
             placeholderTextColor="#FFFFFF"
             style={[styles.input, replying && styles.inputTyping, replying && reply.trim() ? styles.inputWithSend : null]}
             selectionColor="#FFFFFF"

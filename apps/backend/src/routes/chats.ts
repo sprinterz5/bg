@@ -16,8 +16,12 @@ const messageSchema = z.object({
   body: z.string().max(10000).optional(),
   sharedBookId: z.string().uuid().optional(),
   sharedArticleId: z.string().uuid().optional(),
-  sharedReviewId: z.string().uuid().optional()
+  sharedReviewId: z.string().uuid().optional(),
+  // Reply to a story of another member of the conversation (the story viewer's reply field).
+  replyToStoryId: z.string().uuid().optional()
 });
+
+const storyPreview = { select: { id: true, mediaUrl: true, expiresAt: true } } as const;
 
 const userPreview = {
   id: true,
@@ -195,7 +199,8 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
       orderBy: { createdAt: "desc" },
       include: {
         sender: { select: userPreview },
-        sharedBook: true
+        sharedBook: true,
+        replyToStory: storyPreview
       }
     });
 
@@ -238,6 +243,22 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
     if (body.type === "SHARE_REVIEW" && !body.sharedReviewId) {
       throw reply.badRequest("sharedReviewId is required");
     }
+    if (body.replyToStoryId) {
+      // Only an active story of someone else in this conversation, that the sender is allowed to see (follows them).
+      const story = await app.prisma.story.findFirst({
+        where: {
+          id: body.replyToStoryId,
+          status: "ACTIVE",
+          expiresAt: { gt: new Date() },
+          userId: { in: recipientsForSafety.map((r) => r.userId) },
+          user: { followers: { some: { followerId: request.user.sub } } }
+        },
+        select: { id: true }
+      });
+      if (!story) {
+        throw reply.badRequest("Story is not available");
+      }
+    }
 
     const message = await app.prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
@@ -248,11 +269,13 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
           body: body.body,
           sharedBookId: body.sharedBookId,
           sharedArticleId: body.sharedArticleId,
-          sharedReviewId: body.sharedReviewId
+          sharedReviewId: body.sharedReviewId,
+          replyToStoryId: body.replyToStoryId
         },
         include: {
           sender: { select: userPreview },
-          sharedBook: true
+          sharedBook: true,
+          replyToStory: storyPreview
         }
       });
 
@@ -283,7 +306,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
           actorId: request.user.sub,
           targetType: "CONVERSATION",
           targetId: id,
-          title: "New message",
+          title: body.replyToStoryId ? "Replied to your story" : "New message",
           body: body.type === "TEXT" ? body.body : "Shared something with you.",
           data: { messageId: message.id, messageType: message.type }
         })

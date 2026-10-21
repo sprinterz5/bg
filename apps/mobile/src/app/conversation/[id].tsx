@@ -173,6 +173,7 @@ export default function Conversation() {
             return (
               <View>
                 {stamp ? <Text style={styles.stamp}>{formatStamp(item.createdAt)}</Text> : null}
+                {item.replyToStory ? <StoryReply mine={mine} story={item.replyToStory} /> : null}
                 <Bubble mine={mine} body={item.body ?? ''} style={!stamp ? { marginTop: older?.senderId === item.senderId ? 7 : 12 } : undefined} />
               </View>
             );
@@ -232,6 +233,24 @@ function formatStamp(iso: string) {
 // Card: avatar 105 28 under the header, name 16.4 semibold, line 14.5 #999. Bubbles: Inter 14.55 / 20.2, 14 / 7.9 padding,
 // radius 18, mine #1E1E1E (white text) 7 from the right, theirs #F7F7F7 10 from the left. Stamps Inter 13 #999, 34.3
 // above and 13.7 below. Composer: a #F7F7F7 40px "+" circle at x 18, the pill (44 tall, radius 22) from 64 to 383.
+// Not designed: a reply to a story shows the story (small, rounded) above the text with who replied; once the story
+// has expired a grey box says so.
+function StoryReply({ mine, story }: { mine: boolean; story: NonNullable<ChatMessage['replyToStory']> }) {
+  const live = new Date(story.expiresAt).getTime() > Date.now();
+  return (
+    <View style={[styles.reply, mine ? styles.replyMine : styles.replyTheirs]}>
+      <Text style={styles.replyLabel}>{mine ? 'You replied to their story' : 'Replied to your story'}</Text>
+      {live ? (
+        <Image source={{ uri: story.mediaUrl }} style={styles.replyStory} contentFit="cover" transition={150} />
+      ) : (
+        <View style={[styles.replyStory, styles.replyGone]}>
+          <Text style={styles.replyGoneText}>Story unavailable</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 function Bubble({ mine, body, style }: { mine: boolean; body: string; style?: { marginTop: number } }) {
   const [multi, setMulti] = useState(false);
   return (
@@ -269,6 +288,13 @@ const styles = StyleSheet.create({
   theirs: { alignSelf: 'flex-start', backgroundColor: BUBBLE },
   bubbleText: { fontFamily: INTER_FAMILIES['400'], fontSize: 14.55, lineHeight: BUBBLE_LINE, color: colors.text },
   mineText: { color: '#FFFFFF' },
+  reply: { marginTop: 12, marginBottom: -5 },
+  replyMine: { alignItems: 'flex-end' },
+  replyTheirs: { alignItems: 'flex-start' },
+  replyLabel: { marginBottom: 6, fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 15, color: SUBTLE },
+  replyStory: { width: 96, height: 170, borderRadius: 12, backgroundColor: BUBBLE },
+  replyGone: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
+  replyGoneText: { textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 15, color: SUBTLE },
 
   // "+" circle 40 at x 18, the pill from 64 to 383 (44 tall, radius 22; 25 once it grows), text Inter 14.5 from 21.6 in;
   // send pill 46x34 (white, radius 17) 5 from the right, 5 from the bottom.
