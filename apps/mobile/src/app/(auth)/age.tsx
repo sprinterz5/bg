@@ -12,7 +12,7 @@ import { push } from '@/lib/nav';
 
 const MIN_AGE = 13;
 
-/** AutoLayouted-3 / -4 (TH(2)): between the name and the username; under 13 the button greys out and says why. */
+/** AutoLayouted-3 / -4 (TH(2)): between the name and the phone; under 13 the button greys out and says why. */
 export default function AgeStep() {
   const { updateDraft } = useSession();
   const [age, setAge] = useState('');
@@ -23,7 +23,7 @@ export default function AgeStep() {
   const next = () => {
     if (!valid) return;
     updateDraft({ ageConfirmed: true });
-    push('/username');
+    push('/phone');
   };
 
   return (

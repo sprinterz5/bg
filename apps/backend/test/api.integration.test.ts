@@ -58,6 +58,9 @@ describe("Puzzle API integration", () => {
     const suffix = Date.now().toString(36);
     const aliceUsername = `it_alice_${suffix}`;
     const bobUsername = `it_bob_${suffix}`;
+    const bobDigits = String(Date.now()).slice(-7);
+    const bobPhone = `+7701${bobDigits}`;
+    const bobPhoneTyped = `+7 701 ${bobDigits.slice(0, 3)} ${bobDigits.slice(3)}`;
 
     const availableUsername = await json(app, {
       method: "GET",
@@ -138,6 +141,7 @@ describe("Puzzle API integration", () => {
       body: {
         username: bobUsername,
         displayName: "Integration Bob",
+        phone: bobPhoneTyped,
         password: "Puzzle123!",
         interests: ["psychology"],
         ageConfirmed: true
@@ -149,6 +153,24 @@ describe("Puzzle API integration", () => {
     expect(bobChats.payload.some((c: { members: { user: { username: string } }[] }) => c.members.some((m) => m.user.username === "thoughts"))).toBe(true);
     const bobId = bobRegister.payload.user.id as string;
     const bobToken = bobRegister.payload.accessToken as string;
+
+    // Phone: stored as E.164, logs in, and is found from someone's contacts (not by bob himself, not once followed).
+    expect(bobRegister.payload.user.phone).toBe(bobPhone);
+    const phoneLogin = await json(app, { method: "POST", url: "/auth/login", body: { login: bobPhone, password: "Puzzle123!" } });
+    expect(phoneLogin.response.statusCode).toBe(200);
+    const phoneTaken = await json(app, {
+      method: "POST",
+      url: "/auth/register",
+      body: { username: `${bobUsername}p`, phone: bobPhone, password: "Puzzle123!", ageConfirmed: true }
+    });
+    expect(phoneTaken.response.statusCode).toBe(409);
+    const phoneCheck = await json(app, { method: "GET", url: `/auth/phone-availability?phone=${encodeURIComponent(bobPhoneTyped)}` });
+    expect(phoneCheck.payload.available).toBe(false);
+    const contactMatch = await json(app, { method: "POST", url: "/users/contacts/match", token: aliceToken, body: { phones: [bobPhone, "+15555550100"] } });
+    expect(contactMatch.response.statusCode).toBe(200);
+    expect(contactMatch.payload.data.map((u: { id: string }) => u.id)).toEqual([bobId]);
+    const selfMatch = await json(app, { method: "POST", url: "/users/contacts/match", token: bobToken, body: { phones: [bobPhone] } });
+    expect(selfMatch.payload.data).toEqual([]);
 
     // Books / shelves / reading-now are switched off (app.ts); bring this back with them.
     // const book = await app.prisma.book.upsert({

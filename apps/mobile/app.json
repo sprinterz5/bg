@@ -60,7 +60,14 @@
           ]
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-localization",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Smarts checks the phone numbers in your contacts to show which of your friends are here. Your contacts are not stored."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

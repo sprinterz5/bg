@@ -12,6 +12,7 @@ export const publicUserSelect = {
 export const privateUserSelect = {
   ...publicUserSelect,
   email: true,
+  phone: true,
   emailVerified: true,
   appleUserId: true,
   googleUserId: true,

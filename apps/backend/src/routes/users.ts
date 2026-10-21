@@ -5,6 +5,7 @@ import { createNotification } from "../services/notificationService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { privateUserSelect, publicUserSelect } from "../utils/users.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
+import { E164, normalizePhone } from "../utils/phone.js";
 import { asApi, type ApiConnection, type ApiProfile, type ApiSessionUser, type ApiUserArticle, type Page } from "../contracts/api.js";
 
 const updateProfileSchema = z.object({
@@ -12,8 +13,13 @@ const updateProfileSchema = z.object({
   bio: z.string().max(1000).optional(),
   // An AVATAR asset the user uploaded via POST /media; null removes the avatar. Arbitrary URLs are not accepted.
   avatarMediaId: z.string().uuid().nullable().optional(),
-  interests: z.array(z.string().min(1).max(40)).max(20).optional()
+  interests: z.array(z.string().min(1).max(40)).max(20).optional(),
+  // International form; null removes it.
+  phone: z.string().max(32).nullable().optional()
 });
+
+// The phone's contacts, already in E.164. Matched and dropped: nothing from the address book is stored.
+const contactsMatchSchema = z.object({ phones: z.array(z.string().regex(E164)).max(5000) });
 
 const listUserSelect = { id: true, username: true, displayName: true, avatarUrl: true } as const;
 
@@ -143,7 +149,14 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
   }
 
   app.patch("/users/me", { preHandler: [app.authenticate] }, async (request, reply) => {
-    const { avatarMediaId, ...body } = updateProfileSchema.parse(request.body);
+    const { avatarMediaId, phone: phoneInput, ...body } = updateProfileSchema.parse(request.body);
+    let phone: string | null | undefined;
+    if (phoneInput === null) {
+      phone = null;
+    } else if (phoneInput !== undefined) {
+      phone = normalizePhone(phoneInput);
+      if (!phone) throw reply.badRequest("Invalid phone number");
+    }
     let avatarUrl: string | null | undefined;
     if (avatarMediaId === null) {
       avatarUrl = null;
@@ -160,10 +173,36 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
     return asApi<ApiSessionUser>(
       await app.prisma.user.update({
         where: { id: request.user.sub },
-        data: { ...body, ...(avatarUrl !== undefined ? { avatarUrl } : {}) },
+        data: { ...body, ...(avatarUrl !== undefined ? { avatarUrl } : {}), ...(phone !== undefined ? { phone } : {}) },
         select: publicUserSelect
+      }).catch((error) => {
+        if ((error as { code?: string }).code === "P2002") throw reply.conflict("This phone number is already used");
+        throw error;
       })
     );
+  });
+
+  // "Your contacts" on Home: who from the phone's address book is here, minus the viewer, blocked users either way,
+  // and people the viewer already follows.
+  const contactsLimit = endpointRateLimit({ key: "contacts-match", limit: 10, windowSeconds: 3600, by: "userOrIp" });
+  app.post("/users/contacts/match", { preHandler: [app.authenticate, contactsLimit] }, async (request) => {
+    const { phones } = contactsMatchSchema.parse(request.body);
+    const me = request.user.sub;
+    if (phones.length === 0) return asApi<{ data: ApiConnection[] }>({ data: [] });
+    const users = await app.prisma.user.findMany({
+      where: {
+        phone: { in: [...new Set(phones)] },
+        deletedAt: null,
+        id: { not: me },
+        followers: { none: { followerId: me } },
+        blocksGiven: { none: { blockedId: me } },
+        blocksReceived: { none: { blockerId: me } }
+      },
+      take: 50,
+      orderBy: { createdAt: "asc" },
+      select: listUserSelect
+    });
+    return asApi<{ data: ApiConnection[] }>({ data: users.map((u) => ({ ...u, isFollowing: false, isMe: false })) });
   });
 
   // Data export (GDPR access / portability): everything the account owns as one JSON file. Raw feed events

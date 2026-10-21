@@ -4,6 +4,7 @@ import type { SessionUser, SignupDraft } from '@/state/session';
 import { ApiError, api, clearTokens, getStoredRefreshToken, refreshSession, saveTokens } from './api';
 import { CAPTURE } from './capture';
 import { uploadImage } from './media';
+import { looksLikePhone, toE164 } from './phone';
 
 // Same rule as the backend (usernameService): a–z, 0–9, _ and . — no dot at either end, no double dots.
 export const USERNAME_PATTERN = /^(?!\.)(?!.*\.\.)[a-z0-9_.]{3,30}(?<!\.)$/;
@@ -28,6 +29,7 @@ export async function completeSignup(draft: SignupDraft): Promise<SessionUser> {
     body: {
       username: draft.username,
       displayName: draft.name,
+      ...(draft.phone ? { phone: draft.phone } : {}),
       password: draft.password,
       interests: draft.interests,
       // The age step (13+) comes before this; the backend still wants the flag.
@@ -53,15 +55,23 @@ export async function setAvatar(localUri: string): Promise<string | null> {
   return updated.avatarUrl;
 }
 
-export async function loginWithUsername(username: string, password: string): Promise<SessionUser | null> {
+/** `login` is a username or a phone number (sent as E.164). */
+export async function loginWithUsername(login: string, password: string): Promise<SessionUser | null> {
   try {
-    const data = await api<AuthResponse>('/auth/login', { body: { login: username, password } });
+    const phone = looksLikePhone(login) ? toE164(login) : null;
+    const data = await api<AuthResponse>('/auth/login', { body: { login: phone ?? normalizeUsername(login), password } });
     await saveTokens(data);
     return toSessionUser(data.user);
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) return null;
     throw e;
   }
+}
+
+export async function checkPhoneAvailable(e164: string) {
+  if (CAPTURE) return true;
+  const data = await api<ApiUsernameAvailability>(`/auth/phone-availability?phone=${encodeURIComponent(e164)}`);
+  return data.available;
 }
 
 export async function checkUsernameAvailable(username: string) {

@@ -1,34 +1,61 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AuthorAvatar } from '@/components/author-row';
 import { PressableScale } from '@/components/pressable-scale';
 import { RollingLabel } from '@/components/rolling-label';
 import { INTER_FAMILIES, Text } from '@/components/text';
-import type { Author } from '@/mock/data';
+import { allowContacts, useContacts, type ContactPerson } from '@/lib/contacts';
 import { openProfile } from '@/lib/nav';
+import { setFollow } from '@/lib/users';
 import { colors } from '@/theme';
 
 // AutoLayouted-39 (TH(2)), between two posts, from the separator above: "Your contacts" Inter SemiBold 13.7 #999
 // (ink 20 under it, x 8.3); cards 172×203 (r 18) #F4F5F5 from x 8, 8 apart, 46 under the separator, scrolling
 // sideways; in a card: the avatar 83 (8 from the top), the name Inter Bold 14.2 (ink 105.9), the handle Inter 11.9 #999
 // (ink 127.1), Follow 116×31 (r 10) black with Inter SemiBold 12.4 white, 164 down; 20 under the cards the next separator.
-export function ContactsBlock({ people }: { people: Author[] }) {
+// People come from the phone's contacts matched on the backend (lib/contacts). Not designed: before access is given
+// the block shows one card asking for it; with no access or no one found it isn't shown (nor the separator above it).
+export function ContactsBlock({ separator }: { separator?: ReactNode }) {
+  const { status, people } = useContacts();
+  if (status !== 'ask' && status !== 'ready') return null;
   return (
-    <View style={styles.root}>
-      <Text style={styles.title}>Your contacts</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} decelerationRate="fast" snapToInterval={180}>
-        {people.map((p) => (
-          <ContactCard key={p.username} person={p} />
-        ))}
-      </ScrollView>
+    <>
+      {separator}
+      <View style={styles.root}>
+        <Text style={styles.title}>Your contacts</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} decelerationRate="fast" snapToInterval={180}>
+          {status === 'ask' ? <AskCard /> : people.map((p) => <ContactCard key={p.username} person={p} />)}
+        </ScrollView>
+      </View>
+    </>
+  );
+}
+
+function AskCard() {
+  return (
+    <View style={styles.card}>
+      <Text style={[styles.name, styles.askTitle]} numberOfLines={1}>
+        Find your friends
+      </Text>
+      <Text style={[styles.handle, styles.askText]} numberOfLines={3}>
+        See who from your contacts is already here
+      </Text>
+      <PressableScale haptic scaleTo={0.95} onPress={allowContacts} style={styles.follow} accessibilityRole="button" accessibilityLabel="Allow access to contacts">
+        <Text style={styles.followText}>Allow</Text>
+      </PressableScale>
     </View>
   );
 }
 
-function ContactCard({ person }: { person: Author }) {
+function ContactCard({ person }: { person: ContactPerson }) {
   // Not designed: Follow turns into an outlined "Following" (tap again to undo).
   const [following, setFollowing] = useState(false);
+  const toggle = () => {
+    const next = !following;
+    setFollowing(next);
+    if (person.id) setFollow(person.id, next).catch(() => setFollowing(!next));
+  };
   return (
     <View style={styles.card}>
       {/* the card opens the profile; Follow sits beside it, not inside (no button in a button on web) */}
@@ -42,7 +69,7 @@ function ContactCard({ person }: { person: Author }) {
       <Text style={styles.handle} numberOfLines={1} pointerEvents="none">
         {person.username}
       </Text>
-      <PressableScale haptic scaleTo={0.95} onPress={() => setFollowing((v) => !v)} style={[styles.follow, following && styles.following]} accessibilityRole="button">
+      <PressableScale haptic scaleTo={0.95} onPress={toggle} style={[styles.follow, following && styles.following]} accessibilityRole="button">
         <RollingLabel text={following ? 'Following' : 'Follow'} style={[styles.followText, following && styles.followingText]} />
       </PressableScale>
     </View>
@@ -62,4 +89,6 @@ const styles = StyleSheet.create({
   following: { backgroundColor: '#F4F5F5', borderWidth: 1, borderColor: '#D9D9D9' },
   followText: { fontFamily: INTER_FAMILIES['600'], fontSize: 12.4, lineHeight: 15, color: '#FFFFFF' },
   followingText: { color: colors.text },
+  askTitle: { top: 52 },
+  askText: { top: 76, left: 18, right: 18, lineHeight: 16 },
 });

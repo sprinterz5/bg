@@ -9,6 +9,7 @@ import { sendMail, shouldExposeDevEmailToken } from "../services/emailService.js
 import { sendWelcomeChat } from "../services/welcomeChat.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { checkUsernameAvailability, normalizeUsername, validateUsername } from "../services/usernameService.js";
+import { normalizePhone } from "../utils/phone.js";
 import { sha256 } from "../utils/hash.js";
 import { toTokenPayload } from "../utils/authPayload.js";
 import { privateUserSelect } from "../utils/users.js";
@@ -35,6 +36,8 @@ const registerSchema = z.object({
     .regex(USERNAME_FORMAT)
     .transform(normalizeUsername),
   displayName: z.string().min(1).max(80).optional(),
+  // International form; stored as E.164. Not verified yet.
+  phone: z.string().max(32).optional(),
   password: passwordSchema,
   interests: z.array(z.string().min(1).max(40)).max(20).default([]),
   // "I'm 13 or older" at signup; logged as a consent.
@@ -199,6 +202,16 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   const loginLimit = endpointRateLimit({ key: "auth-login", limit: 10, windowSeconds: 60, failClosed: true });
   const forgotLimit = endpointRateLimit({ key: "auth-forgot", limit: 5, windowSeconds: 15 * 60, failClosed: true });
 
+  // The phone step of the signup: a number can belong to one account.
+  const phoneCheckLimit = endpointRateLimit({ key: "auth-phone-check", limit: 30, windowSeconds: 60 });
+  app.get("/auth/phone-availability", { preHandler: [phoneCheckLimit] }, async (request, reply) => {
+    const { phone: input } = z.object({ phone: z.string().max(32) }).parse(request.query);
+    const phone = normalizePhone(input);
+    if (!phone) throw reply.badRequest("Invalid phone number");
+    const taken = await app.prisma.user.findUnique({ where: { phone }, select: { id: true } });
+    return asApi<ApiUsernameAvailability>({ available: !taken });
+  });
+
   app.get("/auth/username-availability", async (request) => {
     const query = usernameAvailabilitySchema.parse(request.query);
     return asApi<ApiUsernameAvailability>(await checkUsernameAvailability(app.prisma, query.username));
@@ -206,6 +219,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
   app.post("/auth/register", { preHandler: [authWriteLimit] }, async (request, reply) => {
     const body = registerSchema.parse(request.body);
+    const phone = body.phone ? normalizePhone(body.phone) : null;
+    if (body.phone && !phone) {
+      throw reply.badRequest("Invalid phone number");
+    }
     const usernameValidationReason = validateUsername(body.username);
     if (usernameValidationReason) {
       const availability = await checkUsernameAvailability(app.prisma, body.username);
@@ -217,11 +234,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     const existing = await app.prisma.user.findFirst({
       where: {
-        OR: [...(body.email ? [{ email: body.email }] : []), { username: body.username }]
+        OR: [...(body.email ? [{ email: body.email }] : []), ...(phone ? [{ phone }] : []), { username: body.username }]
       }
     });
 
     if (existing) {
+      if (phone && existing.phone === phone) {
+        return reply.status(409).send({ error: "phone_taken", message: "This phone number is already used" });
+      }
       throw reply.conflict("Email or username is already taken");
     }
 
@@ -229,6 +249,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const user = await app.prisma.user.create({
       data: {
         email: body.email ?? null,
+        phone,
         username: body.username,
         displayName: body.displayName,
         passwordHash,
@@ -254,11 +275,13 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
   app.post("/auth/login", { preHandler: [loginLimit] }, async (request, reply) => {
     const body = loginSchema.parse(request.body);
+    const phone = normalizePhone(body.login);
     const user = await app.prisma.user.findFirst({
       where: {
         OR: [
           { email: body.login.toLowerCase() },
-          { username: normalizeUsername(body.login) }
+          { username: normalizeUsername(body.login) },
+          ...(phone ? [{ phone }] : [])
         ],
         deletedAt: null
       }

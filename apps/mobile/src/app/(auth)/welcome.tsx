@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/components/pressable-scale';
 import { loginWithUsername, normalizeUsername } from '@/lib/auth';
+import { looksLikePhone } from '@/lib/phone';
 import { useSession } from '@/state/session';
 import { colors, fonts } from '@/theme';
 import { AnimatedText, INTER_FAMILIES, Text, TextInput } from '@/components/text';
@@ -62,7 +63,8 @@ export default function Welcome() {
         <TextInput
           value={username}
           onChangeText={(v) => {
-            setUsername(normalizeUsername(v));
+            // a phone number keeps its "+" and spaces; the rest is a username
+            setUsername(/^[+\d]/.test(v) && looksLikePhone(v.padEnd(6, '0')) ? v : normalizeUsername(v));
             setError(false);
           }}
           placeholder="Username or phone number"

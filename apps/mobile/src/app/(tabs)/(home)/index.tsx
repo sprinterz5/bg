@@ -14,7 +14,7 @@ import { ContactsBlock } from '@/components/contacts-block';
 import { PressableScale } from '@/components/pressable-scale';
 import { HomeStories } from '@/components/home-stories';
 import { PullSpinner } from '@/components/pull-spinner';
-import { CONTACTS, HOME_STORIES, type Post } from '@/mock/data';
+import { HOME_STORIES, type Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { Text } from '@/components/text';
@@ -137,10 +137,7 @@ export default function Home() {
           <FeedPost post={item} onHide={hidePost} />
           {/* AutoLayouted-39: the contacts cards come after the first post, between two separators */}
           {index === 0 ? (
-            <>
-              <FeedSeparator />
-              <ContactsBlock people={CONTACTS} />
-            </>
+            <ContactsBlock separator={<FeedSeparator />} />
           ) : null}
         </Swap>
       </Animated.View>

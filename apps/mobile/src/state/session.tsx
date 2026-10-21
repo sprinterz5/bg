@@ -21,6 +21,8 @@ export type SignupDraft = {
   interests: string[];
   /** "I'm 13 or older" ticked on the first step; the backend refuses the signup without it. */
   ageConfirmed: boolean;
+  /** E.164, or '' when skipped. */
+  phone: string;
 };
 
 const emptyDraft: SignupDraft = {
@@ -30,6 +32,7 @@ const emptyDraft: SignupDraft = {
   avatarUri: null,
   interests: [],
   ageConfirmed: false,
+  phone: '',
 };
 
 type SessionContextValue = {
