@@ -2,7 +2,7 @@ import type { ApiProfile } from '@api/api';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Alert, Modal, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { KeyboardAvoidingView, useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeInDown, FadeOut, interpolate, LinearTransition, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +10,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { INTER_FAMILIES, Text, TextInput } from '@/components/text';
-import { chatSocket, fetchMessages, markRead, sendMessage, type ChatMessage } from '@/lib/chat';
+import { chatSocket, fetchMessages, markRead, sendMessage, sendPhotoMessage, type ChatMessage } from '@/lib/chat';
+import { uploadImage } from '@/lib/media';
+import * as ImagePicker from 'expo-image-picker';
 import { back, openProfile, push } from '@/lib/nav';
 import { fetchProfile } from '@/lib/users';
 import { useSession } from '@/state/session';
@@ -106,15 +108,22 @@ export default function Conversation() {
 
   // Not designed: the own message shows at once, faded until the server has it (it keeps its place and key when the
   // server's copy replaces it); a failed one stays with "Not sent · Tap to retry".
-  const deliver = (key: string, body: string) => {
+  const deliver = (key: string, body: string, photo?: { localUri: string; uploaded?: string }) => {
     if (!id) return;
     setMessages((list) => list.map((m) => (m.key === key ? { ...m, failed: false } : m)));
-    sendMessage(id, body)
+    const request = photo
+      ? // a photo: uploaded once (kept for a retry), then sent as an IMAGE message
+        (photo.uploaded ? Promise.resolve(photo.uploaded) : uploadImage(photo.localUri, 'CHAT_ATTACHMENT').then((a) => {
+          setMessages((list) => list.map((m) => (m.key === key ? { ...m, uploaded: a.url } : m)));
+          return a.url;
+        })).then((url) => sendPhotoMessage(id, url))
+      : sendMessage(id, body);
+    request
       .then((m) =>
         setMessages((list) =>
           list.some((x) => x.id === m.id)
             ? list.filter((x) => x.key !== key) // the socket was quicker
-            : list.map((x) => (x.key === key ? { ...m, key } : x)),
+            : list.map((x) => (x.key === key ? { ...m, key, localUri: x.localUri } : x)),
         ),
       )
       .catch(() => setMessages((list) => list.map((m) => (m.key === key ? { ...m, failed: true } : m))));
@@ -128,6 +137,20 @@ export default function Conversation() {
     setMessages((list) => [{ id: key, key, conversationId: id, senderId: user.id, body, createdAt: new Date().toISOString(), pending: true }, ...list]);
     deliver(key, body);
   };
+
+  // Not designed: "+" picks a photo from the library; it shows at once (faded until sent) like a text message.
+  const sendPhoto = async () => {
+    if (!id || !user) return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
+    const uri = result.canceled ? null : result.assets[0]?.uri;
+    if (!uri) return;
+    const key = `local-${++localSeq.current}`;
+    fresh.current.add(key);
+    const row: Row = { id: key, key, conversationId: id, senderId: user.id, body: null, type: 'IMAGE', mediaUrl: null, localUri: uri, createdAt: new Date().toISOString(), pending: true };
+    setMessages((list) => [row, ...list]);
+    deliver(key, '', { localUri: uri });
+  };
+  const [viewing, setViewing] = useState<string | null>(null);
 
   const showProfile = () => username && openProfile(username, true);
   // No calls or photo messages yet.
@@ -200,9 +223,14 @@ export default function Conversation() {
                 {stamp ? <Text style={styles.stamp}>{formatStamp(item.createdAt)}</Text> : null}
                 {item.replyToStory ? <StoryReply mine={mine} story={item.replyToStory} /> : null}
                 {item.type === 'SHARE_ARTICLE' ? <SharedPost mine={mine} post={item.sharedArticle ?? null} first={!stamp && older?.senderId !== item.senderId} /> : null}
-                {item.type === 'SHARE_ARTICLE' && !item.body ? null : <Bubble mine={mine} body={item.body ?? ''} style={[!stamp ? { marginTop: older?.senderId === item.senderId ? 7 : 12 } : undefined, waiting && !item.failed ? styles.pending : undefined]} />}
+                {item.type === 'IMAGE' ? (
+                  <Pressable onPress={() => setViewing(item.localUri ?? item.mediaUrl ?? null)} accessibilityRole="imagebutton" accessibilityLabel="Photo" style={[styles.photo, mine ? styles.postMine : styles.postTheirs, { marginTop: !stamp && older?.senderId === item.senderId ? 7 : 12 }, waiting && !item.failed ? styles.pending : undefined]}>
+                    <Image source={{ uri: item.localUri ?? item.mediaUrl ?? undefined }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+                  </Pressable>
+                ) : null}
+                {(item.type === 'SHARE_ARTICLE' || item.type === 'IMAGE') && !item.body ? null : <Bubble mine={mine} body={item.body ?? ''} style={[!stamp ? { marginTop: older?.senderId === item.senderId ? 7 : 12 } : undefined, waiting && !item.failed ? styles.pending : undefined]} />}
                 {item.failed ? (
-                  <Pressable onPress={() => deliver(key, item.body ?? '')} hitSlop={8} accessibilityRole="button">
+                  <Pressable onPress={() => deliver(key, item.body ?? '', item.localUri ? { localUri: item.localUri, uploaded: item.uploaded } : undefined)} hitSlop={8} accessibilityRole="button">
                     <Text style={styles.failed}>Not sent · Tap to retry</Text>
                   </Pressable>
                 ) : null}
@@ -219,7 +247,7 @@ export default function Conversation() {
 
         <Animated.View style={[styles.bar, barPad]}>
           <View style={styles.barRow}>
-          <PressableScale onPress={() => soon('Photos in chats')} scaleTo={0.9} accessibilityLabel="Attach" style={styles.plus}>
+          <PressableScale onPress={sendPhoto} scaleTo={0.9} accessibilityLabel="Send a photo" style={styles.plus}>
             <Icon name="chatPlus" width={15.6} height={15.6} />
           </PressableScale>
           <View style={[styles.field, tall && styles.fieldTall]}>
@@ -245,6 +273,13 @@ export default function Conversation() {
           </View>
         </Animated.View>
       </KeyboardAvoidingView>
+
+      {/* a photo full screen; a tap closes it */}
+      <Modal visible={!!viewing} transparent animationType="fade" onRequestClose={() => setViewing(null)} statusBarTranslucent>
+        <Pressable style={styles.viewer} onPress={() => setViewing(null)} accessibilityLabel="Close photo">
+          {viewing ? <Image source={{ uri: viewing }} style={StyleSheet.absoluteFill} contentFit="contain" /> : null}
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -325,7 +360,7 @@ function Bubble({ mine, body, style }: { mine: boolean; body: string; style?: St
 }
 
 /** A message in the list; `key` stays the same from the local copy to the server's one (no remount). */
-type Row = ChatMessage & { key?: string; pending?: boolean; failed?: boolean };
+type Row = ChatMessage & { key?: string; pending?: boolean; failed?: boolean; localUri?: string; uploaded?: string };
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
@@ -360,6 +395,8 @@ const styles = StyleSheet.create({
   replyTheirs: { alignItems: 'flex-start' },
   replyLabel: { marginBottom: 6, fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 15, color: SUBTLE },
   replyStory: { width: 96, height: 170, borderRadius: 12, backgroundColor: BUBBLE },
+  photo: { width: 210, height: 260, borderRadius: 16, overflow: 'hidden', backgroundColor: BUBBLE },
+  viewer: { flex: 1, backgroundColor: '#000000' },
   post: { width: 240, borderRadius: 16, backgroundColor: BUBBLE, overflow: 'hidden' },
   postMine: { alignSelf: 'flex-end' },
   postTheirs: { alignSelf: 'flex-start' },

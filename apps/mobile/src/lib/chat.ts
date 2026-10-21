@@ -24,6 +24,9 @@ export const fetchMessages = (conversationId: string, cursor?: string): Promise<
     auth: true,
   });
 
+export const sendPhotoMessage = (conversationId: string, mediaUrl: string) =>
+  api<ChatMessage>(`/conversations/${conversationId}/messages`, { body: { type: 'IMAGE', mediaUrl }, auth: true, idempotent: true });
+
 export const sendMessage = (conversationId: string, body: string) =>
   api<ChatMessage>(`/conversations/${conversationId}/messages`, { body: { type: 'TEXT', body }, auth: true, idempotent: true });
 
@@ -61,7 +64,7 @@ export function chatStatus(c: Conversation, meId: string): { text: string; time:
     return { text: read && read >= last.createdAt ? `seen ${shortAge(read)} ago` : `sent ${shortAge(last.createdAt)} ago`, time: null };
   }
   // a shared post with no text says so instead of an empty line
-  const text = last.body || (last.type === 'SHARE_ARTICLE' ? 'Sent a post' : last.replyToStory ? 'Replied to your story' : '');
+  const text = last.body || (last.type === 'SHARE_ARTICLE' ? 'Sent a post' : last.type === 'IMAGE' ? 'Sent a photo' : last.replyToStory ? 'Replied to your story' : '');
   return { text, time: c.unreadCount ? null : shortAge(last.createdAt) };
 }
 

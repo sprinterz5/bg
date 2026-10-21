@@ -522,6 +522,15 @@ describe("Puzzle API integration", () => {
       body: { body: "Me", replyToStoryId: aliceStory.id }
     });
     expect(ownStoryReply.response.statusCode).toBe(400);
+    // A photo message needs the sender's own chat attachment.
+    const badPhoto = await json(app, { method: "POST", url: `/conversations/${conversation.payload.id}/messages`, token: bobToken, body: { type: "IMAGE", mediaUrl: "https://example.com/x.jpg" } });
+    expect(badPhoto.response.statusCode).toBe(400);
+    const photoAsset = await app.prisma.mediaAsset.create({
+      data: { ownerId: bobId, kind: "CHAT_ATTACHMENT", provider: "LOCAL", url: `http://localhost:4000/media/chat-${suffix}.jpg`, storageKey: `chat-${suffix}.jpg`, mimeType: "image/jpeg", byteSize: 10, moderationStatus: "APPROVED" }
+    });
+    const photo = await json(app, { method: "POST", url: `/conversations/${conversation.payload.id}/messages`, token: bobToken, body: { type: "IMAGE", mediaUrl: photoAsset.url } });
+    expect(photo.response.statusCode).toBe(201);
+    expect(photo.payload.mediaUrl).toBe(photoAsset.url);
 
     const sharedViaEndpoint = await json(app, {
       method: "POST",

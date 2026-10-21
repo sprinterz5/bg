@@ -18,6 +18,8 @@ const messageSchema = z.object({
   sharedBookId: z.string().uuid().optional(),
   sharedArticleId: z.string().uuid().optional(),
   sharedReviewId: z.string().uuid().optional(),
+  // IMAGE: the URL of a CHAT_ATTACHMENT the sender uploaded via POST /media.
+  mediaUrl: z.string().url().optional(),
   // Reply to a story of another member of the conversation (the story viewer's reply field).
   replyToStoryId: z.string().uuid().optional()
 });
@@ -245,6 +247,17 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
     if (body.type === "SHARE_REVIEW" && !body.sharedReviewId) {
       throw reply.badRequest("sharedReviewId is required");
     }
+    if (body.type === "IMAGE") {
+      const asset = body.mediaUrl
+        ? await app.prisma.mediaAsset.findFirst({
+            where: { url: body.mediaUrl, ownerId: request.user.sub, kind: "CHAT_ATTACHMENT", moderationStatus: { not: "REJECTED" } },
+            select: { id: true }
+          })
+        : null;
+      if (!asset) {
+        throw reply.badRequest("mediaUrl must be a chat attachment you uploaded via POST /media");
+      }
+    }
     if (body.replyToStoryId) {
       // Only an active story of someone else in this conversation, that the sender is allowed to see (follows them).
       const story = await app.prisma.story.findFirst({
@@ -272,7 +285,8 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
           sharedBookId: body.sharedBookId,
           sharedArticleId: body.sharedArticleId,
           sharedReviewId: body.sharedReviewId,
-          replyToStoryId: body.replyToStoryId
+          replyToStoryId: body.replyToStoryId,
+          mediaUrl: body.type === "IMAGE" ? body.mediaUrl : undefined
         },
         include: {
           sender: { select: userPreview },
@@ -310,7 +324,7 @@ export const chatRoutes: FastifyPluginAsync = async (app) => {
           targetType: "CONVERSATION",
           targetId: id,
           title: body.replyToStoryId ? "Replied to your story" : "New message",
-          body: body.type === "TEXT" ? body.body : "Shared something with you.",
+          body: body.type === "TEXT" ? body.body : body.type === "IMAGE" ? "Sent a photo." : "Shared something with you.",
           data: { messageId: message.id, messageType: message.type }
         })
       )

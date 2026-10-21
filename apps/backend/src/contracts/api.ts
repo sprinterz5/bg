@@ -120,7 +120,9 @@ export type ApiChatMessage = {
   senderId: string;
   body: string | null;
   createdAt: string;
-  type?: "TEXT" | "SHARE_BOOK" | "SHARE_ARTICLE" | "SHARE_REVIEW" | "SYSTEM";
+  type?: "TEXT" | "SHARE_BOOK" | "SHARE_ARTICLE" | "SHARE_REVIEW" | "SYSTEM" | "IMAGE";
+  /** IMAGE: the photo. */
+  mediaUrl?: string | null;
   /** SHARE_ARTICLE: the post's preview; null once it's deleted or unpublished. */
   sharedArticle?: { id: string; title: string; subtitle: string | null; coverImageUrl: string | null; author: ApiUserSummary } | null;
   /** Set when the message answers a story; null once the story is deleted. */

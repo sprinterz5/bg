@@ -102,6 +102,7 @@ enum MessageType {
   SHARE_ARTICLE
   SHARE_REVIEW
   SYSTEM
+  IMAGE
 }
 
 enum ModerationTargetType {
@@ -560,6 +561,8 @@ model Message {
   sharedBookId    String?     @db.Uuid
   sharedArticleId String?     @db.Uuid
   sharedReviewId  String?     @db.Uuid
+  // IMAGE: a photo uploaded as a CHAT_ATTACHMENT media asset.
+  mediaUrl        String?
   // A reply to a story: the story stays linked while it exists (the chat shows it above the text).
   replyToStoryId  String?     @db.Uuid
   createdAt       DateTime    @default(now())
