@@ -5,7 +5,7 @@
 // lists every change (screen · what · from → to).
 //
 // Env: TWEAK_PORT (4848), TWEAK_REPO (repo root, default ../../.. from here), TWEAK_PUSH_URL (git URL to push to;
-// unset = commit only), TWEAK_AUTHOR ("Name <email>").
+// unset = commit only), TWEAK_AUTHOR ("Name <email>"), TWEAK_APP_URL (the app's web build for the preview).
 import { execFile } from 'node:child_process';
 import { createServer } from 'node:http';
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
@@ -256,6 +256,7 @@ createServer(async (req, res) => {
       return reply(res, 200, out);
     }
     if (p === '/api/status') return reply(res, 200, status());
+    if (p === '/api/config') return reply(res, 200, { app: process.env.TWEAK_APP_URL || '' });
     if (req.method === 'POST' && p === '/api/set') {
       const b = await json(req);
       setValue(safe(b.file), b.key, b.value);

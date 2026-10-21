@@ -9,7 +9,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.35 Inter, system-ui, -apple-system, sans-serif; }
   button, input, select { font: inherit; color: inherit; }
-  .app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 52px 1fr; height: 100vh; }
+  .app { display: grid; grid-template-columns: 210px 1fr 430px; grid-template-rows: 52px 1fr; height: 100vh; }
   header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line); }
   header b { font-size: 15px; margin-right: 6px; }
   #q { flex: 1; max-width: 460px; height: 34px; border: 1px solid var(--line); border-radius: 9px; padding: 0 12px; background: var(--panel); outline: none; }
@@ -50,6 +50,16 @@
   dialog ul { margin: 0 0 12px; padding-left: 18px; max-height: 45vh; overflow: auto; line-height: 1.7; }
   dialog input { width: 100%; height: 36px; border: 1px solid var(--line); border-radius: 9px; padding: 0 12px; margin-bottom: 14px; }
   .acts { display: flex; justify-content: flex-end; gap: 8px; }
+  aside { border-left: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; background: var(--panel); min-height: 0; }
+  .bar { display: flex; gap: 6px; padding: 10px; width: 100%; }
+  .bar input { flex: 1; height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; outline: none; min-width: 0; }
+  .btn.pick.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .phone { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
+  .phone iframe { width: 390px; height: 844px; border: 0; border-radius: 28px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0,0,0,.08); transform-origin: top center; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer; background: #fff; font-size: 12px; }
+  .chip.on { background: var(--text); color: #fff; border-color: var(--text); }
+  .all { color: var(--accent); cursor: pointer; font-size: 12px; margin-left: 6px; }
   #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 9px 16px; border-radius: 10px; opacity: 0; transition: opacity .2s; pointer-events: none; }
   #toast.on { opacity: 1; } #toast.err { background: var(--err); }
 </style>
@@ -65,6 +75,10 @@
   </header>
   <nav id="screens"></nav>
   <main id="main"><div class="empty">Выберите экран слева или найдите свойство.</div></main>
+  <aside>
+    <div class="bar"><button class="btn pick" id="pick" title="Кликните по элементу в превью">◎ Выбрать</button><input id="path" value="/" title="Экран приложения (адрес)" /><button class="btn" id="reload" title="Перезагрузить превью">↻</button></div>
+    <div class="phone"><iframe id="app"></iframe></div>
+  </aside>
 </div>
 <dialog id="dlg">
   <h2>Отправить изменения</h2>
@@ -99,10 +113,25 @@ function drawScreens() {
 }
 $('#screens').onclick = (e) => { const d = e.target.closest('[data-rel]'); if (d) { $('#q').value = ''; open(d.dataset.rel); } };
 
-async function open(rel) {
+let chain = [];
+async function open(rel, focus) {
   cur = rel; location.hash = encodeURIComponent(rel); drawScreens();
   const name = screens.find((s) => s.rel === rel)?.name ?? rel;
-  draw((await api('values?file=' + encodeURIComponent(rel))).map((i) => ({ ...i, rel, screen: name })), false);
+  let items = (await api('values?file=' + encodeURIComponent(rel))).map((i) => ({ ...i, rel, screen: name }));
+  if (focus && focus.keys.length) items = items.filter((i) => focus.keys.includes(i.group));
+  draw(items, false);
+  if (focus) {
+    const head = document.createElement('div');
+    head.className = 'chips';
+    head.innerHTML = chain.map((c, k) => `<span class="chip${c === focus.raw ? ' on' : ''}" data-k="${k}">${esc(c.split('|')[1] || 'элемент')}</span>`).join('') + `<span class="all">весь экран</span>`;
+    $('#main').prepend(head);
+    head.onclick = (e) => { if (e.target.dataset.k) pickFrom(chain[e.target.dataset.k]); if (e.target.matches('.all')) open(rel); };
+    if (!items.length) $('#main').insertAdjacentHTML('beforeend', '<div class="empty">У этого элемента нет настраиваемых значений — выберите элемент выше по цепочке.</div>');
+  }
+}
+function pickFrom(raw) {
+  const [rel, keys, line] = raw.split('|');
+  open(rel, { raw, keys: keys ? keys.split(',') : [], line: +line });
 }
 let st;
 $('#q').oninput = () => { clearTimeout(st); st = setTimeout(async () => { const q = $('#q').value.trim(); if (!q) return cur && open(cur); draw(await api('search?q=' + encodeURIComponent(q)), true); }, 150); };
@@ -191,7 +220,28 @@ $('#discard').onclick = async () => {
   if (!changes.length || !confirm(`Вернуть ${changes.length} знач. как было?`)) return;
   try { setStatus(await api('discard', {})); if (cur) open(cur); toast('Вернул как было'); } catch (e) { toast(e.message, true); }
 };
+// preview: the web build of the app (mock data) in a phone-sized frame; ◎ picks an element in it
+let APP = '';
+const frame = $('#app');
+function fit() { const h = $('.phone').clientHeight - 16, w = $('.phone').clientWidth - 16; frame.style.transform = `scale(${Math.min(1, h / 844, w / 390)})`; }
+addEventListener('resize', fit);
+function go() { const p = $('#path').value.trim() || '/'; frame.src = APP + p + (p.includes('?') ? '&' : '?') + 'capture'; }
+$('#path').onkeydown = (e) => e.key === 'Enter' && go();
+$('#reload').onclick = go;
+let picking = false;
+const setPick = (on) => { picking = on; $('#pick').classList.toggle('on', on); frame.contentWindow?.postMessage({ tweak: 'pick', on }, '*'); };
+$('#pick').onclick = () => setPick(!picking);
+frame.onload = () => picking && setPick(true);
+addEventListener('message', (e) => {
+  if (!APP || e.origin !== new URL(APP).origin || e.data?.tweak !== 'picked') return;
+  chain = e.data.chain;
+  if (e.data.path) $('#path').value = e.data.path;
+  $('#q').value = '';
+  pickFrom(chain[0]);
+});
 (async () => {
+  APP = (await api('config')).app;
+  if (APP) { go(); fit(); } else $('aside').style.display = 'none';
   screens = await api('screens');
   setStatus(await api('status'));
   const h = decodeURIComponent(location.hash.slice(1));
