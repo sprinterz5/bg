@@ -3,10 +3,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ApiArticleCreated } from '@api/api';
 import type { ImageSourcePropType } from 'react-native';
 
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { CAPTURE, captureParam } from '@/lib/capture';
 import { fetchArticle, fetchFeed } from '@/lib/feed-api';
 import { uploadImage } from '@/lib/media';
+import { reportError } from '@/lib/report-errors';
 import { useSession } from '@/state/session';
 import { ARTICLES, FEED, HOME_STORIES, type Article, type Author, type Post, type Story } from '@/mock/data';
 import { fetchFriendStories, viewStory } from '@/lib/stories';
@@ -149,7 +150,9 @@ export function FeedProvider({ children }: { children: ReactNode }) {
         setPublishing((v) => v && v.articleId === id ? { ...v, done: true } : v);
         setTimeout(() => setPublishing((v) => (v?.articleId === id ? null : v)), 450);
       }, POSTED_MS);
-    } catch {
+    } catch (e) {
+      // the step it failed on goes to the server log (POST /client-logs) with the error
+      reportError(new Error(`publish failed (${j.coverUrl ? 'post' : 'upload'}): ${e instanceof Error ? e.message : String(e)} ${e instanceof ApiError ? JSON.stringify(e.body).slice(0, 300) : ''}`), { level: 'warn' });
       setPublishing((v) => v && { ...v, stage: 'error' });
     }
   }, []);
