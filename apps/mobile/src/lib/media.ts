@@ -1,4 +1,5 @@
 import type { ApiMediaAsset } from '@api/api';
+import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
 import { api } from './api';
@@ -24,6 +25,8 @@ export async function uploadImage(uri: string, kind: MediaKind): Promise<MediaAs
   const jpeg = await toJpeg(uri, MAX_SIDE[kind]);
   const form = new FormData();
   form.append('kind', kind); // fields must come before the file for the multipart parser
-  form.append('file', { uri: jpeg.uri, name: 'image.jpg', type: 'image/jpeg' } as unknown as Blob);
+  // Expo's fetch only takes Blob-like parts (an RN-style { uri, name, type } object fails with "Unsupported
+  // FormDataPart implementation"); expo-file-system's File is one and reads the picture itself.
+  form.append('file', new File(jpeg.uri), 'image.jpg');
   return api<MediaAsset>('/media', { form, auth: true, idempotent: true });
 }
