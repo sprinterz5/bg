@@ -75,7 +75,7 @@ function StoryViewer() {
   const story = HOME_STORIES[index];
   const prev: Story | undefined = HOME_STORIES[index - 1];
   const next: Story | undefined = HOME_STORIES[index + 1];
-  const barH = 50 + Math.max(insets.bottom, 12);
+  const barH = 48 + Math.max(insets.bottom, 12); // TH(2): the bar starts 2 lower (762)
 
   // Open / close. `t`: 0 = the window is the story photo on Home (origin), 1 = full screen. The window clips the
   // viewer; inside it the viewer is scaled so its photo fills the circle, centred, at t 0. Swiping down drags the
@@ -672,7 +672,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
       <Pressable style={[styles.half, { left: 0, width: width / 2, height }]} onPress={() => onTap(-1)} accessibilityLabel="Previous story" />
       <Pressable style={[styles.half, { left: width / 2, width: width / 2, height }]} onPress={() => onTap(1)} accessibilityLabel="Next story" />
 
-      <Animated.View style={[styles.info, { bottom: barH }, infoStyle]} pointerEvents={expanded ? 'none' : 'box-none'}>
+      <Animated.View style={[styles.info, { bottom: barH + 2 }, infoStyle]} pointerEvents={expanded ? 'none' : 'box-none'}>
         <View style={styles.author}>
           {story.author.avatar ? (
             <Image source={story.author.avatar} fadeDuration={0} onLoad={() => setAvatarReady(true)} style={styles.avatar} />
@@ -733,7 +733,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
         <ScrollView style={styles.sheetScroll} contentContainerStyle={styles.sheetScrollContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.sheetText}>{story.caption}</Text>
         </ScrollView>
-        <Text style={[styles.sheetTime, { marginBottom: Math.max(insets.bottom - 7.6, 12) }]}>{story.timeAgo}</Text>
+        <Text style={[styles.sheetTime, { marginBottom: Math.max(insets.bottom - 7.6, 12) + 19.5 }]}>{story.timeAgo}</Text>
       </Animated.View>
       </GestureDetector>
     </Animated.View>
@@ -757,7 +757,7 @@ const styles = StyleSheet.create({
   names: { marginLeft: 11.7, marginTop: -1.86 },
   name: { fontFamily: INTER_FAMILIES['600'], fontSize: 13.26, lineHeight: 17, color: '#FFFFFF' },
   time: { marginTop: -1.16, marginLeft: 1.3, fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 14, color: MUTED },
-  caption: { marginTop: 18.9, marginBottom: 14.1, fontFamily: INTER_FAMILIES['400'], fontSize: 12.65, lineHeight: 15.65, color: '#FFFFFF' },
+  caption: { marginTop: 19.9, marginBottom: 13.1, fontFamily: INTER_FAMILIES['400'], fontSize: 12.65, lineHeight: 15.65, color: '#FFFFFF' },
   measure: { position: 'absolute', left: 0, right: 0, opacity: 0 },
   // Same box as `caption`; the slack below the last line keeps descenders from being clipped while it animates.
   card: { position: 'absolute', left: 104.5, width: CARD_W, height: CARD_H, borderRadius: 10, overflow: 'hidden', backgroundColor: '#0F1419' },
@@ -767,13 +767,13 @@ const styles = StyleSheet.create({
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, borderTopLeftRadius: 40, borderTopRightRadius: 40, backgroundColor: '#181C1F' },
   handleHit: { alignSelf: 'center', paddingTop: 13, paddingBottom: 10 },
   handle: { width: 53, height: 2, borderRadius: 1, backgroundColor: '#8E8E93' },
-  sheetAuthor: { flexDirection: 'row', alignItems: 'center', marginTop: 3, marginLeft: 18 },
+  sheetAuthor: { flexDirection: 'row', alignItems: 'center', marginTop: 1.5, marginLeft: 15 },
   sheetAvatar: { width: 27, height: 27, borderRadius: 13.5 },
   sheetName: { marginLeft: 12.7, fontFamily: INTER_FAMILIES['700'], fontSize: 12.9, lineHeight: 16, color: '#FFFFFF' },
   sheetScroll: { flex: 1, marginTop: 15.2 },
-  sheetScrollContent: { paddingLeft: 19.6, paddingRight: 18, paddingBottom: 16 },
+  sheetScrollContent: { paddingLeft: 17.2, paddingRight: 18, paddingBottom: 16 },
   sheetText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.85, lineHeight: 22, color: '#FFFFFF' },
-  sheetTime: { marginLeft: 19.8, fontFamily: INTER_FAMILIES['400'], fontSize: 12.2, lineHeight: 15, color: MUTED },
+  sheetTime: { marginLeft: 17.3, fontFamily: INTER_FAMILIES['400'], fontSize: 12.2, lineHeight: 15, color: MUTED },
   captionBox: { marginTop: 18.9, marginBottom: 14.1 - CAPTION_SLACK, overflow: 'hidden' },
   captionText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.65, lineHeight: CAPTION_LH, color: '#FFFFFF' },
   more: { color: MUTED },
