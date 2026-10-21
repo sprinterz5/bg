@@ -19,7 +19,8 @@ export function Glass({ children, blurTarget, style, radius = 13, blur = true }:
           intensity={20}
           tint="light"
           blurTarget={blurTarget}
-          blurMethod="dimezisBlurViewSdk31Plus"
+          // Android blurs only a given target; without one the native blur would be a no-op anyway
+          blurMethod={blurTarget ? 'dimezisBlurViewSdk31Plus' : 'none'}
           style={StyleSheet.absoluteFill}
         />
       ) : null}
