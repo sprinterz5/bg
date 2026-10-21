@@ -73,6 +73,23 @@ export type ApiComment = {
   _count?: { children: number };
 };
 
+/** GET /notifications (page, newest first). */
+export type ApiNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  targetType: string;
+  targetId: string | null;
+  readAt: string | null;
+  createdAt: string;
+  actor: ApiUserSummary | null;
+  /** ARTICLE targets: the post (null once deleted). */
+  article: { id: string; title: string; coverImageUrl: string | null } | null;
+  /** The viewer follows the actor (FOLLOW: "Follow back" or "Following"). */
+  actorFollowed: boolean;
+};
+
 /** GET /articles/:idOrSlug. */
 export type ApiArticle = {
   id: string;

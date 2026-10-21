@@ -262,6 +262,11 @@ describe("Puzzle API integration", () => {
     }
     const likeCount = await app.prisma.like.count({ where: { targetType: "ARTICLE", targetId: posted.payload.id } });
     expect(likeCount).toBe(1);
+    // Bob (the author) hears about it once, with the post's cover
+    const bobNotes = await json(app, { method: "GET", url: "/notifications", token: bobToken });
+    const likeNotes = bobNotes.payload.data.filter((n: { type: string; targetId: string }) => n.type === "LIKE" && n.targetId === posted.payload.id);
+    expect(likeNotes.length).toBe(1);
+    expect(likeNotes[0].article.id).toBe(posted.payload.id);
 
     const moderator = await app.prisma.user.upsert({
       where: { email: `it_mod_${suffix}@puzzle.dev` },

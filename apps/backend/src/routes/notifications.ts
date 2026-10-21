@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { asApi, type ApiNotification, type Page } from "../contracts/api.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
 
 export const notificationRoutes: FastifyPluginAsync = async (app) => {
@@ -24,7 +25,29 @@ export const notificationRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    return pageResult(notifications, query.limit);
+    // What the list shows besides the actor: the article's cover for likes / comments, and whether the viewer
+    // already follows a new follower back.
+    const articleIds = [...new Set(notifications.flatMap((n) => (n.targetType === "ARTICLE" && n.targetId ? [n.targetId] : [])))];
+    const followerIds = [...new Set(notifications.flatMap((n) => (n.type === "FOLLOW" && n.actorId ? [n.actorId] : [])))];
+    const [articles, followed] = await Promise.all([
+      articleIds.length
+        ? app.prisma.article.findMany({ where: { id: { in: articleIds }, deletedAt: null }, select: { id: true, title: true, coverImageUrl: true } })
+        : [],
+      followerIds.length
+        ? app.prisma.follow.findMany({ where: { followerId: request.user.sub, followingId: { in: followerIds } }, select: { followingId: true } })
+        : []
+    ]);
+    const articleById = new Map(articles.map((a) => [a.id, a]));
+    const followedIds = new Set(followed.map((f) => f.followingId));
+    const page = pageResult(notifications, query.limit);
+    return asApi<Page<ApiNotification>>({
+      ...page,
+      data: page.data.map((n) => ({
+        ...n,
+        article: n.targetType === "ARTICLE" && n.targetId ? (articleById.get(n.targetId) ?? null) : null,
+        actorFollowed: n.actorId ? followedIds.has(n.actorId) : false
+      }))
+    });
   });
 
   app.get("/notifications/unread-count", { preHandler: [app.authenticate] }, async (request) => {

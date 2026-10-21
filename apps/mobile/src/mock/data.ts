@@ -1019,6 +1019,10 @@ export type Notice = {
   thumb?: ImageSourcePropType;
   /** …or a Follow / Following button. */
   follow?: boolean;
+  /** From the server: the actor's id (Follow), the post the row opens, not seen yet. */
+  userId?: string;
+  articleId?: string;
+  unread?: boolean;
 };
 
 export const NOTIFICATIONS: { title: string; items: Notice[]; muted?: boolean }[] = [

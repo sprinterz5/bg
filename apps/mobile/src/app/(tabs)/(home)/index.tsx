@@ -2,7 +2,7 @@ import { useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeIn, FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, ZoomIn, ZoomOut, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -20,11 +20,27 @@ import { colors, fonts } from '@/theme';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { homeChromeHidden } from '@/lib/chrome';
 import { push } from '@/lib/nav';
+import { CAPTURE } from '@/lib/capture';
+import { unreadCount } from '@/lib/notifications';
 import { pickStoryPhoto } from '@/lib/pick-cover';
 
 export default function Home() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
+  // Unseen notifications, checked whenever Home comes into view (the notifications screen marks them read).
+  const [unread, setUnread] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      if (CAPTURE) return;
+      let alive = true;
+      unreadCount()
+        .then((n) => alive && setUnread(n))
+        .catch(() => {});
+      return () => {
+        alive = false;
+      };
+    }, []),
+  );
   const { posts, stories, tab, setTab, loadedTab, publishing, retryPublish, cancelPublish, loadMore, refresh, hidePost } = useFeed();
   // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
   // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
@@ -216,6 +232,8 @@ export default function Home() {
               <Text style={styles.logo}>{' Thoughts '}</Text>
               <PressableScale haptic onPress={() => push('/notifications')} hitSlop={10} accessibilityLabel="Notifications" style={styles.bell}>
                 <Icon name="homeBell" width={20} height={22.5} />
+                {/* Not designed: a red dot while there are unseen notifications */}
+                {unread ? <Animated.View collapsable={false} entering={ZoomIn.duration(220)} exiting={ZoomOut.duration(160)} style={styles.bellDot} /> : null}
               </PressableScale>
             </View>
       </Animated.View>
@@ -269,6 +287,7 @@ const styles = StyleSheet.create({
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   storiesGap: { marginBottom: 0.7 },
+  bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: colors.bg },
   empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
   stories: { marginTop: -2, marginLeft: -2.5 },
 });

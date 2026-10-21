@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { appear } from '@/lib/appear';
@@ -10,7 +10,10 @@ import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { RollingLabel } from '@/components/rolling-label';
 import { INTER_FAMILIES, Text } from '@/components/text';
-import { back, openProfile } from '@/lib/nav';
+import { back, openProfile, push } from '@/lib/nav';
+import { CAPTURE } from '@/lib/capture';
+import { fetchNotices, markAllRead, type NoticeSection } from '@/lib/notifications';
+import { setFollow } from '@/lib/users';
 import { NOTIFICATIONS, type Notice } from '@/mock/data';
 import { useSession } from '@/state/session';
 import { colors } from '@/theme';
@@ -22,9 +25,26 @@ const MUTED = '#999999';
 export default function Notifications() {
   const insets = useSafeAreaInsets();
   const { user } = useSession();
+  // From the server (?capture: the design's mock list); opening the screen marks everything read.
+  const [sections, setSections] = useState<NoticeSection[] | null>(CAPTURE ? NOTIFICATIONS : null);
   const [following, setFollowing] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(NOTIFICATIONS.flatMap((s) => s.items).map((n) => [n.id, !!n.follow])),
+    CAPTURE ? Object.fromEntries(NOTIFICATIONS.flatMap((s) => s.items).map((n) => [n.id, !!n.follow])) : {},
   );
+  useEffect(() => {
+    if (CAPTURE) return;
+    fetchNotices()
+      .then((list) => {
+        setSections(list);
+        setFollowing(Object.fromEntries(list.flatMap((s) => s.items).map((n) => [n.id, !!n.follow])));
+        markAllRead();
+      })
+      .catch(() => setSections([]));
+  }, []);
+  const toggle = (n: (typeof NOTIFICATIONS)[number]['items'][number]) => {
+    const next = !following[n.id];
+    setFollowing((f) => ({ ...f, [n.id]: next }));
+    if (n.userId) setFollow(n.userId, next).catch(() => setFollowing((f) => ({ ...f, [n.id]: !next })));
+  };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -37,17 +57,19 @@ export default function Notifications() {
         </Text>
       </View>
       <ScrollView contentContainerStyle={{ paddingTop: 12.82, paddingBottom: insets.bottom + 24 }} showsVerticalScrollIndicator={false}>
-        {NOTIFICATIONS.map((section, i) => (
+        {sections === null ? <ActivityIndicator style={styles.loading} color={MUTED} /> : null}
+        {sections && !sections.length ? <Text style={styles.empty}>Likes, comments and new followers will show up here.</Text> : null}
+        {(sections ?? []).map((section, i) => (
           // rows rise in one after another across the sections
           <View key={section.title} style={i > 0 && styles.sectionGap}>
             <Text style={styles.section}>{section.title}</Text>
             {section.items.map((n, k) => (
-              <Animated.View key={n.id} collapsable={false} entering={appear(NOTIFICATIONS.slice(0, i).reduce((sum, s) => sum + s.items.length, 0) + k)}>
+              <Animated.View key={n.id} collapsable={false} entering={appear((sections ?? []).slice(0, i).reduce((sum, s) => sum + s.items.length, 0) + k)}>
                 <Row
                   item={n}
                   muted={section.muted}
                   following={following[n.id]}
-                  onToggle={() => setFollowing((f) => ({ ...f, [n.id]: !f[n.id] }))}
+                  onToggle={() => toggle(n)}
                 />
               </Animated.View>
             ))}
@@ -64,7 +86,7 @@ function Row({ item, muted, following, onToggle }: { item: Notice; muted?: boole
     <View style={[styles.row, second ? styles.rowPair : null]}>
       <PressableScale
         scaleTo={0.98}
-        onPress={() => openProfile(item.username, true)}
+        onPress={() => (item.articleId ? push(`/article/${item.articleId}`) : openProfile(item.username, true))}
         style={styles.person}
         accessibilityRole="button"
         accessibilityLabel={`${item.who} ${item.what}`}>
@@ -98,6 +120,8 @@ function Row({ item, muted, following, onToggle }: { item: Notice; muted?: boole
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
+  loading: { marginTop: 40 },
+  empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: MUTED },
   header: { height: 61 },
   back: { position: 'absolute', left: 18.97, top: 21.81 },
   title: { position: 'absolute', left: 51, right: 16, top: 20.2, fontFamily: INTER_FAMILIES['700'], fontSize: 21.5, lineHeight: 27, color: colors.text },

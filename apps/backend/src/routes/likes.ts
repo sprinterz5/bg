@@ -1,6 +1,7 @@
 import { LikeTargetType } from "@prisma/client";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { createNotification } from "../services/notificationService.js";
 import { bufferScoreDelta } from "../services/scoreBufferService.js";
 import { incrementContentCounter } from "../services/counterService.js";
 
@@ -44,6 +45,28 @@ export const likeRoutes: FastifyPluginAsync = async (app) => {
     });
     await bufferScoreDelta(app, body.targetType, body.targetId, { likes: 1 });
     await incrementContentCounter(app, body.targetType, body.targetId, { likes: 1 });
+
+    // The author hears about a like on their article (not their own).
+    if (body.targetType === "ARTICLE") {
+      const article = await app.prisma.article.findUnique({ where: { id: body.targetId }, select: { authorId: true, title: true } });
+      // once per person and post: liking again after an unlike doesn't notify twice
+      const already = await app.prisma.notification.findFirst({
+        where: { type: "LIKE", actorId: request.user.sub, targetType: "ARTICLE", targetId: body.targetId },
+        select: { id: true }
+      });
+      if (article && article.authorId !== request.user.sub && !already) {
+        await createNotification(app, {
+          userId: article.authorId,
+          type: "LIKE",
+          actorType: "USER",
+          actorId: request.user.sub,
+          targetType: "ARTICLE",
+          targetId: body.targetId,
+          title: "New like",
+          body: `${request.user.username} liked "${article.title}".`
+        });
+      }
+    }
 
     return { liked: true };
   });
