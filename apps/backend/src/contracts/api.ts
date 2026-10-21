@@ -60,6 +60,17 @@ export type ApiFriendStory = {
 /** POST /stories/:id/view: the story with its caption. */
 export type ApiViewedStory = { id: string; caption: string | null };
 
+/** GET /comments (page, oldest first) and POST /comments. */
+export type ApiComment = {
+  id: string;
+  body: string;
+  createdAt: string;
+  parentId: string | null;
+  user: ApiUserSummary;
+  /** GET only: how many replies it has. */
+  _count?: { children: number };
+};
+
 /** GET /articles/:idOrSlug. */
 export type ApiArticle = {
   id: string;

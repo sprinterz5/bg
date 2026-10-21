@@ -7,6 +7,7 @@ import { incrementContentCounter } from "../services/counterService.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { withIdempotency } from "../services/idempotencyService.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
+import { asApi, type ApiComment, type Page } from "../contracts/api.js";
 
 const commentCreateSchema = z.object({
   targetType: z.nativeEnum(CommentTargetType),
@@ -60,7 +61,7 @@ export const commentRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    return pageResult(comments, query.limit);
+    return asApi<Page<ApiComment>>(pageResult(comments, query.limit));
   });
 
   app.post("/comments", { preHandler: [app.authenticate, endpointRateLimit({ key: "comments", limit: 40, windowSeconds: 60, by: "userOrIp" })] }, async (request, reply) => {
@@ -132,7 +133,7 @@ export const commentRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-      return { statusCode: 201, body: comment };
+      return { statusCode: 201, body: asApi<ApiComment>(comment) };
     });
 
     return reply.status(result.statusCode ?? 201).send(result.body);

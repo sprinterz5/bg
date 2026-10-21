@@ -41,6 +41,7 @@ import { colors, fonts } from '@/theme';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { articleOrigin, type ArticleOrigin } from '@/lib/article-origin';
 import { useReaction } from '@/lib/reactions';
+import { CommentsSheet, useAddedComments } from '@/components/comments-sheet';
 import { captureParam } from '@/lib/capture';
 import { backWhenReady, openProfile } from '@/lib/nav';
 
@@ -94,6 +95,8 @@ function Reader({ article }: { article: Article }) {
   // shared with the post's feed card (and synced with the server)
   const { liked, saved, likes, toggleLike, toggleSave } = useReaction(article.id, { liked: false, saved: false, likes: article.likes });
   const [sharing, setSharing] = useState(false);
+  const [commenting, setCommenting] = useState(false);
+  const addedComments = useAddedComments(article.id);
   const [menu, setMenu] = useState(false);
 
   const top = insets.top;
@@ -398,7 +401,7 @@ function Reader({ article }: { article: Article }) {
         </Animated.View>
 
         <Animated.View collapsable={false} style={[styles.bar, { height: BAR_H }, barIn]}>
-          <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments)} x={43.75} iconTop={11.62} />
+          <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments + addedComments)} x={43.75} iconTop={11.62} onPress={() => setCommenting(true)} />
           <LikeButton
             liked={liked}
             onToggle={toggleLike}
@@ -468,6 +471,7 @@ function Reader({ article }: { article: Article }) {
       </Animated.View>
       </GestureDetector>
       {sharing ? <ShareSheet article={article} onClose={() => setSharing(false)} /> : null}
+      {commenting ? <CommentsSheet articleId={article.id} onClose={() => setCommenting(false)} /> : null}
       <PostActions
         visible={menu}
         onClose={() => setMenu(false)}

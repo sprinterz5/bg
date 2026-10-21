@@ -15,7 +15,8 @@ import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 import { useReaction } from '@/lib/reactions';
-import { openShare } from '@/components/share-host';
+import { openComments, openShare } from '@/components/share-host';
+import { useAddedComments } from '@/components/comments-sheet';
 
 const GRAY = '#999999';
 const INK = GRAY; // action icons and counts (asked for #999 again)
@@ -38,6 +39,7 @@ function shortAge(ago: string) {
 // x 57.5, ~305 wide; picture 325.5×226.5 (r 13.2, #999 0.5 outline) 14.3 under it; the action row 10.4 under the
 // picture: like 520, comment 270, views 3K, bookmark, share (all #999, counts Inter 12.35); 16.3 to the separator.
 export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; onHide: (id: string) => void }) {
+  const addedComments = useAddedComments(post.articleId);
   const { liked, saved, likes, toggleLike: like, toggleSave: save } = useReaction(post.articleId, { liked: !!post.liked, saved: !!post.saved, likes: post.likes });
   const [menu, setMenu] = useState(false);
   // The reader grows its cover out of this picture.
@@ -97,10 +99,10 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           <View style={[styles.countBox, styles.likeCount]}>
             <RollingLabel text={formatCount(likes)} style={styles.countText} />
           </View>
-          <PressableScale onPress={openArticle} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
+          <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
             <Icon name="feedComment" width={16.4} height={16.4} />
           </PressableScale>
-          <Text style={[styles.count, styles.commentCount]}>{formatCount(post.comments)}</Text>
+          <Text style={[styles.count, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
           <View style={styles.views}>
             {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
             <Icon name="feedViews" width={14.86} height={15.8} />

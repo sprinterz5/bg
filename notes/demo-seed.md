@@ -9,12 +9,17 @@
 - 38 постов (обложки, заголовки, тексты из `apps/mobile/src/mock/data.ts`), даты публикации разбросаны по трём дням.
 - Счётчики демо-постов (лайки 135–3377, комментарии, закладки, репосты, просмотры) выставлены прямо в
   `ContentCounter`: это числа, а не настоящие лайки и комментарии. Настоящие действия прибавляются к ним.
+- У 14 постов обложки заменены на фото с Unsplash (были повторы и картинки 142–393 px): ссылки прямо на
+  images.unsplash.com.
+- Комментарии: по 3–9 настоящих комментариев от демо-авторов на каждый пост (40 заготовленных фраз),
+  счётчик комментариев = их число.
 - Бэкап базы перед загрузкой: `/srv/backups/bookgram-preseed-20261021-2344.sql.gz`.
 - В ленте Home моков больше нет (остались только в режиме `?capture`). Сторис, Explore и уведомления пока моковые.
 
 Удалить всё демо (посты удалятся вместе с аккаунтами):
 
 ```sql
+delete from "Comment" where "userId" in (select id from "User" where bio = 'Demo account');
 delete from "ContentCounter" where "targetId" in (select a.id from "Article" a join "User" u on u.id = a."authorId" where u.bio = 'Demo account');
 delete from "User" where bio = 'Demo account';
 ```
