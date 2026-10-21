@@ -44,7 +44,7 @@ type FeedContextValue = {
   retryPublish: () => void;
   /** After an error: drop the card and put the post back into the composer. */
   cancelPublish: () => void;
-  /** Next page: the server's posts first, then the mock ones (the same posts again under new ids). */
+  /** Next page of the server's feed (?capture: more mock posts, the same ones under new ids). */
   loadMore: () => void;
   /** Stories row: the followed users' stories from the server, then the mock ones. */
   stories: Story[];
@@ -83,8 +83,8 @@ const SeenContext = createContext<SeenContextValue | null>(null);
 
 export function FeedProvider({ children }: { children: ReactNode }) {
   const { user } = useSession();
-  // Mock posts and the user's own just-published ones (local); the server's ranked posts go above the mock ones.
-  const [posts, setPosts] = useState<Post[]>(FEED);
+  // The user's own just-published posts (local, until the server's page has them); mock posts only in ?capture.
+  const [posts, setPosts] = useState<Post[]>(CAPTURE ? FEED : []);
   const [server, setServer] = useState<Post[]>([]);
   const [serverStories, setServerStories] = useState<Story[]>([]);
   const cursor = useRef<{ next: string | null; loading: boolean; done: boolean }>({ next: null, loading: false, done: true });
@@ -210,7 +210,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
         .catch(() => (c.loading = false));
       return;
     }
-    setPosts((p) => (p.length >= MOCK_MAX ? p : [...p, ...mockPage(p.length)]));
+    if (CAPTURE) setPosts((p) => (p.length >= MOCK_MAX ? p : [...p, ...mockPage(p.length)]));
   }, []);
 
   const articlesRef = useRef(articles);
