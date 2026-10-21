@@ -128,6 +128,7 @@ export default function Home() {
       return (
         <GrowIn>
           <FeedPost post={item} onHide={hidePost} />
+          {index === 0 ? <ContactsBlock separator={<FeedSeparator />} /> : null}
         </GrowIn>
       );
     }

@@ -1,10 +1,12 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeOut } from 'react-native-reanimated';
 
 import { AuthorAvatar } from '@/components/author-row';
 import { PressableScale } from '@/components/pressable-scale';
 import { RollingLabel } from '@/components/rolling-label';
 import { INTER_FAMILIES, Text } from '@/components/text';
+import { appearSideways } from '@/lib/appear';
 import { allowContacts, useContacts, type ContactPerson } from '@/lib/contacts';
 import { openProfile } from '@/lib/nav';
 import { setFollow } from '@/lib/users';
@@ -25,7 +27,17 @@ export function ContactsBlock({ separator }: { separator?: ReactNode }) {
       <View style={styles.root}>
         <Text style={styles.title}>Your contacts</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} decelerationRate="fast" snapToInterval={180}>
-          {status === 'ask' ? <AskCard /> : people.map((p) => <ContactCard key={p.username} person={p} />)}
+          {status === 'ask' ? (
+            <Animated.View collapsable={false} exiting={FadeOut.duration(150)}>
+              <AskCard />
+            </Animated.View>
+          ) : (
+            people.map((p, i) => (
+              <Animated.View key={p.username} collapsable={false} entering={appearSideways(i)}>
+                <ContactCard person={p} />
+              </Animated.View>
+            ))
+          )}
         </ScrollView>
       </View>
     </>

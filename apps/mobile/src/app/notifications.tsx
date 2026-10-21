@@ -1,6 +1,9 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+
+import { appear } from '@/lib/appear';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -35,16 +38,18 @@ export default function Notifications() {
       </View>
       <ScrollView contentContainerStyle={{ paddingTop: 12.82, paddingBottom: insets.bottom + 24 }} showsVerticalScrollIndicator={false}>
         {NOTIFICATIONS.map((section, i) => (
+          // rows rise in one after another across the sections
           <View key={section.title} style={i > 0 && styles.sectionGap}>
             <Text style={styles.section}>{section.title}</Text>
-            {section.items.map((n) => (
-              <Row
-                key={n.id}
-                item={n}
-                muted={section.muted}
-                following={following[n.id]}
-                onToggle={() => setFollowing((f) => ({ ...f, [n.id]: !f[n.id] }))}
-              />
+            {section.items.map((n, k) => (
+              <Animated.View key={n.id} collapsable={false} entering={appear(NOTIFICATIONS.slice(0, i).reduce((sum, s) => sum + s.items.length, 0) + k)}>
+                <Row
+                  item={n}
+                  muted={section.muted}
+                  following={following[n.id]}
+                  onToggle={() => setFollowing((f) => ({ ...f, [n.id]: !f[n.id] }))}
+                />
+              </Animated.View>
             ))}
           </View>
         ))}

@@ -3,6 +3,8 @@ import { usePathname } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import Animated, { FadeOut } from 'react-native-reanimated';
+
+import { appear } from '@/lib/appear';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { INTER_FAMILIES, Text, TextInput } from '@/components/text';
@@ -130,14 +132,16 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
             <>{empty}</>
           ) : null
         }
-        renderItem={({ item }) => (
-          <Row
-            item={item}
-            button={!item.isMe && (typeof withButtons === 'function' ? withButtons(item) : withButtons)}
-            following={following[item.username]}
-            onToggle={() => toggle(item)}
-            onOpen={onOpen}
-          />
+        renderItem={({ item, index }) => (
+          <Animated.View collapsable={false} entering={appear(index)}>
+            <Row
+              item={item}
+              button={!item.isMe && (typeof withButtons === 'function' ? withButtons(item) : withButtons)}
+              following={following[item.username]}
+              onToggle={() => toggle(item)}
+              onOpen={onOpen}
+            />
+          </Animated.View>
         )}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
