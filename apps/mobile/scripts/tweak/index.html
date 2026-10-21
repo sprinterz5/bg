@@ -38,6 +38,12 @@
   nav div.on { background: var(--text); color: #fff; }
   nav div span:last-child { color: var(--muted); }
   nav .dot { color: var(--mark); }
+  nav .tw { display: inline-block; width: 14px; color: var(--muted); transition: transform .15s; }
+  nav .tw.open { transform: rotate(90deg); }
+  nav div.el { padding: 4px 10px 4px 34px; font-size: 13px; color: #444; }
+  nav div.el.on { background: #e4e4e7; color: var(--text); }
+  nav div.on .tw { color: #fff; }
+  h3 code { font: 11px ui-monospace, monospace; color: var(--muted); margin-left: 8px; font-weight: 400; }
   main { padding: 4px 16px 80px; }
   h3 { margin: 16px 0 4px; font-size: 12px; color: var(--muted); font-weight: 700; position: sticky; top: -4px; background: var(--bg); padding: 6px 0; z-index: 1; }
   h3 i { font-style: normal; font-weight: 500; margin-left: 8px; }
@@ -132,25 +138,49 @@ function setStatus(s) {
   $('#send').textContent = changes.length ? `Отправить (${changes.length})` : 'Отправить';
   drawScreens();
 }
+// Each screen unfolds into its elements (a style group each); a click on one shows only its values.
+const unfolded = new Set();
+let curGroup = null;
 function drawScreens() {
   const touched = new Set(changes.map((c) => c.rel));
-  $('#screens').innerHTML = screens.map((s) => `<div data-rel="${esc(s.rel)}" class="${cur === s.rel ? 'on' : ''}" title="${esc(s.rel)}"><span>${touched.has(s.rel) ? '<span class="dot">● </span>' : ''}${esc(s.name)}</span><span>${s.count}</span></div>`).join('');
+  $('#screens').innerHTML = screens.map((s) => {
+    const open = unfolded.has(s.rel);
+    const head = `<div data-rel="${esc(s.rel)}" class="${cur === s.rel && !curGroup ? 'on' : ''}" title="${esc(s.rel)}"><span><span class="tw${open ? ' open' : ''}" data-fold="1">▸</span>${touched.has(s.rel) ? '<span class="dot">● </span>' : ''}${esc(s.name)}</span><span>${s.count}</span></div>`;
+    const els = open ? s.groups.map((g) => `<div class="el${cur === s.rel && curGroup === g.group ? ' on' : ''}" data-rel="${esc(s.rel)}" data-group="${esc(g.group)}" title="${esc(g.group)}"><span>${esc(g.name)}</span><span>${g.count}</span></div>`).join('') : '';
+    return head + els;
+  }).join('');
 }
-$('#screens').onclick = (e) => { const d = e.target.closest('[data-rel]'); if (d) { $('#q').value = ''; open(d.dataset.rel); } };
+$('#screens').onclick = (e) => {
+  const d = e.target.closest('[data-rel]');
+  if (!d) return;
+  $('#q').value = '';
+  const rel = d.dataset.rel;
+  if (d.dataset.group) return open(rel, null, d.dataset.group);
+  if (e.target.dataset.fold) { unfolded.has(rel) ? unfolded.delete(rel) : unfolded.add(rel); return drawScreens(); }
+  unfolded.add(rel);
+  open(rel);
+};
+const nameOf = (rel, group) => screens.find((s) => s.rel === rel)?.groups.find((g) => g.group === group)?.name ?? group;
 
 let chain = [];
-async function open(rel, focus) {
-  cur = rel; location.hash = encodeURIComponent(rel); drawScreens();
+async function open(rel, focus, group) {
+  cur = rel; curGroup = group ?? null; location.hash = encodeURIComponent(rel); drawScreens();
   const name = screens.find((s) => s.rel === rel)?.name ?? rel;
   let items = (await api('values?file=' + encodeURIComponent(rel))).map((i) => ({ ...i, rel, screen: name }));
   if (focus && focus.keys.length) items = items.filter((i) => focus.keys.includes(i.group));
+  if (group) {
+    draw(items.filter((i) => i.group === group), false);
+    $('#main').insertAdjacentHTML('afterbegin', '<div class="chips"><span class="all">весь экран</span></div>');
+    $('#main .all').onclick = () => open(rel);
+    return;
+  }
   const next = focus?.auto && !items.length && chain[chain.indexOf(focus.raw) + 1];
   if (next) return pickFrom(next, true);
   draw(items, false);
   if (focus) {
     const head = document.createElement('div');
     head.className = 'chips';
-    head.innerHTML = chain.map((c, k) => `<span class="chip${c === focus.raw ? ' on' : ''}" data-k="${k}">${esc(c.split('|')[1] || 'элемент')}</span>`).join('') + `<span class="all">весь экран</span>`;
+    head.innerHTML = chain.map((c, k) => `<span class="chip${c === focus.raw ? ' on' : ''}" data-k="${k}">${esc(c.split('|')[1] ? c.split('|')[1].split(',').map((g) => nameOf(c.split('|')[0], g)).join(', ') : 'элемент')}</span>`).join('') + `<span class="all">весь экран</span>`;
     $('#main').prepend(head);
     head.onclick = (e) => { if (e.target.dataset.k) pickFrom(chain[e.target.dataset.k]); if (e.target.matches('.all')) open(rel); };
     if (!items.length) $('#main').insertAdjacentHTML('beforeend', '<div class="empty">У этого элемента нет настраиваемых значений — выберите элемент выше по цепочке.</div>');
@@ -169,7 +199,7 @@ function draw(items, many) {
   let html = '', last = '';
   for (const i of items) {
     const g = (many ? i.screen + '|' : '') + i.group;
-    if (g !== last) { html += `<h3>${esc(i.group)}${many ? `<i>${esc(i.screen)}</i>` : ''}</h3>`; last = g; }
+    if (g !== last) { html += `<h3>${esc(i.name || i.group)}<code>${esc(i.group)}</code>${many ? `<i>${esc(i.screen)}</i>` : ''}</h3>`; last = g; }
     html += row(i);
   }
   $('#main').innerHTML = html + '<p class="hint"><kbd>↑</kbd> <kbd>↓</kbd> ±1 · с <kbd>Shift</kbd> ±0.1 · с <kbd>Alt</kbd> ±0.05 · жёлтое «было» — вернуть как было · изменения сразу видны на телефоне, «Отправить» — сохранить их в проект</p>';
@@ -232,7 +262,7 @@ M.onkeydown = (e) => {
 };
 
 $('#send').onclick = () => {
-  $('#dlgList').innerHTML = changes.map((c) => `<li>${esc(c.screen)} · ${esc(c.group)} · ${esc(c.label || c.prop)}: ${esc(c.from)} → <b>${esc(c.to)}</b></li>`).join('');
+  $('#dlgList').innerHTML = changes.map((c) => `<li>${esc(c.screen)} · ${esc(c.name || c.group)} · ${esc(c.label || c.prop)}: ${esc(c.from)} → <b>${esc(c.to)}</b></li>`).join('');
   $('#note').value = ''; $('#dlg').showModal(); $('#note').focus();
 };
 $('#cancel').onclick = () => $('#dlg').close();

@@ -54,6 +54,56 @@ const screen = (rel) => {
   return SCREENS[r] ?? r.replace(/^src\/(app|components)\//, '').replace(/\.tsx?$/, '');
 };
 
+// ---------- element names for the designer ----------
+// A group is a StyleSheet key (`likeCount`) or an inline-styled element (`<Icon feedComment>`). Whole names first
+// (per file, then everywhere), else the camelCase words are translated one by one; unknown words stay as they are.
+const NAMES_IN = {
+  'src/components/feed-post.tsx': { root: 'Пост целиком', head: 'Строка автора', media: 'Фото поста', actions: 'Ряд кнопок и счётчиков', column: 'Колонка справа от аватара', '<Icon>': 'Иконка лайка', avatar: 'Аватар (обёртка)', '<AuthorAvatar>': 'Аватар', text: 'Текст поста', age: 'Время поста' },
+  'src/components/primary-button.tsx': { base: 'Кнопка', outline: 'Кнопка с обводкой', label: 'Текст кнопки' },
+  'src/components/big-input.tsx': { input: 'Поле ввода' },
+  'src/components/tab-bar.tsx': { bar: 'Таббар', floating: 'Плавающая панель', tab: 'Кнопка вкладки' },
+  'src/components/feed-tabs.tsx': { root: 'Ряд категорий', tab: 'Категория', label: 'Название категории', line: 'Линия под категориями', bar: 'Полоска активной категории', '<Pressable>': 'Категория (нажатие)' },
+  'src/components/home-stories.tsx': { row: 'Ряд сторис', name: 'Подпись под кружком' },
+  'src/app/(tabs)/(home)/index.tsx': { logo: 'Логотип', headerWrap: 'Шапка', headerBg: 'Фон шапки', headerLine: 'Линия под шапкой', fade: 'Затемнение шапки', fadeLine: 'Линия затемнения', plus: 'Кнопка +', bell: 'Колокольчик', storiesGap: 'Отступ над сторисами', stories: 'Сторисы', headerCap: 'Верх шапки', content: 'Лента' },
+  'src/app/(auth)/welcome.tsx': { root: 'Экран', logo: 'Логотип Thoughts', form: 'Форма', field: 'Поле', second: 'Второе поле (отступ)', login: 'Кнопка Log in', loginText: 'Текст Log in', forgot: 'Forgotten password?', forgotText: 'Текст Forgotten password?', bottom: 'Низ экрана', create: 'Кнопка Create new account', createText: 'Текст Create new account' },
+  'src/components/step-screen.tsx': { root: 'Экран', backRow: 'Ряд со стрелкой назад', back: 'Стрелка назад', '<Icon back>': 'Иконка назад', title: 'Заголовок шага', subtitle: 'Подзаголовок шага', body: 'Содержимое', footer: 'Низ (кнопка)' },
+};
+const NAMES = {
+  root: 'Контейнер', header: 'Шапка', title: 'Заголовок', subtitle: 'Подзаголовок', name: 'Имя', handle: 'Ник', avatar: 'Аватар',
+  likeCount: 'Счётчик лайков', commentCount: 'Счётчик комментариев', viewsCount: 'Счётчик просмотров', countText: 'Цифра счётчика',
+  countBox: 'Рамка счётчика', separator: 'Разделитель между постами', titleInput: 'Поле заголовка', subtitleInput: 'Поле подзаголовка',
+  '<AuthorAvatar>': 'Аватар', '<LikeButton>': 'Кнопка лайка', '<Animated.View>': 'Анимированный блок', '<View>': 'Блок', '<Pressable>': 'Кнопка',
+  '<PressableScale>': 'Кнопка', '<Text>': 'Текст', '<ScrollView>': 'Прокрутка', '<Icon>': 'Иконка',
+};
+const WORDS = {
+  header: 'шапка', wrap: 'обёртка', bg: 'фон', line: 'линия', plus: 'плюс', bell: 'колокольчик', logo: 'логотип', fade: 'затемнение',
+  content: 'контент', stories: 'сторисы', story: 'сторис', gap: 'отступ', tab: 'вкладка', label: 'подпись', bar: 'панель', avatar: 'аватар',
+  column: 'колонка', head: 'верх', name: 'имя', names: 'имена', handle: 'ник', dot: 'точка', dots: 'точки', age: 'время', time: 'время',
+  text: 'текст', texts: 'тексты', media: 'фото', actions: 'кнопки', like: 'лайк', liked: 'лайк', comment: 'комментарий', views: 'просмотры',
+  bookmark: 'закладка', share: 'поделиться', count: 'счётчик', box: 'рамка', row: 'ряд', form: 'форма', field: 'поле', login: 'вход',
+  bottom: 'низ', create: 'создать', back: 'назад', title: 'заголовок', subtitle: 'подзаголовок', menu: 'меню', input: 'поле ввода',
+  picture: 'картинка', footer: 'низ', post: 'пост', body: 'текст', cover: 'обложка', preview: 'превью', more: 'ещё', meta: 'страницы',
+  card: 'карточка', author: 'автор', sub: 'подпись', follow: 'подписаться', close: 'закрыть', item: 'пункт', frame: 'рамка', ring: 'кольцо',
+  page: 'страница', info: 'инфо', caption: 'подпись', measure: 'служебное', sheet: 'шторка', hit: 'зона нажатия', scroll: 'прокрутка',
+  pill: 'плашка', typing: 'при наборе', send: 'отправить', heart: 'сердечко', section: 'секция', pair: 'пара', who: 'кто', what: 'что',
+  suggestion: 'рекомендация', thumb: 'миниатюра', button: 'кнопка', on: 'активная', off: 'неактивная', flying: 'анимация', half: 'половина',
+  filled: 'закрашенная', search: 'поиск', chat: 'чат', views2: 'просмотры', gallery: 'галерея', next: 'далее', undo: 'отменить',
+  redo: 'повторить', check: 'галочка', chevron: 'стрелка', empty: 'пустое', bio: 'о себе', write: 'написать', edit: 'редактировать',
+  notif: 'уведомление', home: '', feed: '', reader: '', article: '', editor: '', at: 'позиция', with: 'с',
+};
+const words = (id) => id.replace(/([a-z])([A-Z0-9])/g, '$1 $2').toLowerCase().split(/\s+/).map((w) => WORDS[w] ?? WORDS[w.replace(/\d+$/, '')] ?? w).filter((w) => w && !/^\d+$/.test(w)).join(' ');
+const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+function elementName(rel, grp) {
+  const r = rel.replace(/^apps\/mobile\//, '');
+  const whole = NAMES_IN[r]?.[grp] ?? NAMES[grp];
+  if (whole) return whole;
+  const icon = grp.match(/^<Icon (.+)>$/);
+  if (icon) return cap(`иконка ${words(icon[1])}`.trim());
+  const tag = grp.match(/^<(.+)>$/);
+  if (tag) return cap(words(tag[1].split('.').pop()));
+  return cap(words(grp));
+}
+
 // ---------- finding the values ----------
 
 const name = (n) => (n.name && (ts.isIdentifier(n.name) || ts.isStringLiteral(n.name)) ? n.name.text : null);
@@ -100,7 +150,7 @@ function scan(rel) {
     const base = `${grp}.${prop}`;
     const k = (seen.get(base) ?? 0) + 1;
     seen.set(base, k);
-    items.push({ key: k > 1 ? `${base}#${k}` : base, group: grp, prop, label: LABELS[prop], kind, value, start, end: node.getEnd(), line: line + 1, src: lines[line].trim().slice(0, 160) });
+    items.push({ key: k > 1 ? `${base}#${k}` : base, group: grp, name: elementName(rel, grp), prop, label: LABELS[prop], kind, value, start, end: node.getEnd(), line: line + 1, src: lines[line].trim().slice(0, 160) });
   };
   const visit = (n) => {
     // <Icon … width={21} height={18.5} />: icon size
@@ -151,6 +201,13 @@ function walk(dir, out = []) {
 
 // ---------- editing ----------
 
+/** The file's elements in the order they first appear, with how many values each has. */
+function groupsOf(rel) {
+  const out = new Map();
+  for (const i of scan(rel)) out.set(i.group, { group: i.group, name: i.name, count: (out.get(i.group)?.count ?? 0) + 1 });
+  return [...out.values()];
+}
+
 const changes = new Map(); // `${rel}|${key}` → { rel, key, prop, group, kind, from, to }
 const num = (v) => String(Math.round(Number(v) * 1000) / 1000).replace(/^-0$/, '0');
 
@@ -177,7 +234,7 @@ function setValue(rel, key, value) {
   const id = `${rel}|${key}`;
   const from = changes.get(id)?.from ?? (item.kind === 'num' ? num(item.value) : item.value);
   if (from === next) changes.delete(id);
-  else changes.set(id, { rel, key, prop: item.prop, label: item.label, group: item.group, kind: item.kind, from, to: next });
+  else changes.set(id, { rel, key, prop: item.prop, label: item.label, group: item.group, name: item.name, kind: item.kind, from, to: next });
 }
 
 const git = (...args) =>
@@ -195,7 +252,7 @@ async function send(note) {
   try {
     const rels = [...new Set(list.map((c) => c.rel))];
     const screens = [...new Set(list.map((c) => screen(c.rel)))].join(', ');
-    const body = list.map((c) => `${screen(c.rel)} · ${c.group} · ${c.label ?? c.prop} (${c.prop}): ${c.from} → ${c.to}`).join('\n');
+    const body = list.map((c) => `${screen(c.rel)} · ${elementName(c.rel, c.group)} (${c.group}) · ${c.label ?? c.prop} (${c.prop}): ${c.from} → ${c.to}`).join('\n');
     await git('add', '--', ...rels);
     await git('commit', '-q', '-m', `Design tweaks: ${screens}`, '-m', (note ? note + '\n\n' : '') + body, '--', ...rels);
     if (PUSH_URL) {
@@ -245,14 +302,14 @@ createServer(async (req, res) => {
   try {
     if (p === '/') return reply(res, 200, readFileSync(join(here, 'index.html')), 'text/html; charset=utf-8');
     if (p === '/api/screens')
-      return reply(res, 200, walk(SRC).map((rel) => ({ rel, name: screen(rel), count: scan(rel).length })).filter((f) => f.count).sort((a, b) => (SCREENS[b.rel.slice(12)] ? 1 : 0) - (SCREENS[a.rel.slice(12)] ? 1 : 0) || a.name.localeCompare(b.name)));
+      return reply(res, 200, walk(SRC).map((rel) => ({ rel, name: screen(rel), count: scan(rel).length, groups: groupsOf(rel) })).filter((f) => f.count).sort((a, b) => (SCREENS[b.rel.slice(12)] ? 1 : 0) - (SCREENS[a.rel.slice(12)] ? 1 : 0) || a.name.localeCompare(b.name)));
     if (p === '/api/values') return reply(res, 200, scan(safe(url.searchParams.get('file'))));
     if (p === '/api/search') {
       const q = (url.searchParams.get('q') || '').toLowerCase();
       const out = [];
       for (const rel of walk(SRC))
         for (const i of scan(rel))
-          if (out.length < 300 && `${screen(rel)} ${i.group} ${i.prop} ${i.label ?? ''} ${i.src}`.toLowerCase().includes(q)) out.push({ ...i, rel, screen: screen(rel) });
+          if (out.length < 300 && `${screen(rel)} ${i.group} ${i.name} ${i.prop} ${i.label ?? ''} ${i.src}`.toLowerCase().includes(q)) out.push({ ...i, rel, screen: screen(rel) });
       return reply(res, 200, out);
     }
     if (p === '/api/status') return reply(res, 200, status());
