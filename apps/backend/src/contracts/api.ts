@@ -82,7 +82,7 @@ export type ApiFeedItem = {
   author: ApiUserSummary;
   publishedAt: string;
   viewer: { liked: boolean; bookmarked: boolean };
-  counts: { likes: number; comments: number; bookmarks: number; shares: number };
+  counts: { likes: number; comments: number; bookmarks: number; shares: number; views: number };
 };
 export type ApiFeedPage = { data: ApiFeedItem[]; nextCursor: string | null };
 

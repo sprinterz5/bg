@@ -36,6 +36,7 @@ function toPost(i: ApiFeedItem): Post | null {
     saved: i.viewer.bookmarked,
     comments: i.counts.comments,
     shares: i.counts.shares,
+    views: i.counts.views || undefined,
     articleId: i.targetId,
   };
 }

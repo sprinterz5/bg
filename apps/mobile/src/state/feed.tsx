@@ -214,14 +214,18 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const articlesRef = useRef(articles);
+  const serverRef = useRef(server);
   useEffect(() => {
     articlesRef.current = articles;
-  }, [articles]);
+    serverRef.current = server;
+  }, [articles, server]);
   const ensureArticle = useCallback(async (id: string) => {
     if (articlesRef.current[id]) return true;
     try {
       const a = await fetchArticle(id);
-      setArticles((m) => ({ ...m, [id]: a }));
+      // the article endpoint has no counters: the feed card's (comments, shares) go to the reader's bar
+      const card = serverRef.current.find((p) => p.articleId === id);
+      setArticles((m) => ({ ...m, [id]: card ? { ...a, likes: card.likes, comments: card.comments, shares: card.shares } : a }));
       return true;
     } catch {
       return false;

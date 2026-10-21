@@ -98,7 +98,8 @@ export async function enrichFeedItems<T extends PresentableFeedItem>(
         likes: counter?.likes ?? score?.likes ?? 0,
         comments: counter?.comments ?? score?.comments ?? 0,
         bookmarks: counter?.bookmarks ?? score?.saves ?? 0,
-        shares: counter?.shares ?? score?.shares ?? 0
+        shares: counter?.shares ?? score?.shares ?? 0,
+        views: counter?.views ?? 0
       }
     };
   });
