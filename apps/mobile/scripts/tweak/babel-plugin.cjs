@@ -25,7 +25,8 @@ module.exports = function tweakPlugin({ types: t }) {
         });
         const rel = path.relative(REPO, file).split(path.sep).join('/');
         const line = p.node.loc ? p.node.loc.start.line : 0;
-        attrs.push(
+        // first, so a {...props} spread after it wins: a wrapper (our Text) passes on its caller's mark instead of its own
+        attrs.unshift(
           t.jsxAttribute(
             t.jsxIdentifier('dataSet'),
             t.jsxExpressionContainer(t.objectExpression([t.objectProperty(t.identifier('tw'), t.stringLiteral(`${rel}|${keys.join(',')}|${line}`))])),

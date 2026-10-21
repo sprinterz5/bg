@@ -43,6 +43,8 @@
   nav div.el { padding: 4px 10px 4px 34px; font-size: 13px; color: #444; }
   nav div.el.on { background: #e4e4e7; color: var(--text); }
   nav div.on .tw { color: #fff; }
+  h3[data-group] { cursor: pointer; }
+  h3[data-group]:hover { color: var(--accent); }
   h3 code { font: 11px ui-monospace, monospace; color: var(--muted); margin-left: 8px; font-weight: 400; }
   main { padding: 4px 16px 80px; }
   h3 { margin: 16px 0 4px; font-size: 12px; color: var(--muted); font-weight: 700; position: sticky; top: -4px; background: var(--bg); padding: 6px 0; z-index: 1; }
@@ -160,6 +162,8 @@ $('#screens').onclick = (e) => {
   unfolded.add(rel);
   open(rel);
 };
+// Makes the element blink in the preview (the app's tweak-picker does the drawing).
+const flashIn = (rel, group, items) => $('#app')?.contentWindow?.postMessage({ tweak: 'highlight', rel, group, lines: [...new Set(items.map((i) => i.line))] }, '*');
 const nameOf = (rel, group) => screens.find((s) => s.rel === rel)?.groups.find((g) => g.group === group)?.name ?? group;
 
 let chain = [];
@@ -169,7 +173,9 @@ async function open(rel, focus, group) {
   let items = (await api('values?file=' + encodeURIComponent(rel))).map((i) => ({ ...i, rel, screen: name }));
   if (focus && focus.keys.length) items = items.filter((i) => focus.keys.includes(i.group));
   if (group) {
-    draw(items.filter((i) => i.group === group), false);
+    const mine = items.filter((i) => i.group === group);
+    flashIn(rel, group, mine);
+    draw(mine, false);
     $('#main').insertAdjacentHTML('afterbegin', '<div class="chips"><span class="all">весь экран</span></div>');
     $('#main .all').onclick = () => open(rel);
     return;
@@ -194,12 +200,18 @@ let st;
 $('#q').oninput = () => { clearTimeout(st); st = setTimeout(async () => { const q = $('#q').value.trim(); if (!q) return cur && open(cur); draw(await api('search?q=' + encodeURIComponent(q)), true); }, 150); };
 document.onkeydown = (e) => { if (e.key === '/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); $('#q').select(); } };
 
+let drawn = [];
+$('#main').addEventListener('click', (e) => {
+  const h = e.target.closest('h3[data-group]');
+  if (h) flashIn(h.dataset.rel, h.dataset.group, drawn.filter((i) => i.rel === h.dataset.rel && i.group === h.dataset.group));
+});
 function draw(items, many) {
+  drawn = items;
   if (!items.length) return ($('#main').innerHTML = '<div class="empty">Ничего не найдено.</div>');
   let html = '', last = '';
   for (const i of items) {
     const g = (many ? i.screen + '|' : '') + i.group;
-    if (g !== last) { html += `<h3>${esc(i.name || i.group)}<code>${esc(i.group)}</code>${many ? `<i>${esc(i.screen)}</i>` : ''}</h3>`; last = g; }
+    if (g !== last) { html += `<h3 data-rel="${esc(i.rel)}" data-group="${esc(i.group)}" title="Показать на превью">${esc(i.name || i.group)}<code>${esc(i.group)}</code>${many ? `<i>${esc(i.screen)}</i>` : ''}</h3>`; last = g; }
     html += row(i);
   }
   $('#main').innerHTML = html + '<p class="hint"><kbd>↑</kbd> <kbd>↓</kbd> ±1 · с <kbd>Shift</kbd> ±0.1 · с <kbd>Alt</kbd> ±0.05 · жёлтое «было» — вернуть как было · изменения сразу видны на телефоне, «Отправить» — сохранить их в проект</p>';

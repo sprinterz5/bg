@@ -17,7 +17,40 @@ if (typeof window !== 'undefined' && window.parent !== window) {
   const marked = (t: EventTarget | null) => (t instanceof Element ? t.closest('[data-tw]') : null);
   let selected: Element | null = null;
 
+  // An element chosen in the Tweak panel flashes on the screen: a dashed outline over a blue tint that fades out.
+  const flash = (targets: Element[]) => {
+    const visible = targets.filter((t) => {
+      const r = t.getBoundingClientRect();
+      return r.width && r.height && r.bottom > 0 && r.top < innerHeight;
+    });
+    if (!visible.length && targets[0]) targets[0].scrollIntoView({ block: 'center' });
+    for (const t of (visible.length ? visible : targets.slice(0, 1)).slice(0, 30)) {
+      const r = t.getBoundingClientRect();
+      const el = document.createElement('div');
+      Object.assign(el.style, {
+        position: 'fixed', pointerEvents: 'none', zIndex: '2147483646', left: `${r.left - 2}px`, top: `${r.top - 2}px`,
+        width: `${r.width + 4}px`, height: `${r.height + 4}px`, border: '1.5px dashed #1D9BF0', borderRadius: '3px',
+        background: 'rgba(29,155,240,0.22)', transition: 'opacity 1.4s ease-out 0.5s',
+      });
+      document.documentElement.appendChild(el);
+      requestAnimationFrame(() => requestAnimationFrame(() => (el.style.opacity = '0')));
+      setTimeout(() => el.remove(), 2100);
+    }
+  };
+  // A StyleSheet key matches by name; an inline-styled element (<Icon …>) by the closest element at or above its line.
+  const find = (rel: string, group: string, lines: number[]) => {
+    const all = [...document.querySelectorAll<HTMLElement>('[data-tw]')].map((el) => ({ el, tw: el.dataset.tw!.split('|') })).filter((x) => x.tw[0] === rel);
+    if (!group.startsWith('<')) return all.filter((x) => x.tw[1].split(',').includes(group)).map((x) => x.el);
+    const out: Element[] = [];
+    for (const line of lines) {
+      const best = Math.max(...all.map((x) => +x.tw[2]).filter((l) => l <= line && line - l <= 8));
+      out.push(...all.filter((x) => +x.tw[2] === best).map((x) => x.el));
+    }
+    return out;
+  };
+
   window.addEventListener('message', (e) => {
+    if (e.data?.tweak === 'highlight') return flash(find(e.data.rel, e.data.group, e.data.lines ?? []));
     if (e.data?.tweak !== 'pick') return;
     picking = !!e.data.on;
     document.documentElement.style.cursor = picking ? 'crosshair' : '';
