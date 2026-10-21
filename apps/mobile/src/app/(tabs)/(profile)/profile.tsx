@@ -122,8 +122,8 @@ export default function Profile() {
           </View>
         ) : tab === 'posts' ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cards} style={styles.cardsScroll}>
-            <EmptyCard icon="profileEmptyBio" text={'Dare to tell people about\nyourself a bit'} action="Add bio" onPress={() => push('/edit-bio')} />
-            <EmptyCard icon="profileEmptyWrite" text={'Write your first article\non your favourite topic'} action="Write it" onPress={() => router.navigate('/create')} />
+            <EmptyCard icon="profileEmptyBio" text="Tell people about yourself" action="Add bio" onPress={() => push('/edit-bio')} />
+            <EmptyCard icon="profileEmptyWrite" text={'Write your first post\non your favourite topic'} action="Write it" onPress={() => router.navigate('/create')} />
           </ScrollView>
         ) : null}
         </Animated.View>
@@ -143,13 +143,12 @@ export default function Profile() {
   );
 }
 
-// Card 209.5x225.5 with a centred 0.5 stroke (210x226 outside). Offsets below are from the inner edge.
 // Everything is centred on the card (in Figma the icon sits 7.9px and the text/button 2.9px left of centre by mistake).
 // Line breaks are fixed so Inter on Android wraps like SF Pro in the design.
 function EmptyCard({ icon, text, action, onPress }: { icon: IconName; text: string; action: string; onPress?: () => void }) {
   return (
     <View style={styles.card}>
-      <Icon name={icon} width={67} height={67} style={styles.cardIcon} />
+      <Icon name={icon} width={81} height={81} style={styles.cardIcon} />
       <Text style={styles.cardText}>{text}</Text>
       <PressableScale haptic onPress={onPress} scaleTo={0.95} style={styles.cardButton} accessibilityRole="button">
         <Text style={styles.cardButtonText}>{action}</Text>
@@ -170,18 +169,18 @@ const styles = StyleSheet.create({
   plus: { position: 'absolute', left: 14.5, top: 7 },
   settings: { position: 'absolute', right: 22.85, top: 5.66 },
 
-  // AutoLayouted-25: cards 210x231 from x 14, 17 apart, 26.75 under the tab line; icon circle 67 at (62.5, 19.5),
-  // text Inter 12.3 / 16 #999 from 104.5, a black 104x28 button at (50, 185.5).
+  // AutoLayouted-25 (TH(2)): cards 210x231 (r 13) #F4F5F5 from x 14, 17 apart, 26.75 under the tab line; a white circle
+  // 80 (1 #999) with the icon at (59.5, 18), text Inter 12.3 / 16 #999 (ink 118.9), a black 104x28 button at (49.5, 189).
   cardsScroll: { marginTop: 26.75 },
   posts: { marginTop: 17.75 },
   cards: { paddingHorizontal: 14, gap: 17 },
-  card: { width: 210, height: 231, borderWidth: 0.5, borderColor: '#E9E9E9', borderRadius: 5 },
-  cardIcon: { position: 'absolute', left: 62.5, top: 19.5 },
+  card: { width: 210, height: 231, borderRadius: 13, backgroundColor: '#F4F5F5' },
+  cardIcon: { position: 'absolute', left: 59, top: 17.5 },
   cardText: {
     position: 'absolute',
     left: 0,
     right: 6,
-    top: 104.5,
+    top: 115.9,
     textAlign: 'center',
     fontFamily: INTER_FAMILIES['400'],
     fontSize: 12.3,
@@ -190,8 +189,8 @@ const styles = StyleSheet.create({
   },
   cardButton: {
     position: 'absolute',
-    left: 50,
-    top: 185.5,
+    left: 49.5,
+    top: 189,
     width: 104,
     height: 28,
     borderRadius: 7,
@@ -199,5 +198,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardButtonText: { fontFamily: INTER_FAMILIES['600'], fontSize: 12.7, lineHeight: 16, color: '#FFFFFF' },
+  cardButtonText: { fontFamily: INTER_FAMILIES['600'], fontSize: 12.3, lineHeight: 16, color: '#FFFFFF' },
 });
