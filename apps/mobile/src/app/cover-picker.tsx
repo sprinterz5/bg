@@ -1,17 +1,19 @@
 import { Image } from 'expo-image';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as MediaLibrary from 'expo-media-library/legacy';
 import { useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { FlatList, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CropView, type Crop } from '@/components/crop-view';
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { Text } from '@/components/text';
 import { backWhenReady } from '@/lib/nav';
-import { deliverCover, pickCoverWithSystemPicker } from '@/lib/pick-cover';
+import { coverAspect, deliverCover, pickCoverWithSystemPicker } from '@/lib/pick-cover';
 
 // Frame 1198 "Choose a cover": black screen, ✕ and the title on top, the album ("Recents ›") over a 3-column
 // grid of 129x230 tiles 1.5 apart (the photo fitted in the middle over a dark band and a grey-to-black fade),
@@ -44,6 +46,8 @@ export default function CoverPicker() {
   const [albumsOpen, setAlbumsOpen] = useState(false);
   const cursor = useRef<{ after?: string; hasNext: boolean; loading: boolean }>({ hasNext: true, loading: false });
   const [ready, setReady] = useState(false);
+  const cropRef = useRef<(() => Crop) | null>(null);
+  const [busy, setBusy] = useState(false);
 
   // No library access (refused, or Expo Go on Android): the system picker instead.
   const fallBack = useCallback(() => {
@@ -109,10 +113,33 @@ export default function CoverPicker() {
   };
 
   const next = async () => {
-    if (!selected) return;
+    if (!selected || busy) return;
+    setBusy(true);
     // iOS gives ph:// ids: the composer and the upload need a file.
     const info = await MediaLibrary.getAssetInfoAsync(selected).catch(() => null);
-    deliverCover(info?.localUri ?? selected.uri);
+    const uri = info?.localUri ?? selected.uri;
+    const crop = story ? null : cropRef.current?.();
+    let out = uri;
+    if (crop) {
+      try {
+        const image = await ImageManipulator.manipulate(uri).renderAsync();
+        // the library's size can differ from the decoded one (orientation, HEIC previews): crop proportionally
+        const kx = image.width / selected.width;
+        const ky = image.height / selected.height;
+        const rect = {
+          originX: Math.round(crop.originX * kx),
+          originY: Math.round(crop.originY * ky),
+          width: Math.min(image.width, Math.round(crop.width * kx)),
+          height: Math.min(image.height, Math.round(crop.height * ky)),
+        };
+        const cropped = await ImageManipulator.manipulate(image).crop(rect).renderAsync();
+        out = (await cropped.saveAsync({ format: SaveFormat.JPEG, compress: 0.9 })).uri;
+      } catch {
+        out = uri;
+      }
+    }
+    setBusy(false);
+    deliverCover(out);
     backWhenReady();
   };
 
@@ -131,7 +158,7 @@ export default function CoverPicker() {
         )}
       </View>
 
-      {story ? null : <CoverGrid {...{ assets, selected, setSelected, tileW, album, openAlbums, albumsOpen, bottom: insets.bottom, onEnd: () => load(album.id, false).catch(() => {}) }} />}
+      {story ? null : <CoverGrid {...{ assets, selected, setSelected, tileW, album, openAlbums, albumsOpen, cropRef, bottom: insets.bottom, onEnd: () => load(album.id, false).catch(() => {}) }} />}
 
       {story ? <Pressable onPress={openAlbums} hitSlop={10} style={[styles.album, { top: insets.top + 96.1 }]} accessibilityRole="button" accessibilityLabel={`Album: ${album.title}`}>
         <Text style={styles.albumText} numberOfLines={1}>
@@ -195,14 +222,21 @@ type GridProps = {
   album: Album;
   openAlbums: () => void;
   albumsOpen: boolean;
+  cropRef: RefObject<(() => Crop) | null>;
   bottom: number;
   onEnd: () => void;
 };
 
-function CoverGrid({ assets, selected, setSelected, tileW, album, openAlbums, albumsOpen, bottom, onEnd }: GridProps) {
+function CoverGrid({ assets, selected, setSelected, tileW, album, openAlbums, albumsOpen, cropRef, bottom, onEnd }: GridProps) {
+  // The chosen photo stays on top while the grid scrolls under it, so dragging it never fights the list.
   return (
+    <View style={styles.coverGrid}>
+      {selected ? (
+        <Animated.View collapsable={false} entering={FadeIn.duration(200)} style={styles.preview}>
+          <CropView key={selected.id} uri={selected.uri} imageW={selected.width} imageH={selected.height} boxW={389} boxH={294} aspect={coverAspect()} cropRef={cropRef} />
+        </Animated.View>
+      ) : null}
     <FlatList
-      style={styles.coverGrid}
       data={assets}
       keyExtractor={(a) => a.id}
       numColumns={4}
@@ -213,11 +247,6 @@ function CoverGrid({ assets, selected, setSelected, tileW, album, openAlbums, al
       initialNumToRender={24}
       ListHeaderComponent={
         <View>
-          {selected ? (
-            <Animated.View collapsable={false} entering={FadeIn.duration(200)} style={styles.preview}>
-              <Image source={{ uri: selected.uri }} recyclingKey={selected.id} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
-            </Animated.View>
-          ) : null}
           <Pressable onPress={openAlbums} hitSlop={10} style={[styles.coverAlbum, !selected && styles.coverAlbumTop]} accessibilityRole="button" accessibilityLabel={`Album: ${album.title}`}>
             <Text style={styles.albumText} numberOfLines={1}>
               {album.title}
@@ -233,6 +262,7 @@ function CoverGrid({ assets, selected, setSelected, tileW, album, openAlbums, al
         </Pressable>
       )}
     />
+    </View>
   );
 }
 
@@ -285,7 +315,7 @@ const styles = StyleSheet.create({
   // cover mode: ✕ 16 (+2 stroke) at (16, 65); the → circle 44 centred on (355, 74)
   closeCover: { position: 'absolute', left: 16, top: 18 },
   nextTop: { position: 'absolute', left: 333, top: 5, width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
-  coverGrid: { marginTop: 50 - 60 },
+  coverGrid: { flex: 1, marginTop: 50 - 60 },
   coverRow: { gap: 1 },
   preview: { marginTop: 15, marginLeft: 1, width: 389, height: 294, borderRadius: 1, overflow: 'hidden', backgroundColor: '#1C1C1E' },
   // "Recents" ink 430.3 (24.3 under the picture), the grid 461

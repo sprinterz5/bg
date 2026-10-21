@@ -14,6 +14,11 @@ export function pickCover(onPicked: (uri: string) => void, opts?: { title?: stri
   push(opts?.title ? `/cover-picker?title=${encodeURIComponent(opts.title)}` : '/cover-picker');
 }
 
+/** The crop aspect (w / h) asked for by the current pick. */
+export function coverAspect() {
+  return aspect[0] / aspect[1];
+}
+
 /** Called by the cover screen with the chosen photo. */
 export function deliverCover(uri: string) {
   pending?.(uri);
