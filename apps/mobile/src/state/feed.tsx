@@ -1,8 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
+import type { ApiArticleCreated } from '@api/api';
+import type { ImageSourcePropType } from 'react-native';
+
+import { api } from '@/lib/api';
+import { CAPTURE, captureParam } from '@/lib/capture';
+import { uploadImage } from '@/lib/media';
 import { ARTICLES, FEED, type Article, type Author, type Post } from '@/mock/data';
 
-export const PUBLISH_MS = 2600;
+/** How long the "Posted" card stays before folding away. */
+const POSTED_MS = 1600;
 
 export type ArticleDraft = {
   coverUri: string | null;
@@ -12,8 +19,16 @@ export type ArticleDraft = {
   subtitle: string;
 };
 
-/** `done`: the post is in the feed and the "Posting..." row is folding away. */
-type Publishing = { coverUri: string; done?: boolean };
+/** The post being sent, shown in the card over the tab bar: uploading the cover, sending the text, "Posted" (with the
+ *  new article's id, tap opens it), or failed (Retry / ✕). `done`: the card is folding away. */
+export type Publishing = {
+  cover: ImageSourcePropType;
+  title: string;
+  subtitle?: string;
+  stage: 'upload' | 'post' | 'posted' | 'error';
+  articleId?: string;
+  done?: boolean;
+};
 
 type FeedContextValue = {
   posts: Post[];
@@ -22,6 +37,10 @@ type FeedContextValue = {
   updateDraft: (patch: Partial<ArticleDraft>) => void;
   publishing: Publishing | null;
   publish: (author: Author) => void;
+  /** After an error: send again (same request id, so a post that did reach the server isn't doubled). */
+  retryPublish: () => void;
+  /** After an error: drop the card and put the post back into the composer. */
+  cancelPublish: () => void;
   /** Next page of the feed (mock: the same posts again under new ids, so long scrolling can be tested). */
   loadMore: () => void;
   /** "Not interested": drops the post from the feed. */
@@ -54,7 +73,11 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<Post[]>(FEED);
   const [articles, setArticles] = useState<Record<string, Article>>(ARTICLES);
   const [draft, setDraft] = useState<ArticleDraft>(emptyDraft);
-  const [publishing, setPublishing] = useState<Publishing | null>(null);
+  // ?capture&posting=upload|post|posted|error shows the card in that state (design checks).
+  const [publishing, setPublishing] = useState<Publishing | null>(() => {
+    const stage = CAPTURE ? captureParam('posting') : null;
+    return stage ? { cover: FEED[0].image, title: FEED[0].title, stage: stage as Publishing['stage'], articleId: FEED[0].articleId } : null;
+  });
   const [seenStories, setSeenStories] = useState<ReadonlySet<string>>(() => new Set());
   const markStoriesSeen = useCallback(
     (ids: string[]) => setSeenStories((s) => (ids.every((id) => s.has(id)) ? s : new Set([...s, ...ids]))),
@@ -69,42 +92,77 @@ export function FeedProvider({ children }: { children: ReactNode }) {
 
   const updateDraft = useCallback((patch: Partial<ArticleDraft>) => setDraft((d) => ({ ...d, ...patch })), []);
 
+  // The post in flight: what to send, and the request id that makes retries safe.
+  const job = useRef<{ draft: ArticleDraft; author: Author; key: string; coverUrl?: string } | null>(null);
+
+  const run = useCallback(async () => {
+    const j = job.current;
+    if (!j) return;
+    const d = j.draft;
+    const title = d.label.trim().slice(0, 80);
+    const subtitle = d.subtitle.trim().slice(0, 240) || undefined;
+    const paragraphs = d.body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+    try {
+      setPublishing((v) => v && { ...v, stage: 'upload' });
+      let id: string;
+      if (CAPTURE) {
+        await new Promise((r) => setTimeout(r, 1200));
+        setPublishing((v) => v && { ...v, stage: 'post' });
+        await new Promise((r) => setTimeout(r, 800));
+        id = `a_${Date.now()}`;
+      } else {
+        j.coverUrl ??= (await uploadImage(d.coverUri!, 'ARTICLE_COVER')).url;
+        setPublishing((v) => v && { ...v, stage: 'post' });
+        const created = await api<ApiArticleCreated>('/articles', {
+          body: { title, ...(subtitle ? { subtitle } : {}), body: paragraphs.join('\n\n') || title, coverImageUrl: j.coverUrl, publish: true },
+          auth: true,
+          idempotent: true,
+          idempotencyKey: j.key,
+        });
+        id = created.id;
+      }
+      // The feed itself is still mock: the post goes on top of it locally (the picture from the phone, no download).
+      const cover = { uri: d.coverUri! };
+      const author = j.author;
+      setArticles((a) => ({ ...a, [id]: { id, author, cover, title, subtitle, body: paragraphs.length ? paragraphs : [title], likes: 0, comments: 0, shares: 0 } }));
+      setPosts((p) => [{ id: `p_${id}`, author, image: cover, title, caption: subtitle ?? '', timeAgo: 'just now', likes: 0, comments: 0, shares: 0, articleId: id }, ...p]);
+      job.current = null;
+      setPublishing((v) => v && { ...v, stage: 'posted', articleId: id });
+      setTimeout(() => {
+        setPublishing((v) => v && v.articleId === id ? { ...v, done: true } : v);
+        setTimeout(() => setPublishing((v) => (v?.articleId === id ? null : v)), 450);
+      }, POSTED_MS);
+    } catch {
+      setPublishing((v) => v && { ...v, stage: 'error' });
+    }
+  }, []);
+
   const publish = useCallback((author: Author) => {
     const d = draftRef.current;
-    if (!d.coverUri || !d.label.trim()) return;
-    const id = `a_${Date.now()}`;
-    const cover = { uri: d.coverUri };
-    const title = d.label.trim();
-    const subtitle = d.subtitle.trim() || undefined;
-    const body = d.body
-      .split(/\n{2,}/)
-      .map((p) => p.trim())
-      .filter(Boolean);
-
-    setPublishing({ coverUri: d.coverUri });
+    if (!d.coverUri || !d.label.trim() || job.current) return;
+    job.current = { draft: d, author, key: `post-${Date.now()}-${Math.random().toString(36).slice(2)}` };
+    setPublishing({ cover: { uri: d.coverUri }, title: d.label.trim(), subtitle: d.subtitle.trim() || undefined, stage: 'upload' });
     setDraft(emptyDraft);
+    run();
+  }, [run]);
 
-    setTimeout(() => {
-      setArticles((a) => ({
-        ...a,
-        [id]: { id, author, cover, title, subtitle, body: body.length ? body : [title], likes: 0, comments: 0, shares: 0 },
-      }));
-      setPosts((p) => [
-        { id: `p_${id}`, author, image: cover, title, caption: subtitle ?? '', timeAgo: 'just now', likes: 0, comments: 0, shares: 0, articleId: id },
-        ...p,
-      ]);
-      // The row folds away while the new post opens up in its place, then goes.
-      setPublishing((v) => v && { ...v, done: true });
-      setTimeout(() => setPublishing(null), 450);
-    }, PUBLISH_MS);
+  const retryPublish = useCallback(() => {
+    if (job.current) run();
+  }, [run]);
+
+  const cancelPublish = useCallback(() => {
+    const j = job.current;
+    job.current = null;
+    if (j) setDraft(j.draft);
+    setPublishing(null);
   }, []);
 
   const hidePost = useCallback((id: string) => setPosts((p) => p.filter((post) => post.id !== id)), []);
   const loadMore = useCallback(() => setPosts((p) => (p.length >= MOCK_MAX ? p : [...p, ...mockPage(p.length)])), []);
 
   const value = useMemo(
-    () => ({ posts, articles, draft, updateDraft, publishing, publish, loadMore, hidePost }),
-    [posts, articles, draft, updateDraft, publishing, publish, loadMore, hidePost],
+    () => ({ posts, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, hidePost }),
+    [posts, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, hidePost],
   );
 
   return (

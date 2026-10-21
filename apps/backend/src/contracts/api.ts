@@ -37,6 +37,16 @@ export type ApiProfile = ApiUserSummary & {
   _count: { followers: number; following: number; authoredArticles: number };
 };
 
+/** POST /articles (the app's "Post"). */
+export type ApiArticleCreated = {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  coverImageUrl: string | null;
+  publishedAt: string | null;
+};
+
 /** GET /users/:username/articles (page). */
 export type ApiUserArticle = {
   id: string;

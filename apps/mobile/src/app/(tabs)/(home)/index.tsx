@@ -25,7 +25,7 @@ import { pickStoryPhoto } from '@/lib/pick-cover';
 export default function Home() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const { posts, publishing, loadMore, hidePost } = useFeed();
+  const { posts, publishing, retryPublish, cancelPublish, loadMore, hidePost } = useFeed();
   // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
   // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
   // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
@@ -209,7 +209,9 @@ export default function Home() {
         <View style={styles.fadeLine} />
       </Animated.View>
       {/* AutoLayouted-40: "Posting..." floats 8 above the tab bar (whose top is 47 above the home indicator) */}
-      {publishing && !publishing.done ? <PostingRow coverUri={publishing.coverUri} bottom={insets.bottom + 47 + 8} /> : null}
+      {publishing && !publishing.done ? (
+        <PostingRow publishing={publishing} bottom={insets.bottom + 47 + 8} onRetry={retryPublish} onCancel={cancelPublish} onOpen={(id) => push(`/article/${id}`)} />
+      ) : null}
     </View>
   );
 }

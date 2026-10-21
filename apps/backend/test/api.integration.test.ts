@@ -234,6 +234,20 @@ describe("Puzzle API integration", () => {
     expect(publishedArticle.response.statusCode).toBe(200);
     expect(publishedArticle.payload.moderationStatus).toBe("PENDING");
 
+    // The app's "Post": created and published in one call; a retry with the same Idempotency-Key gives the same article.
+    const postOnce = () => json(app, {
+      method: "POST",
+      url: "/articles",
+      token: bobToken,
+      headers: { "idempotency-key": `post-${suffix}` },
+      body: { title: `Bob Post ${suffix}`, subtitle: "Sub", body: "First paragraph.\n\nSecond one.", publish: true }
+    });
+    const posted = await postOnce();
+    expect(posted.response.statusCode).toBe(201);
+    expect(posted.payload.publishedAt).toBeTruthy();
+    const postedAgain = await postOnce();
+    expect(postedAgain.payload.id).toBe(posted.payload.id);
+
     const moderator = await app.prisma.user.upsert({
       where: { email: `it_mod_${suffix}@puzzle.dev` },
       update: { role: "MODERATOR" },

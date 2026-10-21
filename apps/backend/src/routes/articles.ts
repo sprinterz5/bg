@@ -4,6 +4,9 @@ import { z } from "zod";
 import { readingTimeMinutes } from "../utils/readingTime.js";
 import { makeSlug } from "../utils/slug.js";
 import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
+import { withIdempotency } from "../services/idempotencyService.js";
+import { endpointRateLimit } from "../services/rateLimitService.js";
+import { asApi, type ApiArticleCreated } from "../contracts/api.js";
 
 const articleCreateSchema = z.object({
   // The app measures titles against the Explore card (2 lines); this is only a hard cap.
@@ -15,6 +18,9 @@ const articleCreateSchema = z.object({
   tags: z.array(z.string().min(1).max(40)).max(20).default([])
 });
 
+// The app's "Post": created and published in one call, so a retried request (Idempotency-Key) can't leave a draft.
+const articlePostSchema = articleCreateSchema.extend({ publish: z.boolean().default(false) });
+
 // `status` is intentionally excluded — state transitions go through /publish
 // and /unpublish endpoints so they always produce a ModerationEvent.
 const articleUpdateSchema = articleCreateSchema.partial();
@@ -24,23 +30,33 @@ function isUuid(value: string) {
 }
 
 export const articleRoutes: FastifyPluginAsync = async (app) => {
-  app.post("/articles", { preHandler: [app.authenticate] }, async (request, reply) => {
-    const body = articleCreateSchema.parse(request.body);
-    const article = await app.prisma.article.create({
-      data: {
-        authorId: request.user.sub,
-        title: body.title,
-        slug: makeSlug(body.title),
-        subtitle: body.subtitle,
-        excerpt: body.excerpt,
-        body: body.body,
-        coverImageUrl: body.coverImageUrl,
-        tags: body.tags,
-        readingTimeMinutes: readingTimeMinutes(body.body)
-      }
+  const postLimit = endpointRateLimit({ key: "articles-create", limit: 20, windowSeconds: 3600, by: "userOrIp" });
+  app.post("/articles", { preHandler: [app.authenticate, postLimit] }, async (request, reply) => {
+    const result = await withIdempotency(request, reply, async () => {
+      const { publish, ...body } = articlePostSchema.parse(request.body);
+      const article = await app.prisma.$transaction(async (tx) => {
+        const created = await tx.article.create({
+          data: {
+            authorId: request.user.sub,
+            title: body.title,
+            slug: makeSlug(body.title),
+            subtitle: body.subtitle,
+            excerpt: body.excerpt,
+            body: body.body,
+            coverImageUrl: body.coverImageUrl,
+            tags: body.tags,
+            readingTimeMinutes: readingTimeMinutes(body.body),
+            ...(publish ? { status: "PUBLISHED" as const, moderationStatus: "PENDING" as const, publishedAt: new Date() } : {})
+          }
+        });
+        if (publish) {
+          await tx.moderationEvent.create({ data: { targetType: "ARTICLE", targetId: created.id, action: ModerationAction.SUBMITTED } });
+        }
+        return created;
+      });
+      return { statusCode: 201, body: asApi<ApiArticleCreated>(article) };
     });
-
-    return reply.status(201).send(article);
+    return reply.status(result.statusCode ?? 201).send(result.body);
   });
 
   app.get("/me/articles", { preHandler: [app.authenticate] }, async (request) => {
