@@ -10,10 +10,11 @@ import { FeedPost, FeedSeparator } from '@/components/feed-post';
 import { FeedTabs } from '@/components/feed-tabs';
 import { GrowIn } from '@/components/grow-in';
 import { PostingRow } from '@/components/posting-row';
+import { ContactsBlock } from '@/components/contacts-block';
 import { PressableScale } from '@/components/pressable-scale';
 import { HomeStories } from '@/components/home-stories';
 import { PullSpinner } from '@/components/pull-spinner';
-import { HOME_STORIES, type Post } from '@/mock/data';
+import { CONTACTS, HOME_STORIES, type Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { Text } from '@/components/text';
@@ -134,6 +135,13 @@ export default function Home() {
       <Animated.View collapsable={false} entering={entering}>
         <Swap value={swap}>
           <FeedPost post={item} onHide={hidePost} />
+          {/* AutoLayouted-39: the contacts cards come after the first post, between two separators */}
+          {index === 0 ? (
+            <>
+              <FeedSeparator />
+              <ContactsBlock people={CONTACTS} />
+            </>
+          ) : null}
         </Swap>
       </Animated.View>
     );

@@ -153,6 +153,14 @@ const danielKraig: Author = { username: 'daniel_kraig', name: 'Daniel Kraig', av
 const zhangir: Author = { username: 'lesbekov_zh', name: 'Zhangir Cool', avatar: require('@/assets/mock/avatar-zhangir.jpg'), subtitle: '' };
 const dinara: Author = { username: 'dinara_satzhan', avatar: require('@/assets/mock/avatar-dinara.jpg'), subtitle: '' };
 
+/** Home feed "Your contacts" cards (AutoLayouted-39): people from the phone's contacts who are here. */
+export const CONTACTS: Author[] = [
+  zhangir,
+  { username: 'walker_03', name: 'Maximus', avatar: require('@/assets/mock/avatar-daniel.jpg'), subtitle: '' },
+  danielKraig,
+  { username: 'oleg_tinkov', name: 'Oleg Tinkov', avatar: require('@/assets/mock/avatar-tinkov.png'), subtitle: '' },
+];
+
 /** Home stories row (Frame 1049): the circles show the story photo; the last one is already watched. */
 export const HOME_STORIES: Story[] = [
   { id: 'hs-timcook', author: { ...dinara, username: 'timcook' }, image: require('@/assets/mock/story-timcook.jpg'), caption: 'Keynote day. Thank you all for watching — more tomorrow!', timeAgo: '1h ago' },
