@@ -1,22 +1,24 @@
 import { Image } from 'expo-image';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Glass } from '@/components/glass';
 import { Icon } from '@/components/icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { pickCover } from '@/lib/pick-cover';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
-import { Text, TextInput } from '@/components/text';
+import { TextInput } from '@/components/text';
 import { push } from '@/lib/nav';
 
-// AutoLayouted 20 (empty) and 3116:1136 (cover + text). Design status bar = 47.
-const COVER_BOTTOM = 173; // y 220 - 47
-// Black 33px circle with a white + (AutoLayouts BG(1)), centred 1.5 above the cover's bottom edge at x 23.
-const PICKER = 33;
+// AutoLayouted-28 (empty) and -27 (typing), TH(2). Design status bar = 47. The cover runs to y 218; over it glass
+// circles 36 (white 70% + blur, 1 white ring) at y 52: gallery at x 287, next → at 335 (#999 until there is a cover
+// and text), and while writing undo / redo at x 20 and 68. The text box (0.3 #DDDDDD while writing) from (32.6, 244.2).
+const COVER_BOTTOM = 171; // y 218 - 47
+const HISTORY = 100;
 
 export default function CreateArticle() {
   const insets = useSafeAreaInsets();
@@ -27,6 +29,24 @@ export default function CreateArticle() {
   const coverH = insets.top + COVER_BOTTOM;
   const canPost = !!draft.coverUri && draft.body.trim().length > 0;
   const showBox = focused || draft.body.length > 0;
+
+  // undo / redo: every edit is a step (kept per visit of the screen)
+  const [hist, setHist] = useState({ list: [draft.body], i: 0 });
+  const edit = (body: string) => {
+    setHist((h) => {
+      const list = [...h.list.slice(Math.max(0, h.i + 1 - HISTORY), h.i + 1), body];
+      return { list, i: list.length - 1 };
+    });
+    updateDraft({ body });
+  };
+  const step = (d: number) => {
+    const i = hist.i + d;
+    if (i < 0 || i >= hist.list.length) return;
+    setHist({ ...hist, i });
+    updateDraft({ body: hist.list[i] });
+  };
+  const canUndo = hist.i > 0;
+  const canRedo = hist.i < hist.list.length - 1;
 
   const onPick = () => pickCover((uri) => updateDraft({ coverUri: uri }));
 
@@ -54,23 +74,14 @@ export default function CreateArticle() {
           )}
         </View>
 
-        <PressableScale
-          haptic
-          scaleTo={0.9}
-          onPress={onPick}
-          accessibilityLabel="Choose a cover"
-          style={[styles.pickerBtn, { top: coverH - 1.5 - PICKER / 2 }]}>
-          <Icon name="editorPickerPlus" width={PICKER} height={PICKER} />
-        </PressableScale>
-
         <View style={[styles.textBox, showBox && styles.textBoxActive]}>
           <TextInput
             ref={inputRef}
             value={draft.body}
-            onChangeText={(body) => updateDraft({ body })}
+            onChangeText={edit}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            placeholder="Start writing..."
+            placeholder="Just do it..."
             placeholderTextColor="#999999"
             multiline
             scrollEnabled={false}
@@ -81,17 +92,35 @@ export default function CreateArticle() {
         </View>
       </KeyboardAwareScrollView>
 
-      <PressableScale
-        haptic
-        disabled={!canPost}
-        onPress={() => push('/new-article')}
-        scaleTo={0.94}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: !canPost }}
-        style={[styles.post, { top: insets.top + 4.5 }]}>
-        <Text style={[styles.postText, canPost && styles.postTextActive]}>Post</Text>
-      </PressableScale>
+      {showBox ? (
+        <Animated.View collapsable={false} entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={[styles.left, { top: insets.top + 4.5 }]}>
+          <GlassButton onPress={() => step(-1)} disabled={!canUndo} label="Undo">
+            <Icon name="editorUndo" width={18} height={18} style={!canUndo && styles.off} />
+          </GlassButton>
+          <GlassButton onPress={() => step(1)} disabled={!canRedo} label="Redo">
+            <Icon name="editorRedo" width={18} height={18} style={!canRedo && styles.off} />
+          </GlassButton>
+        </Animated.View>
+      ) : null}
+      <View style={[styles.right, { top: insets.top + 4.5 }]}>
+        <GlassButton onPress={onPick} label="Choose a cover">
+          <Icon name="editorGallery" width={23.6} height={23.6} />
+        </GlassButton>
+        <GlassButton onPress={() => push('/new-article')} disabled={!canPost} label="Next">
+          <Icon name="editorNext" width={18.2} height={16.2} tintColor={canPost ? '#000000' : '#999999'} />
+        </GlassButton>
+      </View>
     </View>
+  );
+}
+
+function GlassButton({ onPress, disabled, label, children }: { onPress: () => void; disabled?: boolean; label: string; children: ReactNode }) {
+  return (
+    <PressableScale haptic disabled={disabled} onPress={onPress} scaleTo={0.9} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}>
+      <Glass radius={18.5} style={styles.glass}>
+        {children}
+      </Glass>
+    </PressableScale>
   );
 }
 
@@ -103,19 +132,16 @@ const styles = StyleSheet.create({
   placeholder: { position: 'absolute', left: 61, flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   bars: { paddingTop: 37, gap: 13 },
   bar: { width: 125, height: 11, borderRadius: 5, backgroundColor: '#B7B7B7' },
-  pickerBtn: { position: 'absolute', left: 23, width: PICKER, height: PICKER },
   textBox: {
-    marginTop: 34,
-    marginLeft: 32,
-    marginRight: 35,
+    marginTop: 26.2,
+    marginLeft: 32.6,
+    marginRight: 35.7,
     paddingHorizontal: 5,
     paddingVertical: 4,
-    borderWidth: 1,
-    borderStyle: 'dashed',
+    borderWidth: 0.3,
     borderColor: 'transparent',
-    borderRadius: 2,
   },
-  textBoxActive: { borderColor: '#D9D9D9' },
+  textBoxActive: { borderColor: '#DDDDDD' },
   input: {
     fontFamily: fonts.reading,
     fontSize: 17,
@@ -125,23 +151,8 @@ const styles = StyleSheet.create({
     padding: 0,
     minHeight: 46,
   },
-  post: {
-    position: 'absolute',
-    right: 18.5,
-    width: 76,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOpacity: 0.25,
-    shadowRadius: 0.5,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  postText: { fontSize: 14, fontWeight: '700', color: '#999999' },
-  postTextActive: { color: colors.text },
+  left: { position: 'absolute', left: 19.5, flexDirection: 'row', gap: 11 },
+  right: { position: 'absolute', right: 18.5, flexDirection: 'row', gap: 11 },
+  glass: { width: 37, height: 37, borderWidth: 1, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  off: { opacity: 0.35 },
 });
