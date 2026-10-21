@@ -1,10 +1,10 @@
 import type { ApiProfile } from '@api/api';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { KeyboardAvoidingView, useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, FadeOut, interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeOut, interpolate, LinearTransition, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -33,15 +33,22 @@ export default function Conversation() {
   const insets = useSafeAreaInsets();
   const { user } = useSession();
   const { id, username } = useLocalSearchParams<{ id: string; username: string }>();
-  const [messages, setMessages] = useState<ChatMessage[]>([]); // newest first (inverted list)
+  const [messages, setMessages] = useState<Row[]>([]); // newest first (inverted list)
+  // Messages that arrived or were sent while the chat is open slide in; the loaded history doesn't.
+  const fresh = useRef(new Set<string>());
+  const localSeq = useRef(0);
   const [cursor, setCursor] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [other, setOther] = useState<ApiProfile | null>(null);
   const [text, setText] = useState('');
-  const [sending, setSending] = useState(false);
   const [tall, setTall] = useState(false);
 
-  const add = (m: ChatMessage) => setMessages((list) => (list.some((x) => x.id === m.id) ? list : [m, ...list]));
+  const add = (m: ChatMessage) =>
+    setMessages((list) => {
+      if (list.some((x) => x.id === m.id)) return list;
+      fresh.current.add(m.id);
+      return [m, ...list];
+    });
 
   useEffect(() => {
     if (!username) return;
@@ -97,15 +104,29 @@ export default function Conversation() {
       .catch(() => setCursor(c));
   };
 
+  // Not designed: the own message shows at once, faded until the server has it (it keeps its place and key when the
+  // server's copy replaces it); a failed one stays with "Not sent · Tap to retry".
+  const deliver = (key: string, body: string) => {
+    if (!id) return;
+    setMessages((list) => list.map((m) => (m.key === key ? { ...m, failed: false } : m)));
+    sendMessage(id, body)
+      .then((m) =>
+        setMessages((list) =>
+          list.some((x) => x.id === m.id)
+            ? list.filter((x) => x.key !== key) // the socket was quicker
+            : list.map((x) => (x.key === key ? { ...m, key } : x)),
+        ),
+      )
+      .catch(() => setMessages((list) => list.map((m) => (m.key === key ? { ...m, failed: true } : m))));
+  };
   const send = () => {
     const body = text.trim();
-    if (!id || !body || sending) return;
-    setSending(true);
+    if (!id || !body || !user) return;
     setText('');
-    sendMessage(id, body)
-      .then(add)
-      .catch(() => setText(body))
-      .finally(() => setSending(false));
+    const key = `local-${++localSeq.current}`;
+    fresh.current.add(key);
+    setMessages((list) => [{ id: key, key, conversationId: id, senderId: user.id, body, createdAt: new Date().toISOString(), pending: true }, ...list]);
+    deliver(key, body);
   };
 
   const showProfile = () => username && openProfile(username, true);
@@ -161,21 +182,30 @@ export default function Conversation() {
       </View>
 
       <KeyboardAvoidingView behavior="padding" style={styles.body}>
-        <FlatList
+        <Animated.FlatList
           inverted
           data={messages}
-          keyExtractor={(m) => m.id}
+          keyExtractor={(m) => m.key ?? m.id}
+          itemLayoutAnimation={LinearTransition.duration(220)}
           ListFooterComponent={loaded && !cursor ? card : null}
           renderItem={({ item, index }) => {
             const mine = item.senderId === user?.id;
             const older = messages[index + 1];
             const stamp = !older || new Date(item.createdAt).getTime() - new Date(older.createdAt).getTime() > RUN_GAP;
+            const key = item.key ?? item.id;
+            const waiting = item.key && item.key === item.id; // still the local copy
             return (
-              <View>
+              // the list is inverted (flipped): "down" here comes in from below on screen
+              <Animated.View entering={fresh.current.has(key) ? FadeInDown.duration(240) : undefined}>
                 {stamp ? <Text style={styles.stamp}>{formatStamp(item.createdAt)}</Text> : null}
                 {item.replyToStory ? <StoryReply mine={mine} story={item.replyToStory} /> : null}
-                <Bubble mine={mine} body={item.body ?? ''} style={!stamp ? { marginTop: older?.senderId === item.senderId ? 7 : 12 } : undefined} />
-              </View>
+                <Bubble mine={mine} body={item.body ?? ''} style={[!stamp ? { marginTop: older?.senderId === item.senderId ? 7 : 12 } : undefined, waiting && !item.failed ? styles.pending : undefined]} />
+                {item.failed ? (
+                  <Pressable onPress={() => deliver(key, item.body ?? '')} hitSlop={8} accessibilityRole="button">
+                    <Text style={styles.failed}>Not sent · Tap to retry</Text>
+                  </Pressable>
+                ) : null}
+              </Animated.View>
             );
           }}
           onEndReached={loadOlder}
@@ -205,7 +235,7 @@ export default function Conversation() {
             />
             {hasText ? (
               <Animated.View collapsable={false} entering={FadeIn.duration(140)} exiting={FadeOut.duration(120)} style={styles.sendWrap}>
-                <PressableScale haptic disabled={sending} onPress={send} scaleTo={0.9} hitSlop={6} style={styles.send} accessibilityRole="button" accessibilityLabel="Send">
+                <PressableScale haptic onPress={send} scaleTo={0.9} hitSlop={6} style={styles.send} accessibilityRole="button" accessibilityLabel="Send">
                   <Icon name="chatSend" width={20.82} height={18.16} />
                 </PressableScale>
               </Animated.View>
@@ -252,7 +282,7 @@ function StoryReply({ mine, story }: { mine: boolean; story: NonNullable<ChatMes
   );
 }
 
-function Bubble({ mine, body, style }: { mine: boolean; body: string; style?: { marginTop: number } }) {
+function Bubble({ mine, body, style }: { mine: boolean; body: string; style?: StyleProp<ViewStyle> }) {
   const [multi, setMulti] = useState(false);
   return (
     <View style={[styles.bubble, multi && styles.bubbleMulti, mine ? styles.mine : styles.theirs, style]}>
@@ -262,6 +292,9 @@ function Bubble({ mine, body, style }: { mine: boolean; body: string; style?: { 
     </View>
   );
 }
+
+/** A message in the list; `key` stays the same from the local copy to the server's one (no remount). */
+type Row = ChatMessage & { key?: string; pending?: boolean; failed?: boolean };
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
@@ -289,6 +322,8 @@ const styles = StyleSheet.create({
   theirs: { alignSelf: 'flex-start', backgroundColor: BUBBLE },
   bubbleText: { fontFamily: INTER_FAMILIES['400'], fontSize: 14.55, lineHeight: BUBBLE_LINE, color: colors.text },
   mineText: { color: '#FFFFFF' },
+  pending: { opacity: 0.55 },
+  failed: { alignSelf: 'flex-end', marginTop: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 12, lineHeight: 15, color: colors.danger },
   reply: { marginTop: 12, marginBottom: -5 },
   replyMine: { alignItems: 'flex-end' },
   replyTheirs: { alignItems: 'flex-start' },
