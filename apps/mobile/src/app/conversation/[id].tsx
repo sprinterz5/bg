@@ -236,7 +236,8 @@ function formatStamp(iso: string) {
 // Not designed: a reply to a story shows the story (small, rounded) above the text with who replied; once the story
 // has expired a grey box says so.
 function StoryReply({ mine, story }: { mine: boolean; story: NonNullable<ChatMessage['replyToStory']> }) {
-  const live = new Date(story.expiresAt).getTime() > Date.now();
+  const [now] = useState(Date.now);
+  const live = new Date(story.expiresAt).getTime() > now;
   return (
     <View style={[styles.reply, mine ? styles.replyMine : styles.replyTheirs]}>
       <Text style={styles.replyLabel}>{mine ? 'You replied to their story' : 'Replied to your story'}</Text>
