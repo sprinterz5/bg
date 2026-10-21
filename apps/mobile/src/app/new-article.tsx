@@ -9,7 +9,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icon';
 import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
-import { RollingLabel } from '@/components/rolling-label';
 import { useFeed } from '@/state/feed';
 import { useSession } from '@/state/session';
 import { colors, motion } from '@/theme';
@@ -18,11 +17,10 @@ import { back } from '@/lib/nav';
 
 // AutoLayouted-16 … -19 (BG(2)), y − 47 under the status bar. Header: chevron at (15.5, 55.5), "New Article" Inter
 // Bold 14.2 centred (ink 61.7), ⋯ three 3.3 dots from x 354.8 at 66.3, a 1px #E9E9E9 line at 92. Below it, fixed
-// places: the title (Inter Bold 31.9, -0.03em, lines 42 apart, #0F1419) with its ink from 146.5, "3 pages · 223 words"
-// (Inter 12.3) at 297, the subtitle (Inter 15.6 / 26, #0F1419 since TH) from 322, the picture 360×272 (r 1) at (15, 419);
+// places: the title (Inter Bold 31.9, -0.03em, lines 42 apart, #0F1419) with its ink from 146.5, the subtitle (Inter
+// 15.6 / 26, #0F1419) from 298 and the picture 360×272 (r 1) at (15, 402) since TH(2) dropped the page/word count;
 // Post 360×38 (r 7) 15 above the home indicator / 10 above the keyboard.
 const LINE_Y = 93; // under the header line
-const WORDS_PER_PAGE = 75; // "3 pages · 223 words"
 const KEYBOARD_GAP = 10;
 
 export default function NewArticle() {
@@ -31,8 +29,6 @@ export default function NewArticle() {
   const { user } = useSession();
   const [menu, setMenu] = useState(false);
   const canPost = !!draft.coverUri && draft.label.trim().length > 0;
-  const words = draft.body.trim() ? draft.body.trim().split(/\s+/).length : 0;
-  const pages = Math.max(1, Math.ceil(words / WORDS_PER_PAGE));
 
   const active = useSharedValue(canPost ? 1 : 0);
   useEffect(() => {
@@ -55,7 +51,7 @@ export default function NewArticle() {
     router.dismissTo('/');
   };
 
-  const bottomPad = insets.bottom + 15;
+  const bottomPad = insets.bottom + 16;
   const at = (y: number) => y - LINE_Y; // design y → offset under the header line
 
   return (
@@ -86,13 +82,6 @@ export default function NewArticle() {
           style={[styles.titleInput, { top: at(137.1) }]}
           accessibilityLabel="Title"
         />
-        <View style={[styles.meta, { top: at(294) }]}>
-          <RollingLabel text={pages === 1 ? '1 page' : `${pages} pages`} style={styles.metaText} />
-          <View style={styles.metaDot} />
-          <View style={styles.metaWords}>
-            <RollingLabel text={words === 1 ? '1 word' : `${words} words`} style={styles.metaText} />
-          </View>
-        </View>
         <TextInput
           value={draft.subtitle}
           onChangeText={(subtitle) => updateDraft({ subtitle: subtitle.replace(/\n/g, ' ') })}
@@ -101,10 +90,10 @@ export default function NewArticle() {
           multiline
           maxLength={140}
           submitBehavior="blurAndSubmit"
-          style={[styles.subtitleInput, { top: at(314.7) }]}
+          style={[styles.subtitleInput, { top: at(290.7) }]}
           accessibilityLabel="Subtitle"
         />
-        <View style={[styles.picture, { top: at(419) }]}>
+        <View style={[styles.picture, { top: at(402) }]}>
           {draft.coverUri ? <Image source={{ uri: draft.coverUri }} style={styles.fill} contentFit="cover" transition={250} /> : null}
         </View>
       </View>
@@ -148,10 +137,6 @@ const styles = StyleSheet.create({
   dot: { width: 3.3, height: 3.3, borderRadius: 1.65, backgroundColor: '#000000' },
   body: { flex: 1 },
   titleInput: { position: 'absolute', left: 15.6, width: 350, padding: 0, fontFamily: INTER_FAMILIES['700'], fontSize: 31.9, lineHeight: 42, letterSpacing: -0.96, color: '#0F1419' },
-  meta: { position: 'absolute', left: 16.4, height: 15, overflow: 'hidden', flexDirection: 'row', alignItems: 'center' },
-  metaText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.3, lineHeight: 15, color: colors.text },
-  metaDot: { width: 1.8, height: 1.8, borderRadius: 0.9, marginLeft: 5.8, marginTop: 1.5, backgroundColor: '#0F1419' },
-  metaWords: { marginLeft: 5.1 },
   subtitleInput: { position: 'absolute', left: 16.3, width: 340, padding: 0, fontFamily: INTER_FAMILIES['400'], fontSize: 15.6, lineHeight: 26, color: colors.text },
   picture: { position: 'absolute', left: 15, width: 360, height: 272, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   fill: { width: '100%', height: '100%' },

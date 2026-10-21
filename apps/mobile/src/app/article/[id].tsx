@@ -43,7 +43,7 @@ import { articleOrigin, type ArticleOrigin } from '@/lib/article-origin';
 import { captureParam } from '@/lib/capture';
 import { backWhenReady, openProfile } from '@/lib/nav';
 
-// Page 1 is the preview (AutoLayouted-18): back · author · ⋯, the title, "N pages · N min read", the subtitle, the
+// Page 1 is the preview (AutoLayouted-18): back · author · ⋯, the title, "N pages", the subtitle, the
 // cover and share / bookmark. Swiping on brings in the text pages (AutoLayouted 17): a strip of the cover behind a
 // glass author card, ✕ in a grey circle, the serif text and comments / like / share / bookmark at the bottom. The
 // text pages' chrome comes in from the right with page 2 while the preview goes out to the left. y below are design
@@ -54,7 +54,6 @@ const TEXT_TOP = 107.3;
 const STRIP_H = 59;
 const PAGE_BOTTOM_PAD = 10;
 const noop = () => {};
-const WORDS_PER_MIN = 200;
 // Open / close (not in the design): the cover grows out of the tapped picture (feed, Explore, profile) into the
 // preview's picture and the rest of the reader comes in after it; closing shrinks it back into that picture.
 const OPEN_MS = 440;
@@ -98,7 +97,6 @@ function Reader({ article }: { article: Article }) {
   const pictureH = (pictureW * 272) / 360;
 
   const fullText = useMemo(() => article.body.map((p) => `  ${p}`).join('\n\n'), [article.body]);
-  const minutes = useMemo(() => Math.max(1, Math.round(article.body.join(' ').split(/\s+/).length / WORDS_PER_MIN)), [article.body]);
 
   const pages = useMemo(() => {
     if (!lines) return null;
@@ -432,8 +430,8 @@ function Reader({ article }: { article: Article }) {
         <Animated.View collapsable={false} pointerEvents="none" style={chromeStyle}>
           <Text style={styles.previewTitle}>{titleCase(article.title)}</Text>
           <Text style={styles.previewMeta}>
-            {pages ? `${pages.length} ${pages.length === 1 ? 'page' : 'pages'} · ` : ''}
-            {minutes} min read
+            {/* TH(2): only the page count ("· N min read" is gone); a space holds the line until it is known */}
+            {pages ? `${pages.length} ${pages.length === 1 ? 'page' : 'pages'}` : ' '}
           </Text>
           {article.subtitle ? <Text style={styles.previewSubtitle}>{article.subtitle}</Text> : null}
         </Animated.View>
@@ -441,10 +439,10 @@ function Reader({ article }: { article: Article }) {
           collapsable={false}
           pointerEvents="none"
           onLayout={measurePicture}
-          style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 32.96 : 43.7 }, pictureVisible]}>
+          style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 40.96 : 51.7 }, pictureVisible]}>
           <Image source={article.cover} style={styles.fill} contentFit="cover" onLoad={(e) => e.source.width && e.source.height && setCoverAspect(e.source.width / e.source.height)} />
         </Animated.View>
-        <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 60 }, chromeStyle]}>
+        <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 55 }, chromeStyle]}>
           <PressableScale onPress={() => setSharing(true)} hitSlop={8} accessibilityLabel="Share" style={styles.previewShare}>
             <Icon name="readerShare" width={18.4} height={18.4} />
             <Text style={styles.previewCount}>{article.shares}</Text>
@@ -649,7 +647,7 @@ const styles = StyleSheet.create({
   moreDot: { width: 3.33, height: 3.33, borderRadius: 1.67, backgroundColor: '#000000' },
   previewTitle: { marginTop: 47.07, marginLeft: 15, width: 360, fontFamily: INTER_FAMILIES['800'], fontSize: 34.75, lineHeight: 43.7, letterSpacing: -1.39, color: colors.text },
   previewMeta: { marginTop: 26.97, marginLeft: 16.5, fontFamily: INTER_FAMILIES['400'], fontSize: 12.75, lineHeight: 15, letterSpacing: 0.1275, color: colors.text },
-  previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 330, fontFamily: INTER_FAMILIES['400'], fontSize: 16.75, lineHeight: 26.4, letterSpacing: 0.1675, color: colors.text },
+  previewSubtitle: { marginTop: 5.7, marginLeft: 16, width: 345, fontFamily: INTER_FAMILIES['400'], fontSize: 16.75, lineHeight: 26.4, letterSpacing: 0.1675, color: colors.text },
   picture: { marginLeft: 15, borderRadius: 1, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   previewBar: { position: 'absolute', left: 0, right: 0, height: 22 },
   previewShare: { position: 'absolute', left: 21.05, top: 1.8, flexDirection: 'row', alignItems: 'center', gap: 13.5 },
