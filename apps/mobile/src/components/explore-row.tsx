@@ -10,6 +10,7 @@ import { openProfile } from '@/lib/nav';
 import { AuthorAvatar } from './author-row';
 import { Icon } from './icon';
 import { PostActions } from './post-actions';
+import { report } from '@/lib/moderation';
 import { PressableScale } from './pressable-scale';
 import { INTER_FAMILIES, Text } from './text';
 
@@ -81,6 +82,7 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
           { label: saved ? 'Remove from saved' : 'Save', onPress: () => setSaved((v) => !v) },
           { label: 'Share', onPress: () => Share.share({ message: post.title }).catch(() => {}) },
           { label: 'Not interested', onPress: () => setHidden(true) },
+          { label: 'Report', destructive: true, onPress: () => report('ARTICLE', post.articleId) },
           { label: 'Report', destructive: true, onPress: () => Alert.alert('Thanks for letting us know', 'We will look at this post.') },
         ]}
       />

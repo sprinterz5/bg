@@ -15,6 +15,7 @@ import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 import { useReaction } from '@/lib/reactions';
+import { report } from '@/lib/moderation';
 import { openComments, openShare } from '@/components/share-host';
 import { useAddedComments } from '@/components/comments-sheet';
 
@@ -127,6 +128,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           { label: saved ? 'Remove from saved' : 'Save', onPress: save },
           { label: 'Share', onPress: share },
           { label: 'Not interested', onPress: () => onHide(post.id) },
+          { label: 'Report', destructive: true, onPress: () => report('ARTICLE', post.articleId) },
           { label: 'Report', destructive: true, onPress: () => Alert.alert('Thanks for letting us know', 'We will look at this post.') },
         ]}
       />

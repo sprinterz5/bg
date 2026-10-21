@@ -83,9 +83,15 @@ export const userRoutes: FastifyPluginAsync = async (app) => {
         .then(Boolean);
     const other = viewer && viewer !== user.id;
     // followsYou: the chat card says "You both follow each other" when both are true.
-    const [isFollowing, followsYou] = other ? await Promise.all([follows(viewer, user.id), follows(user.id, viewer)]) : [false, false];
+    const [isFollowing, followsYou, blocked] = other
+      ? await Promise.all([
+          follows(viewer, user.id),
+          follows(user.id, viewer),
+          app.prisma.userBlock.findFirst({ where: { blockerId: viewer, blockedId: user.id }, select: { blockerId: true } }).then(Boolean)
+        ])
+      : [false, false, false];
 
-    return asApi<ApiProfile>({ ...user, isFollowing, followsYou, isMe: viewer === user.id });
+    return asApi<ApiProfile>({ ...user, isFollowing, followsYou, isBlocked: blocked, isMe: viewer === user.id });
   });
 
   app.get("/users/:username/articles", async (request, reply) => {

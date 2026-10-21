@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -10,6 +10,9 @@ import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { RollingLabel } from './rolling-label';
 import { openArticle } from '@/lib/article-origin';
+import { deletePost, report } from '@/lib/moderation';
+import { PostActions } from './post-actions';
+import { openShare } from './share-host';
 import { push } from '@/lib/nav';
 import { usePathname, type Href } from 'expo-router';
 
@@ -168,7 +171,9 @@ export function ProfileTabs({
 }
 
 /** Article row, 108 apart: 143x90 thumb (r 12) at x 14.5, title Inter 12.75 / 17 (172 wide, 4 lines max) at x 177.6, meta 12 gray, ⋮ (2.5 dots, 5 apart) 18.75 from the right. */
-export function ProfilePostRow({ post }: { post: ProfilePost }) {
+// Not designed: ⋮ opens Send / Delete (own posts) or Send / Report (someone else's).
+export function ProfilePostRow({ post, mine, onDeleted }: { post: ProfilePost; mine?: boolean; onDeleted?: () => void }) {
+  const [menu, setMenu] = useState(false);
   // The reader grows its cover out of the thumbnail.
   const thumb = useRef<View>(null);
   const open = () => {
@@ -187,11 +192,23 @@ export function ProfilePostRow({ post }: { post: ProfilePost }) {
           {post.likes} likes • {post.timeAgo}
         </Text>
       </View>
-      <PressableScale hitSlop={12} scaleTo={0.85} style={styles.more} accessibilityLabel="More">
+      <PressableScale onPress={() => setMenu(true)} disabled={!post.articleId} hitSlop={12} scaleTo={0.85} style={styles.more} accessibilityLabel="More">
         <Icon name="dot" width={2.5} height={2.5} />
         <Icon name="dot" width={2.5} height={2.5} />
         <Icon name="dot" width={2.5} height={2.5} />
       </PressableScale>
+      {post.articleId ? (
+        <PostActions
+          visible={menu}
+          onClose={() => setMenu(false)}
+          actions={[
+            { label: 'Send', onPress: () => openShare({ id: post.articleId!, title: post.title }) },
+            mine
+              ? { label: 'Delete', destructive: true, onPress: () => deletePost(post.articleId!).then((ok) => ok && onDeleted?.()) }
+              : { label: 'Report', destructive: true, onPress: () => report('ARTICLE', post.articleId!) },
+          ]}
+        />
+      ) : null}
     </PressableScale>
   );
 }

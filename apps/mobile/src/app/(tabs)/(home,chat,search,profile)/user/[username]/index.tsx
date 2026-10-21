@@ -1,10 +1,11 @@
 import { useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, Share, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
+import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
 import { PROFILE_HEADER_H, ProfileBio, ProfileButton, ProfileButtons, ProfilePostRow, ProfileSummary, ProfileTabs } from '@/components/profile';
 import { ProfileButtonsSkeleton, ProfilePostRowSkeleton, ProfileSummarySkeleton } from '@/components/skeleton';
@@ -13,6 +14,7 @@ import { formatCount, loadProfile, setFollow } from '@/lib/users';
 import { colors } from '@/theme';
 import { back, push } from '@/lib/nav';
 import { openDirect } from '@/lib/chat';
+import { report, setBlocked } from '@/lib/moderation';
 
 // Someone else's profile (AutoLayouts export): back, summary, Follow / Message, bio, article list.
 export default function UserProfile() {
@@ -28,6 +30,8 @@ export default function UserProfile() {
   const [tab, setTab] = useState<'posts' | 'liked'>('posts');
   // Placeholders until the backend answers (or the mock profile is used).
   const [loaded, setLoaded] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [blocked, setBlockedState] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -41,6 +45,7 @@ export default function UserProfile() {
         setIsMe(r.api.isMe);
         setFollowing(r.api.isFollowing);
         setFollowers(r.api._count.followers);
+        setBlockedState(!!r.api.isBlocked);
       })
       .catch(() => {
         if (!alive) return;
@@ -76,8 +81,14 @@ export default function UserProfile() {
       <ProfileSummary {...profile} followers={followers === null ? profile.followers : formatCount(followers)} />
       {isMe ? null : (
         <ProfileButtons>
-          <ProfileButton large label={following ? 'Following' : 'Follow'} primary={!following} onPress={toggleFollow} />
-          <ProfileButton large label="Message" onPress={message} />
+          {blocked && userId ? (
+            <ProfileButton large label="Unblock" onPress={() => setBlocked(userId, profile.username, false).then(setBlockedState)} />
+          ) : (
+            <>
+              <ProfileButton large label={following ? 'Following' : 'Follow'} primary={!following} onPress={toggleFollow} />
+              <ProfileButton large label="Message" onPress={message} />
+            </>
+          )}
         </ProfileButtons>
       )}
       <ProfileBio bio={profile.bio} />
@@ -104,10 +115,40 @@ export default function UserProfile() {
         <PressableScale onPress={() => back()} hitSlop={12} scaleTo={0.85} accessibilityLabel="Back" style={styles.back}>
           <Icon name="profileBack" width={10.99} height={18.99} />
         </PressableScale>
+        {/* Not designed: ⋯ with Share profile, Block / Unblock and Report */}
+        {!isMe ? (
+          <PressableScale onPress={() => setMenu(true)} hitSlop={12} scaleTo={0.85} accessibilityLabel="More" style={styles.more}>
+            <Icon name="dot" width={3.5} height={3.5} />
+            <Icon name="dot" width={3.5} height={3.5} />
+            <Icon name="dot" width={3.5} height={3.5} />
+          </PressableScale>
+        ) : null}
       </View>
 
+      <PostActions
+        visible={menu}
+        onClose={() => setMenu(false)}
+        actions={[
+          { label: 'Share profile', onPress: () => Share.share({ message: `${profile.name} (@${profile.username}) on Thoughts` }).catch(() => {}) },
+          ...(userId
+            ? [
+                {
+                  label: blocked ? 'Unblock' : 'Block',
+                  destructive: !blocked,
+                  onPress: () =>
+                    setBlocked(userId, profile.username, !blocked).then((b) => {
+                      setBlockedState(b);
+                      if (b) setFollowing(false);
+                    }),
+                },
+              ]
+            : []),
+          { label: 'Report', destructive: true, onPress: () => report('USER', userId ?? '') },
+        ]}
+      />
+
       <FlatList
-        data={loaded && tab === 'posts' ? profile.posts : []}
+        data={loaded && tab === 'posts' && !blocked ? profile.posts : []}
         keyExtractor={(p) => p.id}
         ListHeaderComponent={header}
         ListHeaderComponentStyle={styles.listHeader}
@@ -134,5 +175,6 @@ const styles = StyleSheet.create({
   // back chevron 11x19 at design (15.3, 55.5)
   header: { height: PROFILE_HEADER_H },
   back: { position: 'absolute', left: 15.33, top: 8.51 },
+  more: { position: 'absolute', right: 16, top: 14, flexDirection: 'row', gap: 3.5, padding: 4 },
   listHeader: { marginBottom: 17.75 },
 });

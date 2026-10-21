@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
-import { memo, useRef } from 'react';
+import { memo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { Icon } from './icon';
@@ -10,6 +10,9 @@ import type { ExplorePost } from '@/mock/data';
 import { colors, fonts } from '@/theme';
 import { PressableScale } from './pressable-scale';
 import { openArticle } from '@/lib/article-origin';
+import { report } from '@/lib/moderation';
+import { openShare } from './share-host';
+import { PostActions } from './post-actions';
 
 // Figma 3163:1520 / 3170:2017: image 220 tall, title chip 8px from its bottom-left,
 // caption 13/16 at x 15 with bold lead words, time 12/16 #788690, 24px to the next card.
@@ -21,7 +24,11 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
   // The reader grows its cover out of this photo.
   const media = useRef<View>(null);
   const open = () => openArticle(post.articleId, media.current, post.image);
+  // Not designed: ⋮ opens the same menu as the Explore rows (send, not interested, report).
+  const [menu, setMenu] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
+  if (hidden) return null;
   return (
     <PressableScale scaleTo={0.985} onPress={open} accessibilityRole="button" accessibilityLabel={post.title} style={styles.card}>
       <View ref={media} collapsable={false} style={styles.media}>
@@ -43,9 +50,18 @@ export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePo
         </Text>
         <Text style={styles.time}>{post.reads ? `${post.reads} reads • ${post.timeAgo}` : post.timeAgo}</Text>
       </View>
-      <PressableScale hitSlop={12} accessibilityLabel="More" style={styles.more}>
+      <PressableScale onPress={() => setMenu(true)} hitSlop={12} accessibilityLabel="More" style={styles.more}>
         <Icon name="cardMore" width={3.4} height={17.33} />
       </PressableScale>
+      <PostActions
+        visible={menu}
+        onClose={() => setMenu(false)}
+        actions={[
+          { label: 'Send', onPress: () => openShare({ id: post.articleId, title: post.title }) },
+          { label: 'Not interested', onPress: () => setHidden(true) },
+          { label: 'Report', destructive: true, onPress: () => report('ARTICLE', post.articleId) },
+        ]}
+      />
     </PressableScale>
   );
 });

@@ -31,6 +31,8 @@ export type ApiUsernameAvailability = { available: boolean };
 export type ApiProfile = ApiUserSummary & {
   bio: string | null;
   isFollowing: boolean;
+  /** The viewer has blocked this account (profile ⋯ shows Unblock). */
+  isBlocked?: boolean;
   /** The profile's owner follows the viewer. */
   followsYou: boolean;
   isMe: boolean;

@@ -117,7 +117,7 @@ export default function Profile() {
         {tab === 'posts' && posts.length ? (
           <View style={styles.posts}>
             {posts.map((p) => (
-              <ProfilePostRow key={p.id} post={p} />
+              <ProfilePostRow key={p.id} post={p} mine onDeleted={() => setData((d) => d && { ...d, posts: d.posts.filter((x) => x.id !== p.id), articles: Math.max(0, d.articles - 1) })} />
             ))}
           </View>
         ) : tab === 'posts' ? (
