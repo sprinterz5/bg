@@ -150,14 +150,14 @@ const styles = StyleSheet.create({
   like: { position: 'absolute', left: -1.5, top: 0 },
   comment: { position: 'absolute', left: 91.9, top: 0.7 },
   views: { position: 'absolute', left: 180.3, top: 0.85 },
-  bookmark: { position: 'absolute', left: 266.3, top: 0.6 },
-  share: { position: 'absolute', left: 302.3, top: 1.2 },
+  bookmark: { position: 'absolute', left: 265.3, top: 0.6 },
+  share: { position: 'absolute', left: 301.3, top: 1.2 },
   count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countBox: { position: 'absolute', top: 1.9, height: 16, overflow: 'hidden' },
   countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
-  viewsCount: { left: 201.46 },
+  viewsCount: { left: 200.46 }, // TH(2): 3K, bookmark and share 1 further left
   separator: { height: 0.75, backgroundColor: '#E9E9E9' },
 });

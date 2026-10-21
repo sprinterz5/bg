@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icon';
 import { FeedPost, FeedSeparator } from '@/components/feed-post';
 import { FeedTabs } from '@/components/feed-tabs';
-import { Collapse, GrowIn } from '@/components/grow-in';
+import { GrowIn } from '@/components/grow-in';
 import { PostingRow } from '@/components/posting-row';
 import { PressableScale } from '@/components/pressable-scale';
 import { HomeStories } from '@/components/home-stories';
@@ -167,11 +167,6 @@ export default function Home() {
             <View>
               <FeedTabs onChange={onTab} />
             </View>
-            {publishing ? (
-              <Collapse closed={!!publishing.done}>
-                <PostingRow coverUri={publishing.coverUri} />
-              </Collapse>
-            ) : null}
           </>
         }
         ItemSeparatorComponent={FeedSeparator}
@@ -208,6 +203,8 @@ export default function Home() {
       <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 2 }, fadeStyle]}>
         <View style={styles.fadeLine} />
       </Animated.View>
+      {/* AutoLayouted-40: "Posting..." floats 8 above the tab bar (whose top is 47 above the home indicator) */}
+      {publishing && !publishing.done ? <PostingRow coverUri={publishing.coverUri} bottom={insets.bottom + 47 + 8} /> : null}
     </View>
   );
 }
