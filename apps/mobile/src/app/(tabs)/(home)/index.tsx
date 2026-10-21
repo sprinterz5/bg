@@ -2,7 +2,7 @@ import { useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -17,7 +17,7 @@ import { PullSpinner } from '@/components/pull-spinner';
 import type { Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
-import { Text } from '@/components/text';
+import { INTER_FAMILIES, Text } from '@/components/text';
 import { homeChromeHidden } from '@/lib/chrome';
 import { push } from '@/lib/nav';
 import { pickStoryPhoto } from '@/lib/pick-cover';
@@ -25,7 +25,7 @@ import { pickStoryPhoto } from '@/lib/pick-cover';
 export default function Home() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const { posts, stories, publishing, retryPublish, cancelPublish, loadMore, refresh, hidePost } = useFeed();
+  const { posts, stories, tab, setTab, loadedTab, publishing, retryPublish, cancelPublish, loadMore, refresh, hidePost } = useFeed();
   // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
   // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
   // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
@@ -159,6 +159,16 @@ export default function Home() {
         renderItem={renderItem}
         onScroll={onScroll}
         onEndReached={loadMore}
+        // Not designed: an empty tab says why
+        ListEmptyComponent={
+          loadedTab ? (
+            <Animated.View collapsable={false} entering={FadeIn.duration(250)}>
+              <Text style={styles.empty}>
+                {tab === 'Following' ? 'Posts from people you follow will show up here.' : tab === 'For you' ? 'No posts yet.' : `No ${tab} posts yet.`}
+              </Text>
+            </Animated.View>
+          ) : null
+        }
         onEndReachedThreshold={1.5}
         // Posts are ~500pt tall: a few per batch keeps the JS thread free; Android detaches posts far off screen.
         initialNumToRender={3}
@@ -172,7 +182,12 @@ export default function Home() {
               <HomeStories stories={stories} />
             </Animated.View>
             <View>
-              <FeedTabs onChange={onTab} />
+              <FeedTabs
+                onChange={(t) => {
+                  onTab();
+                  setTab(t);
+                }}
+              />
             </View>
           </>
         }
@@ -254,5 +269,6 @@ const styles = StyleSheet.create({
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   storiesGap: { marginBottom: 0.7 },
+  empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
   stories: { marginTop: -2, marginLeft: -2.5 },
 });

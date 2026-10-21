@@ -41,9 +41,14 @@ function toPost(i: ApiFeedItem): Post | null {
   };
 }
 
-/** One page of the ranked "For you" feed (articles with a cover only: the card needs a picture). */
-export async function fetchFeed(cursor?: string | null) {
-  const q = `/feed?mode=for_you&filter=articles&limit=20${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+export type FeedTab = 'For you' | 'Following' | 'Learn' | 'Grow';
+
+/** One page of a Home tab (articles with a cover only: the card needs a picture). "For you" is ranked (cursor);
+ *  "Following" (people you follow) and "Learn" / "Grow" (posts tagged so) are newest first (`before`). */
+export async function fetchFeed(cursor?: string | null, tab: FeedTab = 'For you') {
+  const mode = tab === 'For you' ? 'mode=for_you' : tab === 'Following' ? 'mode=following' : `mode=topic&tag=${tab.toLowerCase()}`;
+  const next = cursor ? `&${tab === 'For you' ? 'cursor' : 'before'}=${encodeURIComponent(cursor)}` : '';
+  const q = `/feed?${mode}&filter=articles&limit=20${next}`;
   const page = await api<ApiFeedPage>(q, { auth: true });
   return { posts: page.data.map(toPost).filter((p): p is Post => !!p), nextCursor: page.nextCursor };
 }

@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
 import { CURL_SUPPORTED, PageCurlCanvas, disposeSnapshot, snapshotView, type Snapshot } from '@/components/page-curl';
+import { PopIcon } from '@/components/pop-icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { Text, TextInput, INTER_FAMILIES } from '@/components/text';
 import { backWhenReady } from '@/lib/nav';
@@ -479,6 +480,23 @@ function StoryViewer() {
   // Not designed: the reply goes to the author's chat, linked to the story; "Sent" shows for a moment in the field's
   // place. Mock stories (no account behind them) only clear the field.
   const [sent, setSent] = useState(false);
+  // Not designed: the heart turns red with a pop; on a server story the first like also sends ❤️ to the author's
+  // chat (as a reply to the story). Kept for the session.
+  const [likedStories, setLikedStories] = useState<ReadonlySet<string>>(() => new Set());
+  const hearted = useRef(new Set<string>());
+  const likeStory = () => {
+    const on = !likedStories.has(story.id);
+    setLikedStories((set) => {
+      const next = new Set(set);
+      if (on) next.add(story.id);
+      else next.delete(story.id);
+      return next;
+    });
+    if (on && story.authorId && !hearted.current.has(story.id)) {
+      hearted.current.add(story.id);
+      replyToStory(story, '❤️').catch(() => hearted.current.delete(story.id));
+    }
+  };
   const sendReply = () => {
     const text = reply.trim();
     if (!text) return;
@@ -552,8 +570,14 @@ function StoryViewer() {
           ) : null}
         </Animated.View>
         {replying ? null : (
-          <PressableScale haptic hitSlop={10} accessibilityLabel="Like story" style={styles.heart}>
-            <Icon name="storyHeart" width={27} height={24} />
+          <PressableScale haptic onPress={likeStory} hitSlop={10} accessibilityLabel={likedStories.has(story.id) ? 'Unlike story' : 'Like story'} style={styles.heart}>
+            <PopIcon active={likedStories.has(story.id)}>
+              {likedStories.has(story.id) ? (
+                <Icon name="feedLikeFilled" width={27} height={24} tintColor="#FF3040" />
+              ) : (
+                <Icon name="storyHeart" width={27} height={24} />
+              )}
+            </PopIcon>
           </PressableScale>
         )}
       </KeyboardStickyView>

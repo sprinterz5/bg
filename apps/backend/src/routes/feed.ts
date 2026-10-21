@@ -8,7 +8,9 @@ import { diversifyByAuthor, scoreFeedItems } from "../services/feedAlgorithm.js"
 import { enrichFeedItems } from "../services/feedPresentationService.js";
 
 const feedQuerySchema = z.object({
-  mode: z.enum(["for_you", "following"]).default("for_you"),
+  mode: z.enum(["for_you", "following", "topic"]).default("for_you"),
+  /** topic: articles tagged with it, newest first (the Home tabs "Learn" / "Grow"). */
+  tag: z.string().min(1).max(40).transform((v) => v.toLowerCase()).optional(),
   filter: z.enum(["all", "articles", "books"]).default("all"),
   limit: z.coerce.number().int().min(1).max(50).default(20),
   /** following: publishedAt of the last item; for_you uses `cursor`. */
@@ -190,7 +192,7 @@ export const feedRoutes: FastifyPluginAsync = async (app) => {
   app.get("/feed", { preHandler: [app.authenticate] }, async (request) => {
     const query = feedQuerySchema.parse(request.query);
     const userId = request.user.sub;
-    const cacheKey = `feed:${userId}:${query.mode}:${query.filter}:${query.limit}:${query.before?.toISOString() ?? "now"}:${query.cursor ?? ""}`;
+    const cacheKey = `feed:${userId}:${query.mode}:${query.tag ?? ""}:${query.filter}:${query.limit}:${query.before?.toISOString() ?? "now"}:${query.cursor ?? ""}`;
     const cached = await app.redis.get(cacheKey).catch(() => null);
     if (cached) {
       return JSON.parse(cached);
@@ -251,14 +253,15 @@ export const feedRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    if (query.mode === "following") {
+    if (query.mode === "following" || query.mode === "topic") {
       const beforeFilter = query.before ? { publishedAt: { lt: query.before } } : {};
-      const where = { ...visibleWhere(hiddenAuthorIds), authorId: { in: [...followingIds] }, ...beforeFilter };
+      const who = query.mode === "topic" ? { tags: { has: query.tag ?? "" } } : { authorId: { in: [...followingIds] } };
+      const where = { ...visibleWhere(hiddenAuthorIds), ...who, ...beforeFilter };
       const [articles, reviews] = await Promise.all([
         query.filter === "books"
           ? Promise.resolve([])
           : app.prisma.article.findMany({ where, take: query.limit, orderBy: { publishedAt: "desc" }, include: { author: authorSelect } }),
-        query.filter === "articles"
+        query.filter === "articles" || query.mode === "topic"
           ? Promise.resolve([])
           : app.prisma.review.findMany({ where, take: query.limit, orderBy: { publishedAt: "desc" }, include: { author: authorSelect, book: true } })
       ]);

@@ -5,7 +5,7 @@ import type { ImageSourcePropType } from 'react-native';
 
 import { api, ApiError } from '@/lib/api';
 import { CAPTURE, captureParam } from '@/lib/capture';
-import { fetchArticle, fetchFeed } from '@/lib/feed-api';
+import { fetchArticle, fetchFeed, type FeedTab } from '@/lib/feed-api';
 import { uploadImage } from '@/lib/media';
 import { reportError } from '@/lib/report-errors';
 import { useSession } from '@/state/session';
@@ -52,6 +52,11 @@ type FeedContextValue = {
   /** The viewer opened a server story: marks it watched on the server and gives its caption (kept by the viewer, so
    *  the stories row under it doesn't re-render while it's open). */
   openedStory: (id: string) => Promise<string | null>;
+  /** The Home tab whose posts are shown; switching loads its first page. */
+  tab: FeedTab;
+  setTab: (tab: FeedTab) => void;
+  /** The server answered for the current tab (an empty tab can say so). */
+  loadedTab: boolean;
   /** Pull-to-refresh: the server's first page again (and the stories). */
   refresh: () => Promise<void>;
   /** Loads a post's text into `articles` when it isn't there (posts from the server, profiles). */
@@ -88,6 +93,9 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<Post[]>(CAPTURE ? FEED : []);
   const [server, setServer] = useState<Post[]>([]);
   const [serverStories, setServerStories] = useState<Story[]>([]);
+  const [tab, setTabState] = useState<FeedTab>('For you');
+  const [loadedTab, setLoadedTab] = useState(false);
+  const tabRef = useRef<FeedTab>('For you');
   const cursor = useRef<{ next: string | null; loading: boolean; done: boolean }>({ next: null, loading: false, done: true });
   const [articles, setArticles] = useState<Record<string, Article>>(ARTICLES);
   const [draft, setDraft] = useState<ArticleDraft>(emptyDraft);
@@ -187,9 +195,12 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     const c = cursor.current;
     c.loading = true;
     fetchFriendStories().then(setServerStories, () => {});
+    const t = tabRef.current;
     try {
-      const page = await fetchFeed();
+      const page = await fetchFeed(null, t);
+      if (tabRef.current !== t) return; // switched again meanwhile
       setServer(page.posts);
+      setLoadedTab(true);
       cursor.current = { next: page.nextCursor, loading: false, done: !page.nextCursor };
     } catch {
       c.loading = false;
@@ -205,8 +216,10 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     if (!c.done) {
       if (c.loading) return;
       c.loading = true;
-      fetchFeed(c.next)
+      const t = tabRef.current;
+      fetchFeed(c.next, t)
         .then((page) => {
+          if (tabRef.current !== t) return;
           setServer((s) => [...s, ...page.posts.filter((p) => !s.some((x) => x.id === p.id))]);
           cursor.current = { next: page.nextCursor, loading: false, done: !page.nextCursor };
         })
@@ -235,6 +248,19 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setTab = useCallback(
+    (t: FeedTab) => {
+      if (t === tabRef.current) return;
+      tabRef.current = t;
+      setTabState(t);
+      setServer([]);
+      setLoadedTab(false);
+      cursor.current = { next: null, loading: false, done: true };
+      refresh();
+    },
+    [refresh],
+  );
+
   const stories = useMemo(() => [...(user ? serverStories : []), ...HOME_STORIES], [serverStories, user]);
   const openedStory = useCallback((id: string) => viewStory(id).then((v) => v.caption, () => null), []);
 
@@ -242,14 +268,15 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const merged = useMemo(() => {
     const fromServer = new Set(server.map((p) => p.articleId));
     // after signing out the previous account's server posts are left out (the next sign-in refreshes them)
-    const mine = posts.filter((p) => p.id.startsWith('p_') && !fromServer.has(p.articleId));
+    // own new posts show on "For you" only (they carry no topic, and you don't follow yourself)
+    const mine = tab === 'For you' ? posts.filter((p) => p.id.startsWith('p_') && !fromServer.has(p.articleId)) : [];
     const rest = posts.filter((p) => !p.id.startsWith('p_'));
     return [...mine, ...(user ? server : []), ...rest];
-  }, [posts, server, user]);
+  }, [posts, server, user, tab]);
 
   const value = useMemo(
-    () => ({ posts: merged, stories, openedStory, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost }),
-    [merged, stories, openedStory, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost],
+    () => ({ posts: merged, tab, setTab, loadedTab, stories, openedStory, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost }),
+    [merged, tab, setTab, loadedTab, stories, openedStory, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost],
   );
 
   return (
