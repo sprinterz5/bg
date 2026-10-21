@@ -67,6 +67,7 @@ const icons = {
   coverCheck: require('@/assets/icons/cover-check.svg'),
   coverNext: require('@/assets/icons/cover-next.svg'),
   storyNext: require('@/assets/icons/story-next.svg'),
+  captionDone: require('@/assets/icons/caption-done.svg'),
   coverTileFade: require('@/assets/icons/cover-tile-fade.svg'),
   storyRingSeen: require('@/assets/icons/story-ring-seen.svg'),
   storyBack: require('@/assets/icons/story-back.svg'),

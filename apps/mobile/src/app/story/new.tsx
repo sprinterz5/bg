@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Keyboard, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { Easing, FadeIn, SlideInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -24,6 +25,7 @@ export default function NewStory() {
   const [size, setSize] = useState({ width: BOX_W, height: 176 });
   const [caption, setCaption] = useState('');
   const [sending, setSending] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const share = async () => {
     if (!uri || sending) return;
@@ -66,18 +68,12 @@ export default function NewStory() {
         />
       ) : null}
 
-      <TextInput
-        value={caption}
-        onChangeText={setCaption}
-        placeholder="Write a caption..."
-        placeholderTextColor="#999999"
-        multiline
-        maxLength={CAPTION_MAX}
-        cursorColor={colors.text}
-        scrollEnabled={false}
-        style={styles.caption}
-        accessibilityLabel="Caption"
-      />
+      {/* AutoLayouted-43 (TH(2)): the caption is written in a sheet that drops from the top */}
+      <Pressable onPress={() => setEditing(true)} style={styles.captionRow} accessibilityRole="button" accessibilityLabel="Caption">
+        <Text style={[styles.caption, !caption && styles.placeholder]} numberOfLines={6}>
+          {caption || 'Write a caption...'}
+        </Text>
+      </Pressable>
 
       {/* TH(2): a hairline 23 above Share */}
       <View style={[styles.line, { bottom: insets.bottom + 67.5 }]} />
@@ -91,7 +87,42 @@ export default function NewStory() {
         accessibilityLabel="Share">
         <Text style={styles.shareText}>Share</Text>
       </PressableScale>
+
+      {editing ? <CaptionSheet initial={caption} top={insets.top} onDone={(c) => { setCaption(c); setEditing(false); }} /> : null}
     </Pressable>
+  );
+}
+
+// Caption sheet (AutoLayouted-43): white from the top to y 251 over a 45% black veil; "Caption" Inter ExtraBold 15.4
+// centred (ink 59.4), a black ✓ circle 41 centred on (346.5, 63.5), a hairline at 97, the text (as on the screen) from
+// (18.8, 123.3).
+function CaptionSheet({ initial, top, onDone }: { initial: string; top: number; onDone: (caption: string) => void }) {
+  const [text, setText] = useState(initial);
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <Animated.View collapsable={false} entering={FadeIn.duration(200)} style={styles.veil}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => onDone(text)} accessibilityLabel="Done" />
+      </Animated.View>
+      <Animated.View collapsable={false} entering={SlideInUp.duration(280).easing(Easing.out(Easing.cubic))} style={[styles.sheet, { height: top + 204 }]}>
+        <Text style={[styles.sheetTitle, { top: top + 9.6 }]}>Caption</Text>
+        <PressableScale haptic onPress={() => onDone(text)} scaleTo={0.9} accessibilityRole="button" accessibilityLabel="Done" style={[styles.done, { top: top - 4 }]}>
+          <Icon name="captionDone" width={19} height={14} />
+        </PressableScale>
+        <View style={[styles.sheetLine, { top: top + 50 }]} />
+        <TextInput
+          autoFocus
+          value={text}
+          onChangeText={setText}
+          placeholder="Write a caption..."
+          placeholderTextColor="#999999"
+          multiline
+          maxLength={CAPTION_MAX}
+          cursorColor={colors.text}
+          style={[styles.caption, styles.sheetInput, { top: top + 72.6 }]}
+          accessibilityLabel="Caption"
+        />
+      </Animated.View>
+    </View>
   );
 }
 
@@ -103,9 +134,15 @@ const styles = StyleSheet.create({
   back: { position: 'absolute', left: 13, top: 5, width: 43, height: 43, borderRadius: 21.5, backgroundColor: '#F2F2F2', paddingLeft: 14, paddingTop: 12 },
   title: { position: 'absolute', left: 0, right: 0, top: 18.87, textAlign: 'center', fontFamily: INTER_FAMILIES['700'], fontSize: 15.5, lineHeight: 19, color: colors.text },
   photo: { alignSelf: 'center', marginTop: 11.5, borderRadius: 10 },
+  captionRow: { marginTop: 21.5, marginHorizontal: 19.65 },
+  placeholder: { color: '#999999' },
+  veil: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.45)' },
+  sheet: { position: 'absolute', left: 0, right: 0, top: 0, backgroundColor: '#FFFFFF' },
+  sheetTitle: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontFamily: INTER_FAMILIES['800'], fontSize: 15.4, lineHeight: 19, color: colors.text },
+  done: { position: 'absolute', left: 326, width: 41, height: 41, borderRadius: 20.5, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
+  sheetLine: { position: 'absolute', left: 0, right: 0, height: 0.5, backgroundColor: '#E9E9E9' },
+  sheetInput: { position: 'absolute', left: 18.3, right: 19, bottom: 12 },
   caption: {
-    marginTop: 21.5,
-    marginHorizontal: 19.65,
     padding: 0,
     textAlignVertical: 'top',
     fontFamily: INTER_FAMILIES['400'],
