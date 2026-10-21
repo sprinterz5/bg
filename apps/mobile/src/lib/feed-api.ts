@@ -32,6 +32,8 @@ function toPost(i: ApiFeedItem): Post | null {
     caption: i.subtitle ?? '',
     timeAgo: shortAgo(i.publishedAt),
     likes: i.counts.likes,
+    liked: i.viewer.liked,
+    saved: i.viewer.bookmarked,
     comments: i.counts.comments,
     shares: i.counts.shares,
     articleId: i.targetId,

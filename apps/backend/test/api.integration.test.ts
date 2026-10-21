@@ -252,6 +252,17 @@ describe("Puzzle API integration", () => {
     const postedAgain = await postOnce();
     expect(postedAgain.payload.id).toBe(posted.payload.id);
 
+    // Like / bookmark with the wanted state: repeating it changes nothing.
+    await app.prisma.article.update({ where: { id: posted.payload.id }, data: { moderationStatus: "APPROVED" } });
+    for (const _ of [1, 2]) {
+      const like = await json(app, { method: "POST", url: "/likes/toggle", token: aliceToken, body: { targetType: "ARTICLE", targetId: posted.payload.id, liked: true } });
+      expect(like.payload.liked).toBe(true);
+      const save = await json(app, { method: "POST", url: "/bookmarks/toggle", token: aliceToken, body: { targetType: "ARTICLE", targetId: posted.payload.id, bookmarked: true } });
+      expect(save.payload.bookmarked).toBe(true);
+    }
+    const likeCount = await app.prisma.like.count({ where: { targetType: "ARTICLE", targetId: posted.payload.id } });
+    expect(likeCount).toBe(1);
+
     const moderator = await app.prisma.user.upsert({
       where: { email: `it_mod_${suffix}@puzzle.dev` },
       update: { role: "MODERATOR" },

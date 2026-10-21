@@ -6,7 +6,9 @@ import { incrementContentCounter } from "../services/counterService.js";
 
 const likeSchema = z.object({
   targetType: z.nativeEnum(LikeTargetType),
-  targetId: z.string().uuid()
+  targetId: z.string().uuid(),
+  // The state the app wants (taps are debounced on the phone); without it the call flips the current state.
+  liked: z.boolean().optional()
 });
 
 export const likeRoutes: FastifyPluginAsync = async (app) => {
@@ -21,6 +23,10 @@ export const likeRoutes: FastifyPluginAsync = async (app) => {
         }
       }
     });
+
+    if (body.liked !== undefined && body.liked === !!existing) {
+      return { liked: body.liked };
+    }
 
     if (existing) {
       await app.prisma.like.delete({ where: { id: existing.id } });

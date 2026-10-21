@@ -40,6 +40,7 @@ import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { articleOrigin, type ArticleOrigin } from '@/lib/article-origin';
+import { useReaction } from '@/lib/reactions';
 import { captureParam } from '@/lib/capture';
 import { backWhenReady, openProfile } from '@/lib/nav';
 
@@ -90,8 +91,8 @@ function Reader({ article }: { article: Article }) {
 
   const [lines, setLines] = useState<string[] | null>(null);
   const [following, setFollowing] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  // shared with the post's feed card (and synced with the server)
+  const { liked, saved, likes, toggleLike, toggleSave } = useReaction(article.id, { liked: false, saved: false, likes: article.likes });
   const [sharing, setSharing] = useState(false);
   const [menu, setMenu] = useState(false);
 
@@ -138,7 +139,7 @@ function Reader({ article }: { article: Article }) {
   const heartId = useRef(0);
   const onDoubleTap = (x: number, y: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLiked(true);
+    if (!liked) toggleLike();
     const id = ++heartId.current;
     setHearts((h) => [...h, { id, x, y, tilt: Math.random() * 24 - 12 }]);
   };
@@ -400,8 +401,8 @@ function Reader({ article }: { article: Article }) {
           <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments)} x={43.75} iconTop={11.62} />
           <LikeButton
             liked={liked}
-            onToggle={() => setLiked((v) => !v)}
-            count={article.likes + (liked ? 1 : 0)}
+            onToggle={toggleLike}
+            count={likes}
             icons={{ off: 'readerLike', on: 'readerLikeFilled' }}
             width={23.5}
             height={19.5}
@@ -409,7 +410,7 @@ function Reader({ article }: { article: Article }) {
             countStyle={styles.barText}
           />
           <BarItem icon="readerShare" w={16.4} h={16.4} label={String(article.shares)} x={232.8} iconTop={14.3} onPress={() => setSharing(true)} />
-          <PressableScale onPress={() => setSaved((v) => !v)} hitSlop={10} accessibilityLabel="Bookmark" style={styles.barBookmark}>
+          <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel="Bookmark" style={styles.barBookmark}>
             <Icon name="readerBookmark" width={16.5} height={18.5} tintColor={saved ? colors.primary : undefined} />
           </PressableScale>
         </Animated.View>
@@ -452,7 +453,7 @@ function Reader({ article }: { article: Article }) {
             <Icon name="readerShare" width={18.4} height={18.4} />
             <Text style={styles.previewCount}>{article.shares}</Text>
           </PressableScale>
-          <PressableScale onPress={() => setSaved((v) => !v)} hitSlop={10} accessibilityLabel="Bookmark" style={styles.previewBookmark}>
+          <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel="Bookmark" style={styles.previewBookmark}>
             <Icon name="readerBookmark" width={18.5} height={21.5} tintColor={saved ? colors.primary : undefined} />
           </PressableScale>
         </Animated.View>
@@ -471,7 +472,7 @@ function Reader({ article }: { article: Article }) {
         visible={menu}
         onClose={() => setMenu(false)}
         actions={[
-          { label: saved ? 'Remove from saved' : 'Save', onPress: () => setSaved((v) => !v) },
+          { label: saved ? 'Remove from saved' : 'Save', onPress: toggleSave },
           { label: 'Share', onPress: () => setSharing(true) },
           { label: 'Report', destructive: true, onPress: () => Alert.alert('Thanks for letting us know', 'We will look at this article.') },
         ]}

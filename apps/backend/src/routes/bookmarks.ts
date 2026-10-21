@@ -8,7 +8,9 @@ import { getPagination, pageResult, takePlusOne } from "../utils/pagination.js";
 
 const bookmarkSchema = z.object({
   targetType: z.nativeEnum(BookmarkTargetType),
-  targetId: z.string().uuid()
+  targetId: z.string().uuid(),
+  // The state the app wants (taps are debounced on the phone); without it the call flips the current state.
+  bookmarked: z.boolean().optional()
 });
 
 async function getBookmarkTarget(app: FastifyInstance, targetType: BookmarkTargetType, targetId: string, currentUserId: string) {
@@ -75,6 +77,10 @@ export const bookmarkRoutes: FastifyPluginAsync = async (app) => {
         }
       }
     });
+
+    if (body.bookmarked !== undefined && body.bookmarked === !!existing) {
+      return { bookmarked: body.bookmarked };
+    }
 
     if (existing) {
       await app.prisma.bookmark.delete({ where: { id: existing.id } });

@@ -14,6 +14,7 @@ import { PressableScale } from './pressable-scale';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
+import { useReaction } from '@/lib/reactions';
 
 const GRAY = '#999999';
 const INK = GRAY; // action icons and counts (asked for #999 again)
@@ -36,8 +37,7 @@ function shortAge(ago: string) {
 // x 57.5, ~305 wide; picture 325.5×226.5 (r 13.2, #999 0.5 outline) 14.3 under it; the action row 10.4 under the
 // picture: like 520, comment 270, views 3K, bookmark, share (all #999, counts Inter 12.35); 16.3 to the separator.
 export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; onHide: (id: string) => void }) {
-  const [saved, setSaved] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const { liked, saved, likes, toggleLike: like, toggleSave: save } = useReaction(post.articleId, { liked: !!post.liked, saved: !!post.saved, likes: post.likes });
   const [menu, setMenu] = useState(false);
   // The reader grows its cover out of this picture.
   const media = useRef<View>(null);
@@ -45,11 +45,11 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   const name = post.author.name ?? post.author.username;
   const toggleLike = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setLiked((v) => !v);
+    like();
   };
   const toggleSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSaved((v) => !v);
+    save();
   };
   const share = () => Share.share({ message: post.title }).catch(() => {});
 
@@ -93,7 +93,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </PressableScale>
           {/* the count rolls to its new value */}
           <View style={[styles.countBox, styles.likeCount]}>
-            <RollingLabel text={formatCount(post.likes + (liked ? 1 : 0))} style={styles.countText} />
+            <RollingLabel text={formatCount(likes)} style={styles.countText} />
           </View>
           <PressableScale onPress={openArticle} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
             <Icon name="feedComment" width={16.4} height={16.4} />
@@ -120,7 +120,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         visible={menu}
         onClose={() => setMenu(false)}
         actions={[
-          { label: saved ? 'Remove from saved' : 'Save', onPress: () => setSaved((v) => !v) },
+          { label: saved ? 'Remove from saved' : 'Save', onPress: save },
           { label: 'Share', onPress: share },
           { label: 'Not interested', onPress: () => onHide(post.id) },
           { label: 'Report', destructive: true, onPress: () => Alert.alert('Thanks for letting us know', 'We will look at this post.') },

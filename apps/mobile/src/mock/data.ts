@@ -53,6 +53,9 @@ export type Post = {
   likes: number;
   comments: number;
   shares: number;
+  /** The viewer's like / bookmark, from the server (mock posts start without). */
+  liked?: boolean;
+  saved?: boolean;
   /** Eye counter on the home card (Frame 1049); falls back to likes. */
   views?: number;
   articleId: string;
