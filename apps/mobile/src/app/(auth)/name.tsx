@@ -15,7 +15,7 @@ export default function NameStep() {
   const next = () => {
     if (!valid) return;
     updateDraft({ name: name.trim() });
-    push('/username');
+    push('/age');
   };
 
   return (

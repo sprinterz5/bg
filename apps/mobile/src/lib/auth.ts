@@ -30,7 +30,7 @@ export async function completeSignup(draft: SignupDraft): Promise<SessionUser> {
       displayName: draft.name,
       password: draft.password,
       interests: draft.interests,
-      // The age question is off the name step for now (it will come back elsewhere); the backend still requires it.
+      // The age step (13+) comes before this; the backend still wants the flag.
       ageConfirmed: true,
     },
   });
