@@ -9,8 +9,21 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.35 Inter, system-ui, -apple-system, sans-serif; }
   button, input, select { font: inherit; color: inherit; }
-  .app { display: grid; grid-template-columns: 210px 1fr min(430px, 38vw); grid-template-rows: 52px 1fr; height: 100vh; }
-  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+  .app { display: flex; flex-direction: column; height: 100vh; }
+  #dock { flex: 1; min-height: 0; display: flex; }
+  .col { display: flex; flex-direction: column; min-width: 160px; min-height: 0; }
+  .panel { display: flex; flex-direction: column; min-height: 60px; min-width: 0; position: relative; }
+  .ph { height: 28px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; background: var(--panel); border-bottom: 1px solid var(--line); cursor: grab; user-select: none; }
+  .ph::before { content: '⠿'; font-size: 12px; letter-spacing: 0; }
+  .pb { flex: 1; min-height: 0; overflow: auto; container-type: inline-size; }
+  .vsplit { width: 5px; flex: none; cursor: col-resize; background: var(--line); }
+  .hsplit { height: 5px; flex: none; cursor: row-resize; background: var(--line); }
+  .vsplit:hover, .hsplit:hover { background: var(--accent); }
+  .drop { position: absolute; pointer-events: none; background: rgba(29,155,240,.18); border: 2px solid var(--accent); z-index: 5; }
+  body.dragging, body.dragging * { cursor: grabbing !important; user-select: none; }
+  body.dragging iframe { pointer-events: none; }
+  @container (max-width: 600px) { .row { grid-template-columns: minmax(110px, 1fr) auto !important; } .src { display: none; } }
+  header { height: 52px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line); }
   header b { font-size: 15px; margin-right: 6px; }
   #q { flex: 1; max-width: 460px; height: 34px; border: 1px solid var(--line); border-radius: 9px; padding: 0 12px; background: var(--panel); outline: none; }
   #q:focus { border-color: var(--accent); background: #fff; }
@@ -19,16 +32,16 @@
   .btn:hover { background: var(--panel); }
   .btn.main { background: var(--text); color: #fff; border-color: var(--text); font-weight: 600; }
   .btn.main:disabled { background: #b3b3b3; border-color: #b3b3b3; cursor: default; }
-  nav { border-right: 1px solid var(--line); overflow: auto; padding: 8px; background: var(--panel); }
+  nav { padding: 8px; }
   nav div { display: flex; justify-content: space-between; padding: 7px 10px; border-radius: 8px; cursor: pointer; gap: 8px; }
   nav div:hover { background: #ececee; }
   nav div.on { background: var(--text); color: #fff; }
   nav div span:last-child { color: var(--muted); }
   nav .dot { color: var(--mark); }
-  main { overflow: auto; padding: 4px 20px 80px; }
+  main { padding: 4px 16px 80px; }
   h3 { margin: 16px 0 4px; font-size: 12px; color: var(--muted); font-weight: 700; position: sticky; top: -4px; background: var(--bg); padding: 6px 0; z-index: 1; }
   h3 i { font-style: normal; font-weight: 500; margin-left: 8px; }
-  .row { display: grid; grid-template-columns: 210px 250px 1fr; gap: 12px; align-items: center; padding: 4px 8px; border-radius: 7px; }
+  .row { display: grid; grid-template-columns: minmax(120px, 210px) auto 1fr; gap: 12px; align-items: center; padding: 4px 8px; border-radius: 7px; }
   .row:hover { background: var(--panel); }
   .row.ch { background: var(--changed); box-shadow: inset 3px 0 0 var(--mark); }
   .lb { font-weight: 600; } .lb small { color: var(--muted); font-weight: 400; margin-left: 4px; }
@@ -50,12 +63,17 @@
   dialog ul { margin: 0 0 12px; padding-left: 18px; max-height: 45vh; overflow: auto; line-height: 1.7; }
   dialog input { width: 100%; height: 36px; border: 1px solid var(--line); border-radius: 9px; padding: 0 12px; margin-bottom: 14px; }
   .acts { display: flex; justify-content: flex-end; gap: 8px; }
-  aside { border-left: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; background: var(--panel); min-height: 0; }
+  aside { display: flex; flex-direction: column; align-items: center; background: var(--panel); height: 100%; }
   .bar { display: flex; gap: 6px; padding: 10px; width: 100%; }
   .bar input { flex: 1; height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; outline: none; min-width: 0; }
   .btn.pick.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .phone { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
-  .phone iframe { width: 390px; height: 844px; border: 0; border-radius: 28px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0,0,0,.08); transform-origin: top center; }
+  .device { position: relative; width: 390px; height: 844px; flex: none; border-radius: 44px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0,0,0,.08); transform-origin: top center; }
+  .device iframe { width: 390px; height: 844px; border: 0; display: block; }
+  /* iPhone status bar (47) and home indicator (34) over the app, which leaves room for them in ?capture */
+  .sb { position: absolute; left: 0; right: 0; top: 0; height: 47px; pointer-events: none; display: flex; align-items: center; justify-content: space-between; padding: 4px 26px 0 52px; font: 600 17px/1 -apple-system, 'SF Pro Text', Inter, sans-serif; color: #000; letter-spacing: -0.3px; }
+  .sb svg { display: block; }
+  .hi { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #000; pointer-events: none; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
   .chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer; background: #fff; font-size: 12px; }
   .chip.on { background: var(--text); color: #fff; border-color: var(--text); }
@@ -73,13 +91,20 @@
     <button class="btn" id="discard">Отменить всё</button>
     <button class="btn main" id="send" disabled>Отправить</button>
   </header>
-  <nav id="screens"></nav>
-  <main id="main"><div class="empty">Выберите экран слева или найдите свойство.</div></main>
-  <aside>
-    <div class="bar"><button class="btn pick" id="pick" title="Кликните по элементу в превью">◎ Выбрать</button><input id="path" value="/" title="Экран приложения (адрес)" /><button class="btn" id="reload" title="Перезагрузить превью">↻</button></div>
-    <div class="phone"><iframe id="app"></iframe></div>
-  </aside>
+  <div id="dock"></div>
 </div>
+<div id="parts" hidden>
+  <section class="panel" data-id="screens"><div class="ph">Экраны</div><div class="pb"><nav id="screens"></nav></div></section>
+  <section class="panel" data-id="props"><div class="ph">Свойства</div><div class="pb"><main id="main"><div class="empty">Выберите экран или кликните «◎ Выбрать» и элемент в превью.</div></main></div></section>
+  <section class="panel" data-id="preview"><div class="ph">Превью</div><div class="pb"><aside>
+    <div class="bar"><button class="btn pick" id="pick" title="Кликните по элементу в превью">◎ Выбрать</button><input id="path" value="/" title="Экран приложения (адрес)" /><button class="btn" id="reload" title="Перезагрузить превью">↻</button></div>
+    <div class="phone"><div class="device"><iframe id="app"></iframe>
+      <div class="sb"><span>9:41</span><span style="display:flex;gap:6px;align-items:center">
+        <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.6c2.3 0 4.4.9 6 2.4l1.1-1.1A10 10 0 0 0 8 1 10 10 0 0 0 .9 3.9L2 5a8.6 8.6 0 0 1 6-2.4Zm0 3.2c1.4 0 2.7.5 3.7 1.4l1.1-1.1A7 7 0 0 0 8 4.2a7 7 0 0 0-4.8 1.9l1.1 1.1c1-.9 2.3-1.4 3.7-1.4Zm0 3.2c-.6 0-1.2.2-1.6.6L8 11.2l1.6-1.6c-.4-.4-1-.6-1.6-.6Z"/></svg>
+        <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="#000" opacity=".35"/><rect x="2" y="2" width="20" height="9" rx="2"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" opacity=".4"/></svg>
+      </span></div><div class="hi"></div></div></div>
+  </aside></div></section>
 <dialog id="dlg">
   <h2>Отправить изменения</h2>
   <ul id="dlgList"></ul>
@@ -225,7 +250,97 @@ $('#discard').onclick = async () => {
 // preview: the web build of the app (mock data) in a phone-sized frame; ◎ picks an element in it
 let APP = '';
 const frame = $('#app');
-function fit() { const h = $('.phone').clientHeight - 16, w = $('.phone').clientWidth - 16; frame.style.transform = `scale(${Math.min(1, h / 844, w / 390)})`; }
+// ---------- panels: drag a header onto another panel (above / below / beside); drag the gaps to resize ----------
+const DEFAULT = { cols: [{ w: 34, panels: [{ id: 'screens', h: 30 }, { id: 'props', h: 70 }] }, { w: 66, panels: [{ id: 'preview', h: 100 }] }] };
+let layout;
+try { layout = JSON.parse(localStorage.getItem('tweak-layout')) || DEFAULT; } catch { layout = DEFAULT; }
+const ids = layout.cols.flatMap((c) => c.panels.map((p) => p.id));
+if (ids.sort().join() !== 'preview,props,screens') layout = DEFAULT;
+const save = () => { try { localStorage.setItem('tweak-layout', JSON.stringify(layout)); } catch {} };
+const part = (id) => document.querySelector(`.panel[data-id="${id}"]`);
+function norm() {
+  layout.cols = layout.cols.filter((c) => c.panels.length);
+  const W = layout.cols.reduce((a, c) => a + c.w, 0);
+  layout.cols.forEach((c) => { c.w = (c.w / W) * 100; const H = c.panels.reduce((a, p) => a + p.h, 0); c.panels.forEach((p) => (p.h = (p.h / H) * 100)); });
+}
+function build() {
+  norm();
+  const dock = $('#dock');
+  [...dock.querySelectorAll('.panel')].forEach((p) => $('#parts').append(p));
+  dock.innerHTML = '';
+  layout.cols.forEach((c, ci) => {
+    if (ci) dock.append(splitter('v', ci));
+    const col = document.createElement('div');
+    col.className = 'col'; col.style.flex = `${c.w} 1 0`;
+    c.panels.forEach((p, pi) => {
+      if (pi) col.append(splitter('h', ci, pi));
+      const el = part(p.id); el.style.flex = `${p.h} 1 0`; col.append(el);
+    });
+    dock.append(col);
+  });
+  save(); requestAnimationFrame(fit);
+}
+function splitter(dir, ci, pi) {
+  const s = document.createElement('div');
+  s.className = dir === 'v' ? 'vsplit' : 'hsplit';
+  s.onpointerdown = (e) => {
+    e.preventDefault(); document.body.classList.add('dragging');
+    const a = dir === 'v' ? layout.cols[ci - 1] : layout.cols[ci].panels[pi - 1];
+    const b = dir === 'v' ? layout.cols[ci] : layout.cols[ci].panels[pi];
+    const k = dir === 'v' ? 'w' : 'h';
+    const box = (dir === 'v' ? $('#dock') : s.parentElement).getBoundingClientRect();
+    const total = dir === 'v' ? box.width : box.height, start = dir === 'v' ? e.clientX : e.clientY, a0 = a[k], b0 = b[k];
+    const move = (ev) => {
+      const d = (((dir === 'v' ? ev.clientX : ev.clientY) - start) / total) * 100;
+      const da = Math.max(-a0 + 8, Math.min(b0 - 8, d));
+      a[k] = a0 + da; b[k] = b0 - da;
+      s.previousElementSibling.style.flex = `${a[k]} 1 0`; s.nextElementSibling.style.flex = `${b[k]} 1 0`; fit();
+    };
+    const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); document.body.classList.remove('dragging'); save(); };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  };
+  return s;
+}
+const dropBox = document.createElement('div'); dropBox.className = 'drop';
+document.addEventListener('pointerdown', (e) => {
+  const ph = e.target.closest('.ph'); if (!ph) return;
+  e.preventDefault();
+  const id = ph.parentElement.dataset.id;
+  let target = null;
+  document.body.classList.add('dragging');
+  const move = (ev) => {
+    target = null; dropBox.remove();
+    const over = document.elementsFromPoint(ev.clientX, ev.clientY).find((x) => x.classList?.contains('panel'));
+    if (!over || over.dataset.id === id) return;
+    const r = over.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width, y = (ev.clientY - r.top) / r.height;
+    const side = x < 0.25 ? 'left' : x > 0.75 ? 'right' : y < 0.5 ? 'top' : 'bottom';
+    target = { id: over.dataset.id, side };
+    const box = { left: [r.left, r.top, r.width / 2, r.height], right: [r.left + r.width / 2, r.top, r.width / 2, r.height], top: [r.left, r.top, r.width, r.height / 2], bottom: [r.left, r.top + r.height / 2, r.width, r.height / 2] }[side];
+    Object.assign(dropBox.style, { left: box[0] + 'px', top: box[1] + 'px', width: box[2] + 'px', height: box[3] + 'px', position: 'fixed' });
+    document.body.append(dropBox);
+  };
+  const up = () => {
+    removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+    document.body.classList.remove('dragging'); dropBox.remove();
+    if (!target) return;
+    let moved;
+    layout.cols.forEach((c) => { const i = c.panels.findIndex((p) => p.id === id); if (i >= 0) moved = c.panels.splice(i, 1)[0]; });
+    const ci = layout.cols.findIndex((c) => c.panels.some((p) => p.id === target.id));
+    const col = layout.cols[ci], pi = col.panels.findIndex((p) => p.id === target.id);
+    if (target.side === 'top' || target.side === 'bottom') {
+      const t = col.panels[pi]; moved.h = t.h / 2; t.h /= 2;
+      col.panels.splice(target.side === 'top' ? pi : pi + 1, 0, moved);
+    } else {
+      moved.h = 100;
+      layout.cols.splice(target.side === 'left' ? ci : ci + 1, 0, { w: col.w / 2, panels: [moved] }); col.w /= 2;
+    }
+    build();
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', up);
+});
+build();
+
+function fit() { const h = $('.phone').clientHeight - 16, w = $('.phone').clientWidth - 16; if (h > 0 && w > 0) $('.device').style.transform = `scale(${Math.min(1, h / 844, w / 390)})`; }
 addEventListener('resize', fit);
 function go() { const p = $('#path').value.trim() || '/'; frame.src = APP + p + (p.includes('?') ? '&' : '?') + 'capture'; }
 $('#path').onkeydown = (e) => e.key === 'Enter' && go();
