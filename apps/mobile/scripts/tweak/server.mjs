@@ -14,7 +14,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const REPO = resolve(process.env.TWEAK_REPO || join(here, '../../..'));
+const REPO = resolve(process.env.TWEAK_REPO || join(here, '../../../..'));
 const MOBILE = join(REPO, 'apps/mobile');
 const SRC = join(MOBILE, 'src');
 const ts = createRequire(join(MOBILE, 'package.json'))('typescript');
