@@ -32,17 +32,19 @@ async function deliverViaResend(input: MailInput) {
   }
 }
 
-export async function sendMail(app: FastifyInstance, input: MailInput) {
+/** True when the message went out (or, outside production, was logged instead). */
+export async function sendMail(app: FastifyInstance, input: MailInput): Promise<boolean> {
   // A configured real transport actually delivers the message.
   if (env.EMAIL_PROVIDER === "RESEND" && env.RESEND_API_KEY) {
     try {
       await deliverViaResend(input);
       // SECURITY: never log the body — it carries verification/reset tokens.
       app.log.info({ to: input.to, subject: input.subject }, "Email sent");
+      return true;
     } catch (error) {
       app.log.error({ to: input.to, subject: input.subject, error }, "Email delivery failed");
+      return false;
     }
-    return;
   }
 
   // No real transport configured.
@@ -53,7 +55,7 @@ export async function sendMail(app: FastifyInstance, input: MailInput) {
       { to: input.to, subject: input.subject },
       "Email delivery is not configured (EMAIL_PROVIDER=LOG); message was not sent"
     );
-    return;
+    return false;
   }
 
   // Development/test transport: tokens are also surfaced via the API in these
@@ -67,6 +69,7 @@ export async function sendMail(app: FastifyInstance, input: MailInput) {
     },
     "Email queued via development transport"
   );
+  return true;
 }
 
 export function shouldExposeDevEmailToken() {

@@ -15,6 +15,9 @@ function setIntegrationEnv() {
   process.env.PUBLIC_MEDIA_URL = "http://localhost:4000/media";
   // keeps the moderation path (PENDING → moderator approves) under test
   process.env.ARTICLES_AUTO_APPROVE = "false";
+  // the old flows here sign up without an email; the code flow is tested on its own domain
+  process.env.SIGNUP_REQUIRE_EMAIL = "false";
+  process.env.SIGNUP_EMAIL_DOMAINS = "uni.test";
   process.env.AI_ENABLED = "true";
   process.env.AI_PROVIDER = "LOCAL_HASH";
   process.env.AI_EMBEDDING_MODEL = "bookgram-test-local-hash-v1";
@@ -129,6 +132,31 @@ describe("Puzzle API integration", () => {
     });
     expect(initialSessions.response.statusCode).toBe(200);
     expect(initialSessions.payload.data.length).toBeGreaterThanOrEqual(1);
+
+    // University email: a code to an allowed domain, a token for it, an account with the address verified.
+    const uniEmail = `it_carol_${suffix}@uni.test`;
+    const otherDomain = await json(app, { method: "POST", url: "/auth/email-code", body: { email: "someone@gmail.com" } });
+    expect(otherDomain.response.statusCode).toBe(400);
+    const codeSent = await json(app, { method: "POST", url: "/auth/email-code", body: { email: uniEmail.toUpperCase() } });
+    expect(codeSent.response.statusCode).toBe(200);
+    const devCode = codeSent.payload.devCode as string;
+    expect(devCode).toMatch(/^\d{6}$/);
+    const again = await json(app, { method: "POST", url: "/auth/email-code", body: { email: uniEmail } });
+    expect(again.response.statusCode).toBe(429);
+    const wrong = await json(app, { method: "POST", url: "/auth/email-code/verify", body: { email: uniEmail, code: devCode === "000000" ? "111111" : "000000" } });
+    expect(wrong.response.statusCode).toBe(400);
+    const verified = await json(app, { method: "POST", url: "/auth/email-code/verify", body: { email: uniEmail, code: devCode } });
+    expect(verified.response.statusCode).toBe(200);
+    const carol = await json(app, {
+      method: "POST",
+      url: "/auth/register",
+      body: { username: `it_carol_${suffix}`, password: "Puzzle123!", ageConfirmed: true, emailToken: verified.payload.emailToken }
+    });
+    expect(carol.response.statusCode).toBe(201);
+    expect(carol.payload.user.email).toBe(uniEmail);
+    expect(carol.payload.user.emailVerified).toBe(true);
+    const taken = await json(app, { method: "POST", url: "/auth/email-code", body: { email: uniEmail } });
+    expect(taken.response.statusCode).toBe(409);
 
     // A password needs a letter.
     const digitsOnly = await json(app, {

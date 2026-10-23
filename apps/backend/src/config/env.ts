@@ -21,6 +21,9 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional().default(""),
   RESEND_BASE_URL: z.string().url().default("https://api.resend.com"),
   EMAIL_FROM: z.string().email().default("no-reply@bookgram.dev"),
+  // Sign-up only with these email domains (comma-separated; empty = any), proven by a 6-digit code sent there.
+  SIGNUP_EMAIL_DOMAINS: z.string().default("coventry.edu.kz,coventry.ac.uk"),
+  SIGNUP_REQUIRE_EMAIL: z.enum(["true", "false"]).default("true").transform((v) => v === "true"),
   EMAIL_VERIFY_URL: z.string().url().default("http://localhost:4000/auth/email/verify"),
   PASSWORD_RESET_URL: z.string().url().default("http://localhost:4000/auth/password/reset"),
   PUSH_DELIVERY_MODE: z.enum(["LOG", "DISABLED"]).default("LOG"),

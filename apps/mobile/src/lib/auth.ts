@@ -30,6 +30,7 @@ export async function completeSignup(draft: SignupDraft): Promise<SessionUser> {
       username: draft.username,
       displayName: draft.name,
       ...(draft.phone ? { phone: draft.phone } : {}),
+      ...(draft.emailToken ? { emailToken: draft.emailToken } : {}),
       password: draft.password,
       interests: draft.interests,
       // The age step (13+) comes before this; the backend still wants the flag.
@@ -59,12 +60,40 @@ export async function setAvatar(localUri: string): Promise<string | null> {
 export async function loginWithUsername(login: string, password: string): Promise<SessionUser | null> {
   try {
     const phone = looksLikePhone(login) ? toE164(login) : null;
-    const data = await api<AuthResponse>('/auth/login', { body: { login: phone ?? normalizeUsername(login), password } });
+    // an email is sent as typed (lowercased); a phone as E.164; anything else is a username
+    const value = login.includes('@') ? login.trim().toLowerCase() : (phone ?? normalizeUsername(login));
+    const data = await api<AuthResponse>('/auth/login', { body: { login: value, password } });
     await saveTokens(data);
     return toSessionUser(data.user);
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) return null;
     throw e;
+  }
+}
+
+/** Sign-up: a code to the university address. 'recent': one went out less than a minute ago (still valid). */
+export async function requestEmailCode(email: string): Promise<'sent' | 'recent' | 'taken' | 'domain' | 'failed'> {
+  if (CAPTURE) return 'sent';
+  try {
+    await api('/auth/email-code', { body: { email } });
+    return 'sent';
+  } catch (e) {
+    if (!(e instanceof ApiError)) return 'failed';
+    if (e.status === 409) return 'taken';
+    if (e.status === 400) return 'domain';
+    if (e.status === 429) return 'recent';
+    return 'failed';
+  }
+}
+
+/** The code from the email → the token /auth/register wants, or null when it's wrong or expired. */
+export async function verifyEmailCode(email: string, code: string): Promise<string | null> {
+  if (CAPTURE) return 'capture';
+  try {
+    const r = await api<{ emailToken: string }>('/auth/email-code/verify', { body: { email, code } });
+    return r.emailToken;
+  } catch {
+    return null;
   }
 }
 

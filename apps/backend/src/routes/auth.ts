@@ -10,6 +10,7 @@ import { sendWelcomeChat } from "../services/welcomeChat.js";
 import { endpointRateLimit } from "../services/rateLimitService.js";
 import { checkUsernameAvailability, normalizeUsername, validateUsername } from "../services/usernameService.js";
 import { normalizePhone } from "../utils/phone.js";
+import { checkSignupCode, emailFromToken, isAllowedEmail, normalizeEmail, sendSignupCode } from "../services/emailCodeService.js";
 import { sha256 } from "../utils/hash.js";
 import { toTokenPayload } from "../utils/authPayload.js";
 import { privateUserSelect } from "../utils/users.js";
@@ -38,6 +39,8 @@ const registerSchema = z.object({
   displayName: z.string().min(1).max(80).optional(),
   // International form; stored as E.164. Not verified yet.
   phone: z.string().max(32).optional(),
+  // From POST /auth/email-code/verify: proves the (university) address; required when SIGNUP_REQUIRE_EMAIL.
+  emailToken: z.string().min(1).optional(),
   password: passwordSchema,
   interests: z.array(z.string().min(1).max(40)).max(20).default([]),
   // "I'm 13 or older" at signup; logged as a consent.
@@ -202,6 +205,34 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   const loginLimit = endpointRateLimit({ key: "auth-login", limit: 10, windowSeconds: 60, failClosed: true });
   const forgotLimit = endpointRateLimit({ key: "auth-forgot", limit: 5, windowSeconds: 15 * 60, failClosed: true });
 
+  // Sign-up email step: a 6-digit code to a university address, then the code for a token /auth/register takes.
+  const emailCodeLimit = endpointRateLimit({ key: "auth-email-code", limit: 8, windowSeconds: 10 * 60, failClosed: true });
+  app.post("/auth/email-code", { preHandler: [emailCodeLimit] }, async (request, reply) => {
+    const { email: raw } = z.object({ email: z.string().email().max(200) }).parse(request.body);
+    const email = normalizeEmail(raw);
+    if (!isAllowedEmail(email)) {
+      return reply.status(400).send({ error: "email_domain", message: "Use your university email" });
+    }
+    if (await app.prisma.user.findFirst({ where: { email }, select: { id: true } })) {
+      return reply.status(409).send({ error: "email_taken", message: "This email already has an account" });
+    }
+    const result = await sendSignupCode(app, email);
+    if (!result.sent) {
+      return reply.status(result.reason === "too_soon" ? 429 : 503).send({ error: result.reason });
+    }
+    return reply.send({ sent: true, ...(result.code ? { devCode: result.code } : {}) });
+  });
+
+  const emailVerifyLimit = endpointRateLimit({ key: "auth-email-code-verify", limit: 20, windowSeconds: 10 * 60, failClosed: true });
+  app.post("/auth/email-code/verify", { preHandler: [emailVerifyLimit] }, async (request, reply) => {
+    const body = z.object({ email: z.string().email().max(200), code: z.string().regex(/^\d{6}$/) }).parse(request.body);
+    const token = await checkSignupCode(app, normalizeEmail(body.email), body.code);
+    if (!token) {
+      return reply.status(400).send({ error: "invalid_code", message: "Wrong or expired code" });
+    }
+    return reply.send({ emailToken: token });
+  });
+
   // The phone step of the signup: a number can belong to one account.
   const phoneCheckLimit = endpointRateLimit({ key: "auth-phone-check", limit: 30, windowSeconds: 60 });
   app.get("/auth/phone-availability", { preHandler: [phoneCheckLimit] }, async (request, reply) => {
@@ -219,6 +250,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
   app.post("/auth/register", { preHandler: [authWriteLimit] }, async (request, reply) => {
     const body = registerSchema.parse(request.body);
+    const provenEmail = body.emailToken ? await emailFromToken(body.emailToken) : null;
+    if (body.emailToken && !provenEmail) {
+      return reply.status(400).send({ error: "email_token_invalid", message: "The email code expired, ask for a new one" });
+    }
+    if (env.SIGNUP_REQUIRE_EMAIL && !provenEmail) {
+      return reply.status(400).send({ error: "email_required", message: "Sign up with your university email" });
+    }
+    if (provenEmail) body.email = provenEmail;
     const phone = body.phone ? normalizePhone(body.phone) : null;
     if (body.phone && !phone) {
       throw reply.badRequest("Invalid phone number");
@@ -249,6 +288,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const user = await app.prisma.user.create({
       data: {
         email: body.email ?? null,
+        emailVerified: !!provenEmail,
         phone,
         username: body.username,
         displayName: body.displayName,
@@ -266,7 +306,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     const tokens = await issueTokens(app, user, request);
     await sendWelcomeChat(app.prisma, user.id);
-    const emailVerificationToken = user.email ? await createEmailVerificationToken(app, { id: user.id, email: user.email }) : null;
+    const emailVerificationToken = user.email && !provenEmail ? await createEmailVerificationToken(app, { id: user.id, email: user.email }) : null;
     return reply.status(201).send({
       ...asApi<ApiAuthResponse>({ user, ...tokens }),
       ...(emailVerificationToken && shouldExposeDevEmailToken() ? { devEmailVerificationToken: emailVerificationToken } : {})

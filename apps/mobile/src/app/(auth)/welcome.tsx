@@ -47,7 +47,7 @@ export default function Welcome() {
 
   const createAccount = () => {
     resetDraft();
-    push('/name');
+    push('/email');
   };
 
   // Not designed: password recovery needs an email, which accounts no longer have.
@@ -64,14 +64,14 @@ export default function Welcome() {
           value={username}
           onChangeText={(v) => {
             // a phone number keeps its "+" and spaces; the rest is a username
-            setUsername(/^[+\d]/.test(v) && looksLikePhone(v.padEnd(6, '0')) ? v : normalizeUsername(v));
+            setUsername(v.includes('@') || (/^[+\d]/.test(v) && looksLikePhone(v.padEnd(6, '0'))) ? v.trim() : normalizeUsername(v));
             setError(false);
           }}
-          placeholder="Username or phone number"
+          placeholder="Username or university email"
           placeholderTextColor={GRAY}
           autoCapitalize="none"
           autoCorrect={false}
-          autoComplete="username"
+          autoComplete="email"
           textContentType="username"
           returnKeyType="next"
           onSubmitEditing={() => passwordRef.current?.focus()}
