@@ -1,6 +1,7 @@
 import type { ApiMediaAsset } from '@api/api';
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import { Platform } from 'react-native';
 
 import { api } from './api';
 
@@ -27,6 +28,8 @@ export async function uploadImage(uri: string, kind: MediaKind): Promise<MediaAs
   form.append('kind', kind); // fields must come before the file for the multipart parser
   // Expo's fetch only takes Blob-like parts (an RN-style { uri, name, type } object fails with "Unsupported
   // FormDataPart implementation"); expo-file-system's File is one and reads the picture itself.
-  form.append('file', new File(jpeg.uri), 'image.jpg');
+  // In the browser the picture is a blob: / data: URL, which fetch turns into a Blob.
+  const file = Platform.OS === 'web' ? await (await fetch(jpeg.uri)).blob() : new File(jpeg.uri);
+  form.append('file', file, 'image.jpg');
   return api<MediaAsset>('/media', { form, auth: true, idempotent: true });
 }
