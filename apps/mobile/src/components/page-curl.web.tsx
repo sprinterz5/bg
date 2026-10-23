@@ -1,9 +1,11 @@
 import type { RefObject } from 'react';
 import type { View } from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 
-// Web: no Skia (CanvasKit isn't loaded), so stories switch without the page turn.
+// Web preview has no Skia (CanvasKit isn't loaded): stories switch without the page turn.
+
 export const CURL_SUPPORTED = false;
-export type Snapshot = never;
+export type Snapshot = { dispose(): void };
 
 export async function snapshotView(_ref: RefObject<View | null>): Promise<Snapshot | null> {
   return null;
@@ -11,6 +13,16 @@ export async function snapshotView(_ref: RefObject<View | null>): Promise<Snapsh
 
 export function disposeSnapshot(_image: Snapshot) {}
 
-export function PageCurlCanvas(_props: Record<string, unknown>) {
+type Props = {
+  layers: { id: string; image: Snapshot }[];
+  active: SharedValue<string>;
+  under: SharedValue<string>;
+  progress: SharedValue<number>;
+  angle: SharedValue<number>;
+  width: number;
+  height: number;
+};
+
+export function PageCurlCanvas(_props: Props) {
   return null;
 }
