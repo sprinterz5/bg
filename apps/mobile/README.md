@@ -13,7 +13,7 @@ All commands from `apps/mobile` with the system Node (run `npm ci` once after cl
 | Add a dependency | `npx expo install <pkg>` (keeps versions in line with the SDK) |
 | Android dev build (EAS cloud, APK) | `npx eas-cli build -p android --profile development` |
 
-- **Dev build (preferred on Android).** The APK from the `development` profile replaces Expo Go: it draws edge-to-edge under the status bar, has full photo-library access and supports native sign-in. Open it and connect to the VPS Metro (`exp://31.220.92.154:8081`, picks up pushes to `main`) or to a local one at `http://<PC LAN IP>:8081` (same Wi‑Fi; IP from `ip -4 addr`). Rebuild only when native dependencies or `app.json` plugins change; JS changes arrive over Metro.
+- **Dev build (preferred on Android).** The APK from the `development` profile replaces Expo Go: it draws edge-to-edge under the status bar, has full photo-library access and supports native sign-in. Open it and connect to the VPS Metro (`exp://31.220.92.154:19347`, picks up pushes to `main`) or to a local one at `http://<PC LAN IP>:8081` (same Wi‑Fi; IP from `ip -4 addr`). Rebuild only when native dependencies or `app.json` plugins change; JS changes arrive over Metro.
 - **Expo Go** still works for quick checks, but on Android it paints an opaque status bar and has no full media-library access (the cover picker falls back to the system photo picker).
 - **Web** (`npx expo start --web`) is only a smoke test; visual checks happen on a phone.
 
