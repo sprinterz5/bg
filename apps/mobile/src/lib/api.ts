@@ -1,5 +1,5 @@
 import type { ApiTokens } from '@api/api';
-import * as TokenStore from './token-store';
+import * as SecureStore from 'expo-secure-store';
 
 // Dev backend on the VPS. Override with EXPO_PUBLIC_API_URL (e.g. http://<PC LAN IP>:4000 for a local backend).
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://31.220.92.154/api';
@@ -30,16 +30,16 @@ export function setSessionExpiredHandler(handler: (() => void) | null) {
 
 export async function saveTokens(tokens: Tokens) {
   accessToken = tokens.accessToken;
-  await TokenStore.setItem(REFRESH_KEY, tokens.refreshToken);
+  await SecureStore.setItemAsync(REFRESH_KEY, tokens.refreshToken);
 }
 
 export async function clearTokens() {
   accessToken = null;
-  await TokenStore.deleteItem(REFRESH_KEY);
+  await SecureStore.deleteItemAsync(REFRESH_KEY);
 }
 
 export function getStoredRefreshToken() {
-  return TokenStore.getItem(REFRESH_KEY);
+  return SecureStore.getItemAsync(REFRESH_KEY);
 }
 
 type ApiInit = {

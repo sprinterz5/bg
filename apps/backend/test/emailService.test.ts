@@ -85,7 +85,7 @@ describe("sendMail (P0-1 transport + token-leak protection)", () => {
     const app = fakeApp();
     await expect(
       sendMail(app, { to: "user@example.com", subject: "Reset your password", text: RESET_TEXT })
-    ).resolves.toBe(false);
+    ).resolves.toBeUndefined();
     expect(app.log.error).toHaveBeenCalledTimes(1);
     expect(loggedString(app)).not.toContain("SUPERSECRETTOKEN");
   });

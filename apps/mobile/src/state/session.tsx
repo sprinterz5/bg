@@ -23,9 +23,6 @@ export type SignupDraft = {
   ageConfirmed: boolean;
   /** E.164, or '' when skipped. */
   phone: string;
-  /** The university address and the server's proof of it (from the code step). */
-  email: string;
-  emailToken: string;
 };
 
 const emptyDraft: SignupDraft = {
@@ -36,8 +33,6 @@ const emptyDraft: SignupDraft = {
   interests: [],
   ageConfirmed: false,
   phone: '',
-  email: '',
-  emailToken: '',
 };
 
 type SessionContextValue = {
