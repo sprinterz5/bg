@@ -89,7 +89,8 @@ export default function Home() {
   const swap = useSharedValue(1);
 
   // Only "For you" is remembered (its posts and where the list was). Any other category starts fresh: the list is put
-  // so that its first post sits right under the pinned categories (the stories stay above, out of sight).
+  // so that its first post sits right under the pinned categories (the stories stay above, out of sight); near the top
+  // (the stories still showing) the list stays where it is.
   const { height: windowH } = useWindowDimensions();
   const forYouAt = useRef<number | null>(null);
   const placing = useRef<{ target: number; wait: boolean; scrolled: boolean } | null>(null);
@@ -102,7 +103,7 @@ export default function Home() {
     const here = Math.max(0, y.get());
     if (tab === 'For you') forYouAt.current = here;
     const pinned = Math.max(0, tabsY.get() - pinTop);
-    const target = next === 'For you' ? (forYouAt.current ?? Math.min(here, pinned)) : pinned;
+    const target = next === 'For you' ? (forYouAt.current ?? Math.min(here, pinned)) : Math.min(here, pinned);
     placing.current = { target, wait: next !== 'For you', scrolled: false };
     switching.current = true;
     setHold(target + windowH);
