@@ -155,6 +155,8 @@ function Reader({ article }: { article: Article }) {
     };
   }, [arm]);
   const chromeFade = useAnimatedStyle(() => ({ opacity: chrome.get() }));
+  // The rail stays in place and only fades in as the text comes up (no sliding with the pull).
+  const railIn = useAnimatedStyle(() => ({ opacity: interpolate(rise.get(), [0.6, 1], [0, 1], Extrapolation.CLAMP) }));
   const barIn = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * (BAR_H + 20) }] }));
 
   // Double tap on the text likes the article (never unlikes) and pops a big heart where the finger was.
@@ -384,7 +386,7 @@ function Reader({ article }: { article: Article }) {
       <Animated.View collapsable={false} pointerEvents={page === 0 || !chromeOn ? 'none' : 'box-none'} style={[StyleSheet.absoluteFill, chromeFade]}>
         {/* Frame AutoLayouted-23/-24: a rail on the left (x 1, y 259, 39 wide, r 20, hairline border): the author with a
             follow "+" (tap the face for the profile), like, comments, share, bookmark, counts under the icons. */}
-        <Animated.View collapsable={false} style={[styles.rail, { top: top + 212 }, cardIn]}>
+        <Animated.View collapsable={false} style={[styles.rail, { top: top + 212 }, railIn]}>
           <View style={styles.railAuthor}>
             <Pressable onPress={() => openProfile(article.author.username, true)} hitSlop={6} accessibilityRole="link" accessibilityLabel={article.author.username}>
               <AuthorAvatar author={article.author} size={32} />
