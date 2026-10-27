@@ -68,9 +68,9 @@ export default function Home() {
       homeChromeHidden.set(hide.get() / BAR);
     }, [hide, BAR]),
   );
-  // The logo row scrolls away with the list near the top; further down it follows `hide` (whichever is lower).
+  // The logo row scrolls away with the list near the top; further down it stays away (only the tab bar comes back on scroll up).
   const headerLineStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, (y.get() - BAR) / 12)) }));
-  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(-Math.max(y.get(), 0), -hide.get()) }] }));
+  const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.max(y.get(), 0) }] }));
 
   // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
   const swap = useSharedValue(1);
