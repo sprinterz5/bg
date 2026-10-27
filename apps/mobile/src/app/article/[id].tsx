@@ -36,10 +36,10 @@ import type { Picture } from '@/lib/picture';
 const LINE_HEIGHT = 32.5;
 const TEXT_LEFT = 57;
 const TEXT_RIGHT = 35;
-// first text line at y ~100 of AutoLayouted-23 (no cover strip above the text any more)
 // Reading colours (asked for by the designer): white page, #191919 text.
 const READER_BG = '#FFFFFF';
 const READER_TEXT = '#191919';
+// first text line's ink at y ~100 (no cover strip above the text)
 const TEXT_TOP = 41.5;
 // Open / close (not in the design): the cover grows out of the tapped picture (feed, Explore, profile) into the
 // preview's picture and the rest of the reader comes in after it; closing shrinks it back into that picture.
