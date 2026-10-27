@@ -261,7 +261,7 @@ export default function Home() {
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.pinnedTabs, pinnedStyle]}>
         <View style={styles.pinnedCap} />
         <FeedTabs
-          fontSize={16.5}
+          fontSize={15.75}
           value={tab}
           onChange={(t) => {
             onTab();
