@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
   age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
   text: { marginTop: -0.06, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 15.5, lineHeight: 21.7, color: colors.text },
-  media: { marginTop: 15.3, marginLeft: 0.2, width: 319.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
+  media: { marginTop: 17.3, marginLeft: 0.2, width: 319.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   actions: { height: 18.5, marginTop: 10.9, marginLeft: 1.5, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
