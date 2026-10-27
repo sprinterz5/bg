@@ -615,7 +615,8 @@ function CubeFace({ at, idx, mode, progress, width, children }: { at: number; id
     // every platform applies as is): the true edge x and edge heights are computed, then the scale s, the turn φ, the
     // camera distance dc and the shift a that reproduce exactly those four numbers.
     const r = width / 2;
-    const d = width * 3;
+    // weak perspective: a turning face is edge-on (and then hidden) close to the screen edge, ~9 px from it
+    const d = width * 10;
     const t = Math.max(-1, Math.min(1, p)) * (Math.PI / 2);
     const c = Math.cos(t);
     const sn = Math.sin(t);
@@ -635,7 +636,8 @@ function CubeFace({ at, idx, mode, progress, width, children }: { at: number; id
     }
     const a = xR - (s * r * Math.cos(phi)) / (1 + k * r);
     return {
-      opacity: Math.abs(p) >= 0.999 ? 0 : 1,
+      // past edge-on the face would show its back: gone from there
+      opacity: Math.abs(p) >= 0.999 || xR - xL < 0.5 ? 0 : 1,
       transform: [{ translateX: a }, { perspective: dc }, { rotateY: `${phi}rad` }, { scale: s }],
     };
   });
