@@ -304,8 +304,8 @@ const styles = StyleSheet.create({
   header: { height: HEADER_H, alignItems: 'center' },
   // AutoLayouted-34 (BG(2)): plus at (22.5, 61.5), bell at (343.5, 61) incl. their strokes; logo ink 107.3 wide from
   // 140.6 × 59.9; story rings 94 at x 12 + 113n, y 104.5.
-  plus: { position: 'absolute', left: 22.5, top: 15.5 },
-  bell: { position: 'absolute', left: 343.5, top: 15 },
+  plus: { position: 'absolute', left: 20.5, top: 15.5 },
+  bell: { position: 'absolute', left: 345.5, top: 15 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
   logo: { marginTop: -1.3, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39, lineHeight: 50, color: colors.text, transform: [{ translateX: -4.35 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: colors.bg },
