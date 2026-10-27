@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { Image as ExpoImage } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Alert, BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View, ScrollView, type HostInstance, type ImageSource as RNImageSource } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
@@ -10,7 +10,7 @@ import Animated, { Easing, Extrapolation, interpolateColor, FadeIn, FadeOut, int
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
-import { CURL_SUPPORTED, PageCurlCanvas, disposeSnapshot, snapshotView, type Snapshot } from '@/components/page-curl';
+import { CURL_SUPPORTED, disposeSnapshot, snapshotView, type Snapshot } from '@/components/page-curl';
 import { PopIcon } from '@/components/pop-icon';
 import { PressableScale } from '@/components/pressable-scale';
 import { Text, TextInput, INTER_FAMILIES } from '@/components/text';
@@ -260,6 +260,18 @@ function StoryViewer() {
   const mode = useSharedValue(0);
   const owner = useSharedValue(0); // the running pan started the current turn
   const startY = useSharedValue(0);
+  // Index of the story in front, kept on the UI thread so the cube stays put while React catches up after a turn.
+  const idx = useSharedValue(index);
+  const settle = (step: number) => {
+    'worklet';
+    idx.set(idx.get() + step);
+    mode.set(0);
+    progress.set(0);
+  };
+  // Switches that don't go through the cube (before the pages are mounted) move it along too.
+  useEffect(() => {
+    if (mode.get() === 0) idx.set(index);
+  }, [index, idx, mode]);
 
   const commit = useCallback((step: number) => {
     Haptics.selectionAsync();
@@ -296,37 +308,14 @@ function StoryViewer() {
     return () => cancelAnimationFrame(raf);
   }, [index, active, under, hidden, progress, mode, HOME_STORIES]);
 
-  const canForward = CURL_SUPPORTED && !!next && !!snaps[story.id];
-  const nextSnapped = !!next && !!snaps[next.id];
-  const canBack = CURL_SUPPORTED && !!prev && !!snaps[prev.id] && !!snaps[story.id];
+  // The cube turns live pages: no snapshots needed, only the neighbours mounted.
+  const canForward = settled && !!next;
+  const nextSnapped = true;
+  const canBack = settled && !!prev;
   const currentId = story.id;
   const prevId = prev?.id ?? '';
   const nextId = next?.id ?? '';
 
-  // The first draw of the curl shader compiles it on the GPU (a visible hitch): do it once up front, turned fully
-  // away so nothing shows.
-  const warmed = useRef(false);
-  useEffect(() => {
-    if (!CURL_SUPPORTED || warmed.current || !snaps[currentId]) return;
-    warmed.current = true;
-    runOnUI((id: string) => {
-      'worklet';
-      if (mode.get() !== 0) return;
-      progress.set(1);
-      active.set(id);
-    })(currentId);
-    const t = setTimeout(
-      () =>
-        runOnUI(() => {
-          'worklet';
-          if (mode.get() !== 0) return;
-          active.set('');
-          progress.set(0);
-        })(),
-      200,
-    );
-    return () => clearTimeout(t);
-  }, [snaps, currentId, mode, progress, active]);
   const hasNext = !!next;
   const hasPrev = !!prev;
 
@@ -339,7 +328,9 @@ function StoryViewer() {
     else under.set(base);
     active.set(layer);
     progress.set(withTiming(step === 1 ? 1 : 0, { duration: TURN_MS, easing: TURN_EASING }, (done) => {
-      if (done) runOnJS(commit)(step);
+      if (!done) return;
+      settle(step);
+      runOnJS(commit)(step);
     }));
   };
 
@@ -429,8 +420,10 @@ function StoryViewer() {
         const target = done === (m === 1) ? 1 : 0;
         progress.set(withTiming(target, { duration: 180 + 320 * Math.abs(target - p), easing: RELEASE_EASING }, (fin) => {
           if (!fin) return;
-          if (done) runOnJS(commit)(m);
-          else {
+          if (done) {
+            settle(m);
+            runOnJS(commit)(m);
+          } else {
             active.set('');
             under.set('');
             hidden.set('');
@@ -516,7 +509,6 @@ function StoryViewer() {
     );
   };
   const pages = (settled ? [prev, next, story] : [story]).filter((s): s is Story => !!s);
-  const layers = pages.filter((s) => !!snaps[s.id]).map((s) => ({ id: s.id, image: snaps[s.id] }));
 
   return (
     <View style={styles.root}>
@@ -527,11 +519,10 @@ function StoryViewer() {
         {/* Not flattened on Android, or the pan has no view to attach to. */}
         <View collapsable={false} style={StyleSheet.absoluteFill}>
           {pages.map((s) => (
-            <StoryPage key={s.id} story={captions[s.id] ? { ...s, caption: captions[s.id] } : s} top={s.id === story.id} onPhoto={s.id === story.id ? onTopPhoto : undefined} snapshot={settled} closing={closing} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+            <CubeFace key={s.id} at={s === prev ? index - 1 : s === next ? index + 1 : index} idx={idx} mode={mode} progress={progress} width={width}>
+              <StoryPage story={captions[s.id] ? { ...s, caption: captions[s.id] } : s} top={s.id === story.id} onPhoto={s.id === story.id ? onTopPhoto : undefined} snapshot={false} closing={closing} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+            </CubeFace>
           ))}
-          {/* Inside the gesture view: on Android the gesture handler hit-tests views itself and stops at the
-              first leaf view under the finger (the canvas), so a canvas above it would swallow the swipe. */}
-          {settled ? <PageCurlCanvas layers={layers} active={active} under={under} progress={progress} angle={angle} width={width} height={height} /> : null}
         </View>
       </GestureDetector>
 
@@ -610,6 +601,34 @@ type PageProps = {
 
 // Pictures use the core Image: the snapshot draws the view tree in software on Android, and expo-image's
 // hardware bitmaps can't be drawn there.
+// Instagram-like cube (not designed): the story in front and the one coming in are two sides of a box turning
+// around their shared edge, with perspective and the far side shaded. `p` = the face's place relative to the front
+// (−1 … 1); hinged on its left edge when it's to the right and on its right edge when it's to the left.
+function CubeFace({ at, idx, mode, progress, width, children }: { at: number; idx: SharedValue<number>; mode: SharedValue<number>; progress: SharedValue<number>; width: number; children: ReactNode }) {
+  const place = () => {
+    'worklet';
+    const m = mode.get();
+    const pos = m === 1 ? progress.get() : m === -1 ? progress.get() - 1 : 0;
+    return at - (idx.get() + pos);
+  };
+  const face = useAnimatedStyle(() => {
+    const p = place();
+    if (Math.abs(p) >= 0.999) return { opacity: 0, transform: [{ translateX: 0 }] };
+    return {
+      opacity: 1,
+      transformOrigin: p > 0 ? 'left center' : 'right center',
+      transform: [{ perspective: width * 3 }, { translateX: p * width }, { rotateY: `${p * 90}deg` }],
+    };
+  });
+  const shade = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.abs(place())) * 0.55 }));
+  return (
+    <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, face]}>
+      {children}
+      <Animated.View collapsable={false} pointerEvents="none" style={[StyleSheet.absoluteFill, styles.cubeShade, shade]} />
+    </Animated.View>
+  );
+}
+
 function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTap, onSnapshot, onPhoto }: PageProps) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -790,6 +809,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
 }
 
 const styles = StyleSheet.create({
+  cubeShade: { backgroundColor: '#000000' },
   // Transparent: Home shows around the window while it opens, closes or is dragged.
   root: { flex: 1 },
   frame: { position: 'absolute', left: 0, top: 0, overflow: 'hidden', backgroundColor: '#000000' },
