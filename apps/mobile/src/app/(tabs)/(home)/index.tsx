@@ -88,33 +88,27 @@ export default function Home() {
   // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
   const swap = useSharedValue(1);
 
-  // Each category remembers where its list was. A category seen for the first time opens just under the pinned
-  // categories (the same height wherever you were), unless you were still near the top.
+  // Only "For you" is remembered (its posts and where the list was). Any other category starts fresh: the list is put
+  // so that its first post sits right under the pinned categories (the stories stay above, out of sight).
   const { height: windowH } = useWindowDimensions();
-  const offsets = useRef<Record<string, number>>({});
-  const pendingScroll = useRef<number | null>(null);
-  const [hold, setHold] = useState(0); // list height kept while the new category's posts arrive
+  const forYouAt = useRef<number | null>(null);
+  const placing = useRef<{ target: number; wait: boolean; scrolled: boolean } | null>(null);
+  const [placeKey, setPlaceKey] = useState(0);
+  const [hold, setHold] = useState(0); // list height kept so the offset exists while the posts are not there yet
   // While a category is being put in place its posts show no entrance animation (a post growing from 0 height shortens
   // the list and the position is lost) and the list stays hidden until it is where it belongs.
   const switching = useRef(false);
   const switchTab = (next: string, change: () => void) => {
     const here = Math.max(0, y.get());
-    offsets.current[tab] = here;
-    const pinned = Math.max(0, tabsY.get() - (insets.top - 1));
-    const target = offsets.current[next] ?? Math.min(here, pinned);
-    pendingScroll.current = target;
+    if (tab === 'For you') forYouAt.current = here;
+    const pinned = Math.max(0, tabsY.get() - pinTop);
+    const target = next === 'For you' ? (forYouAt.current ?? Math.min(here, pinned)) : pinned;
+    placing.current = { target, wait: next !== 'For you', scrolled: false };
     switching.current = true;
     setHold(target + windowH);
     swap.set(0);
-    // never stay hidden if the new category never arrives
-    setTimeout(() => {
-      if (pendingScroll.current !== null) {
-        pendingScroll.current = null;
-        switching.current = false;
-        swap.set(withTiming(1, { duration: 220 }));
-      }
-    }, 4000);
     change();
+    setPlaceKey((k) => k + 1);
   };
 
   const onRefresh = useCallback(() => {
@@ -166,22 +160,50 @@ export default function Home() {
     [],
   );
   useScrollToTop(scrollTarget);
+  // Puts the list where the switch wants it (after the new data is rendered), then shows it. A category that has to
+  // load shows from the moment its posts are in; an empty one keeps its height so the position holds.
+  const dataReady = useRef(false);
   useEffect(() => {
-    if (pendingScroll.current === null || !loadedTab) return;
-    const offset = pendingScroll.current;
-    pendingScroll.current = null;
-    requestAnimationFrame(() => {
-      // a jump is not a scroll up or down: keep the categories (and the tab bar) showing where we land
-      prevY.set(offset);
-      hide.set(0);
-      homeChromeHidden.set(0);
-      listRef.current?.scrollToOffset({ offset, animated: false });
-      // an empty category keeps its height, or the list would drop back to the top
+    dataReady.current = loadedTab || posts.length > 0;
+    const ph = placing.current;
+    if (!ph) return;
+    const finish = () => {
+      if (!placing.current?.scrolled || (placing.current.wait && !dataReady.current)) return;
+      placing.current = null;
       if (posts.length > 0) setHold(0);
       swap.set(withTiming(1, { duration: 220 }));
       setTimeout(() => (switching.current = false), 600);
-    });
-  }, [posts, loadedTab, tab, prevY, hide, swap]);
+    };
+    let r1 = 0;
+    let r2 = 0;
+    if (!ph.scrolled) {
+      r1 = requestAnimationFrame(() => {
+        r2 = requestAnimationFrame(() => {
+          if (placing.current !== ph) return;
+          // a jump is not a scroll up or down: keep the categories (and the tab bar) showing where we land
+          prevY.set(ph.target);
+          hide.set(0);
+          homeChromeHidden.set(0);
+          listRef.current?.scrollToOffset({ offset: ph.target, animated: false });
+          ph.scrolled = true;
+          finish();
+        });
+      });
+    } else finish();
+    // never stay hidden if the new category never arrives
+    const giveUp = setTimeout(() => {
+      if (placing.current !== ph) return;
+      placing.current = null;
+      switching.current = false;
+      if (posts.length > 0) setHold(0);
+      swap.set(withTiming(1, { duration: 220 }));
+    }, 5000);
+    return () => {
+      cancelAnimationFrame(r1);
+      cancelAnimationFrame(r2);
+      clearTimeout(giveUp);
+    };
+  }, [placeKey, posts, loadedTab, prevY, hide, swap]);
 
   // FlatList mounts posts lazily while scrolling and remounts ones it dropped off-screen: those must appear as they
   // are, not fade in mid-scroll. A post animates in only on its first mount, while the screen opens or at the top (new post).

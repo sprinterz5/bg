@@ -248,18 +248,18 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Every tab keeps the page(s) it has loaded: coming back to one shows them at once (no reload, so the list can be
-  // put back where it was); pull to refresh fetches it anew.
-  const tabCache = useRef<Partial<Record<FeedTab, { server: Post[]; next: string | null; done: boolean }>>>({});
+  // Only "For you" keeps what it has loaded: coming back shows it at once, so the list can be put back where it was.
+  // The other tabs load again each time (pull to refresh reloads any of them).
+  const forYou = useRef<{ server: Post[]; next: string | null; done: boolean } | null>(null);
   const setTab = useCallback(
     (t: FeedTab) => {
       if (t === tabRef.current) return;
       const c = cursor.current;
-      tabCache.current[tabRef.current] = { server: serverRef.current, next: c.next, done: c.done };
+      if (tabRef.current === 'For you') forYou.current = { server: serverRef.current, next: c.next, done: c.done };
       tabRef.current = t;
       setTabState(t);
-      const cached = tabCache.current[t];
-      if (cached) {
+      if (t === 'For you' && forYou.current) {
+        const cached = forYou.current;
         setServer(cached.server);
         setLoadedTab(true);
         cursor.current = { next: cached.next, loading: false, done: cached.done };
