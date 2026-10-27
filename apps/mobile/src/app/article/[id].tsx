@@ -135,13 +135,18 @@ function Reader({ article }: { article: Article }) {
   const touch = () => {
     wasOn.current = chromeOn;
     if (chromeOn) arm();
-    else wake();
+    else if (!justHid.current) wake();
   };
+  // Hidden at once on the first tap (no wait for a possible second one); the second tap of a double tap (a like)
+  // doesn't bring them back.
+  const justHid = useRef(false);
   const tapped = (x: number, y: number) => {
     if (page === 0 || !wasOn.current || x < 50 || (y < top + 50 && x > W - 70)) return;
     if (idle.current) clearTimeout(idle.current);
-    chrome.set(withTiming(0, { duration: 300 }));
+    chrome.set(withTiming(0, { duration: 180 }));
     setChromeOn(false);
+    justHid.current = true;
+    setTimeout(() => (justHid.current = false), 300);
   };
   useEffect(() => {
     arm();
@@ -324,14 +329,14 @@ function Reader({ article }: { article: Article }) {
       axis.set(0);
     });
   const singleTap = Gesture.Tap()
-    .requireExternalGestureToFail(doubleTap)
     // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
     .onEnd((e, ok) => {
       if (ok) runOnJS(tapped)(e.absoluteX, e.absoluteY);
     });
   const readerGestures = Gesture.Simultaneous(pan, doubleTap, singleTap);
   const pagesRow = useAnimatedStyle(() => ({
-    opacity: interpolate(rise.get(), [0.25, 0.9], [0, 1], Extrapolation.CLAMP),
+    // closing from the text fades it out before the white behind it goes, so the list never shows text over it
+    opacity: interpolate(rise.get(), [0.25, 0.9], [0, 1], Extrapolation.CLAMP) * interpolate(t.get(), [0.3, 0.9], [0, 1], Extrapolation.CLAMP),
     transform: [{ translateY: (1 - rise.get()) * H * 0.55 }, { translateX: -scrollX.get() }],
   }));
   // White early in the flight, so the picture left behind in the list doesn't show through while the copy flies.
