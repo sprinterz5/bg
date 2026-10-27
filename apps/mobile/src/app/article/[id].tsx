@@ -361,7 +361,7 @@ function Reader({ article }: { article: Article }) {
   }));
   const slideStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX.get() }] }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: interpolate(t.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP) }));
-  const pictureVisible = useAnimatedStyle(() => ({ opacity: (origin ? 1 - flying.get() : t.get()) * (rise.get() > 0.001 ? 0 : 1) }));
+  const pictureVisible = useAnimatedStyle(() => ({ opacity: origin ? 1 - flying.get() : t.get() }));
 
   // The preview layer starts at the window's top-left, so the picture's layout box is its window rect.
   const measurePicture = (e: LayoutChangeEvent) => {
