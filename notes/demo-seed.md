@@ -23,3 +23,11 @@ delete from "Comment" where "userId" in (select id from "User" where bio = 'Demo
 delete from "ContentCounter" where "targetId" in (select a.id from "Article" a join "User" u on u.id = a."authorId" where u.bio = 'Demo account');
 delete from "User" where bio = 'Demo account';
 ```
+
+## Замена статей (2026-10-27)
+
+- 38 старых демо-постов скрыты (`deletedAt`), не удалены: вернуть можно, обнулив `deletedAt` у постов демо-авторов.
+- Вместо них 10 новых статей (тексты и заголовки присланы 2026-10-27): Musk ×2, Silicon Valley, happiness,
+  Steve Jobs, Duolingo, LGBTQ+ love, loneliness online, iPhone, ordinary life. Авторы — демо-аккаунты, обложки с
+  Unsplash (free license), по 3–6 комментариев из прежних демо-фраз, счётчики выставлены в `ContentCounter`.
+- Бэкап перед заменой: `/srv/backups/bookgram-pre-articles-20261027-1445.sql.gz`.
