@@ -2,7 +2,7 @@ import type { ApiComment, Page } from '@api/api';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { ActivityIndicator, BackHandler, FlatList, Pressable, StyleSheet, View, useWindowDimensions, type TextInput as RNTextInput } from 'react-native';
+import { ActivityIndicator, BackHandler, FlatList, Pressable, StyleSheet, View, useWindowDimensions, type TextInputInstance } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, { Easing, FadeIn, FadeInDown, FadeOut, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -42,7 +42,7 @@ export function CommentsSheet({ articleId, onClose }: Props) {
   const [replyTo, setReplyTo] = useState<ApiComment | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
-  const input = useRef<RNTextInput>(null);
+  const input = useRef<TextInputInstance>(null);
   const shown = useSharedValue(0);
   const drag = useSharedValue(0);
   const { height: keyboard } = useReanimatedKeyboardAnimation();

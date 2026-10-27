@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, TextInput as RNTextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput as RNTextInput, View, type TextInputInstance } from 'react-native';
 
 import { StepScreen } from '@/components/step-screen';
 import { INTER_FAMILIES, Text } from '@/components/text';
@@ -13,7 +13,7 @@ const BOX = 54;
 
 export default function PhoneCodeStep() {
   const [code, setCode] = useState('');
-  const input = useRef<RNTextInput>(null);
+  const input = useRef<TextInputInstance>(null);
 
   const change = (v: string) => {
     const d = v.replace(/\D/g, '').slice(0, 6);
