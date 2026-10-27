@@ -142,8 +142,8 @@ export const FeedSeparator = () => <View style={styles.separator} />;
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
   root: { paddingTop: 11.91, paddingBottom: 21.8 },
-  avatar: { position: 'absolute', left: 13.35, top: 16.05 },
-  column: { marginLeft: 65 },
+  avatar: { position: 'absolute', left: 14.35, top: 16.05 },
+  column: { marginLeft: 66 },
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 15.75, lineHeight: 19, color: colors.text },
   handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
