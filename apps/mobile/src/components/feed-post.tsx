@@ -136,7 +136,7 @@ export const FeedSeparator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
-  root: { paddingTop: 11.91, paddingBottom: 16.8 },
+  root: { paddingTop: 11.91, paddingBottom: 15.8 },
   avatar: { position: 'absolute', left: 14.6, top: 15.3 },
   column: { marginLeft: 64 },
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
