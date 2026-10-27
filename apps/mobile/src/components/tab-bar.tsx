@@ -120,6 +120,6 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5E5',
   },
   floating: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  tab: { position: 'absolute', top: 2, width: TAB_W, height: BAR_H + 1 },
+  tab: { position: 'absolute', top: 1.5, width: TAB_W, height: BAR_H + 1 },
   layer: { position: 'absolute' },
 });
