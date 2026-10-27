@@ -163,7 +163,7 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
 }
 
 const styles = StyleSheet.create({
-  row: { paddingLeft: 8.5, paddingRight: 8, gap: STEP - RING },
+  row: { paddingLeft: 8.5, paddingRight: 8, gap: STEP - RING + 1 },
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
