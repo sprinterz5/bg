@@ -6,13 +6,14 @@ import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, w
 import { AnimatedText, INTER_FAMILIES } from '@/components/text';
 import { colors } from '@/theme';
 
-const TABS = ['For you', 'Following', 'Learn', 'Grow'] as const;
+const TABS = ['For you', 'Following', 'Saved', 'History'] as const;
 export type FeedTab = (typeof TABS)[number];
 
 // AutoLayouted-34 (BG(2)): labels Inter Medium 14.1 (active black, others #999) starting at x 18.7 / 114.3 / 231.5 /
 // 326.9, cap tops 239.6; under the active one a 59×2 #2A2121 bar (r 1) at 265.5 (x 16 under "For you"), over a
 // full-width 0.75 #E9E9E9 line at 267 (from x 2.5).
-const LEFTS = [19.7, 115.3, 232.5, 327.9]; // +1 asked for
+// Saved / History in place of Learn / Grow (not designed): moved left so the wider "History" ends ~22 from the edge.
+const LEFTS = [19.7, 115.3, 228, 316];
 const BAR = 67; // 59 in the frame, +4 each side asked for
 
 /** Not designed: the tabs only switch the highlighted label for now (the feed is the same mock for each). */

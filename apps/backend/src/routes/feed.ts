@@ -8,12 +8,12 @@ import { diversifyByAuthor, scoreFeedItems } from "../services/feedAlgorithm.js"
 import { enrichFeedItems } from "../services/feedPresentationService.js";
 
 const feedQuerySchema = z.object({
-  mode: z.enum(["for_you", "following", "topic"]).default("for_you"),
+  mode: z.enum(["for_you", "following", "topic", "saved", "history"]).default("for_you"),
   /** topic: articles tagged with it, newest first (the Home tabs "Learn" / "Grow"). */
   tag: z.string().min(1).max(40).transform((v) => v.toLowerCase()).optional(),
   filter: z.enum(["all", "articles", "books"]).default("all"),
   limit: z.coerce.number().int().min(1).max(50).default(20),
-  /** following: publishedAt of the last item; for_you uses `cursor`. */
+  /** following: publishedAt of the last item; saved / history: its bookmark / last-open time; for_you uses `cursor`. */
   before: z.coerce.date().optional(),
   /** for_you: opaque nextCursor from the previous page. */
   cursor: z.string().max(100).optional()
@@ -243,6 +243,41 @@ export const feedRoutes: FastifyPluginAsync = async (app) => {
     const followingIds = new Set(follows.map((f) => f.followingId));
     const mutedIds = new Set(mutedRows.map((m) => m.mutedId));
     const hiddenAuthorIds = [...blockedIds, ...mutedIds];
+
+    // Home tabs "Saved" (own bookmarked articles, newest bookmark first) and "History" (articles opened, last opened
+    // first). Not cached: they change with every bookmark or read.
+    if (query.mode === "saved" || query.mode === "history") {
+      const before = query.before ? { createdAt: { lt: query.before } } : {};
+      const marks =
+        query.mode === "saved"
+          ? (await app.prisma.bookmark.findMany({
+              where: { userId, targetType: "ARTICLE", ...before },
+              orderBy: { createdAt: "desc" },
+              take: query.limit,
+              select: { targetId: true, createdAt: true }
+            })).map((b) => ({ targetId: b.targetId, at: b.createdAt }))
+          : (await app.prisma.feedEvent.groupBy({
+              by: ["targetId"],
+              where: { userId, eventType: "OPEN", targetType: "ARTICLE", ...before },
+              _max: { createdAt: true },
+              orderBy: { _max: { createdAt: "desc" } },
+              take: query.limit
+            })).map((e) => ({ targetId: e.targetId, at: e._max.createdAt ?? new Date(0) }));
+      const articles = await app.prisma.article.findMany({
+        where: { ...visibleWhere(hiddenAuthorIds), id: { in: marks.map((m) => m.targetId) } },
+        include: { author: authorSelect }
+      });
+      const byId = new Map(articles.map((a) => [a.id, a]));
+      const data = marks.flatMap((m) => {
+        const a = byId.get(m.targetId);
+        return a ? [articleToFeedItem(a)] : [];
+      });
+      return {
+        data: await enrichFeedItems(app, userId, data),
+        nextCursor: marks.length === query.limit ? (marks.at(-1)?.at.toISOString() ?? null) : null,
+        algorithm: `${query.mode}_v1`
+      };
+    }
 
     if (query.mode === "for_you" && !cursor && await needsColdStart(app, userId)) {
       const coldItems = await getColdStartFeed(app, userId, user.interests, query.limit);

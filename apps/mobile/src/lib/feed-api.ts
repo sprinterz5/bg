@@ -41,12 +41,13 @@ function toPost(i: ApiFeedItem): Post | null {
   };
 }
 
-export type FeedTab = 'For you' | 'Following' | 'Learn' | 'Grow';
+export type FeedTab = 'For you' | 'Following' | 'Saved' | 'History';
 
 /** One page of a Home tab (articles with a cover only: the card needs a picture). "For you" is ranked (cursor);
- *  "Following" (people you follow) and "Learn" / "Grow" (posts tagged so) are newest first (`before`). */
+ *  "Following" (people you follow) is newest first, "Saved" (own bookmarks) by bookmark time and "History" (posts
+ *  opened) by last open; those three page with `before`. */
 export async function fetchFeed(cursor?: string | null, tab: FeedTab = 'For you') {
-  const mode = tab === 'For you' ? 'mode=for_you' : tab === 'Following' ? 'mode=following' : `mode=topic&tag=${tab.toLowerCase()}`;
+  const mode = `mode=${tab === 'For you' ? 'for_you' : tab.toLowerCase()}`;
   const next = cursor ? `&${tab === 'For you' ? 'cursor' : 'before'}=${encodeURIComponent(cursor)}` : '';
   const q = `/feed?${mode}&filter=articles&limit=20${next}`;
   const page = await api<ApiFeedPage>(q, { auth: true });

@@ -25,6 +25,7 @@ import { useReaction } from '@/lib/reactions';
 import { CommentsSheet, useAddedComments } from '@/components/comments-sheet';
 import { captureParam } from '@/lib/capture';
 import { backWhenReady, openProfile } from '@/lib/nav';
+import { api } from '@/lib/api';
 import type { Picture } from '@/lib/picture';
 
 // Page 1 is the preview (AutoLayouted-18): back · author · ⋯, the title, "N pages", the subtitle, the
@@ -57,6 +58,12 @@ export default function ArticleScreen() {
   useEffect(() => {
     if (id && !article) ensureArticle(id).then((ok) => setMissing(!ok));
   }, [id, article, ensureArticle]);
+  // An opened server post goes into the Home "History" tab.
+  useEffect(() => {
+    if (id && /^[0-9a-f-]{36}$/i.test(id)) {
+      api('/feed/events', { body: { events: [{ eventType: 'OPEN', targetType: 'ARTICLE', targetId: id, source: 'reader' }] }, auth: true }).catch(() => {});
+    }
+  }, [id]);
   if (!article) return missing ? <PlaceholderScreen title="Article not found" showBack /> : <View style={styles.loading} />;
   // Own gesture root: the reader is a native modal (transparentModal), which on iOS sits outside the app's root view,
   // so without it the pages / swipe-down pans never receive touches.

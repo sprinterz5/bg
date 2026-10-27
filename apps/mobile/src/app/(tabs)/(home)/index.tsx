@@ -180,7 +180,7 @@ export default function Home() {
           loadedTab ? (
             <Animated.View collapsable={false} entering={FadeIn.duration(250)}>
               <Text style={styles.empty}>
-                {tab === 'Following' ? 'Posts from people you follow will show up here.' : tab === 'For you' ? 'No posts yet.' : `No ${tab} posts yet.`}
+                {tab === 'Following' ? 'Posts from people you follow will show up here.' : tab === 'Saved' ? 'Posts you bookmark will show up here.' : tab === 'History' ? 'Posts you read will show up here.' : 'No posts yet.'}
               </Text>
             </Animated.View>
           ) : undefined
