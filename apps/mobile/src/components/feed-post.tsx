@@ -89,7 +89,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         <View style={styles.actions}>
           {/* not pressable here: a post is liked and commented in the reader, after reading it */}
           <View style={styles.like} accessibilityLabel="Likes">
-            <Icon name={liked ? 'feedLikeFilled' : 'feedLikeBlack'} width={17.85} height={15.725} />
+            <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={17.85} height={15.725} />
           </View>
           {/* the count rolls to its new value */}
           <View style={[styles.countBox, styles.likeCount]}>
@@ -106,7 +106,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           <Text style={[styles.count, styles.countDark, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
             <PopIcon active={saved}>
-              <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmarkBlack'} width={14.5} height={16.1} />
+              <Icon name={saved ? 'feedBookmarkFilledInk' : 'feedBookmarkBlack'} width={14.5} height={16.1} />
             </PopIcon>
           </PressableScale>
           <PressableScale onPress={share} hitSlop={10} accessibilityLabel="Share" style={styles.share}>
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   share: { position: 'absolute', left: 301.3, top: 1.2 },
   count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   caption: { color: colors.text },
-  countDark: { color: colors.text },
+  countDark: { color: '#424242' },
   countBox: { position: 'absolute', top: 1.9, height: 16, overflow: 'hidden' },
   countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   likeCount: { left: 23.26 },
