@@ -371,10 +371,10 @@ const styles = StyleSheet.create({
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   storiesGap: { marginBottom: 0.7 },
   // 1 more between the stories and the tabs (everything below moves down with them)
-  tabsGap: { marginTop: -0.5 },
+  tabsGap: { marginTop: 0 },
   pinnedCap: { position: 'absolute', left: 0, right: 0, top: -6, height: 6, backgroundColor: colors.bg },
   pinnedTabs: { position: 'absolute', top: 0, left: 0, right: 0, height: TABS_H, backgroundColor: colors.bg },
   bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: colors.bg },
   empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
-  stories: { marginTop: -1, marginLeft: -2.5 },
+  stories: { marginTop: -1.5, marginLeft: -2.5 },
 });
