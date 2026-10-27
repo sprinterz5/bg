@@ -35,6 +35,9 @@ import type { Picture } from '@/lib/picture';
 const LINE_HEIGHT = 26.5;
 const TEXT_SIDE = 43;
 // first text line at y ~100 of AutoLayouted-23 (no cover strip above the text any more)
+// Reading colours (asked for by the designer): white page, #191919 text.
+const READER_BG = '#FFFFFF';
+const READER_TEXT = '#191919';
 const TEXT_TOP = 52;
 const PAGE_BOTTOM_PAD = 10;
 // Open / close (not in the design): the cover grows out of the tapped picture (feed, Explore, profile) into the
@@ -627,7 +630,7 @@ const styles = StyleSheet.create({
   // Transparent: the list stays visible while the reader opens and closes over it.
   root: { flex: 1 },
   slide: { overflow: 'hidden' },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: READER_BG },
   // No fill: until the copy is drawn, the same picture in the list shows through.
   flying: { position: 'absolute', left: 0, top: 0, overflow: 'hidden' },
   measure: { position: 'absolute', left: 0, top: 0, opacity: 0 },
@@ -635,12 +638,12 @@ const styles = StyleSheet.create({
   fill: { width: '100%', height: '100%' },
   pageText: { position: 'absolute', left: TEXT_SIDE },
   // ~17.8 / 26.5 in AutoLayouted 17 (cap 12.3).
-  body: { fontFamily: fonts.reading, fontSize: 17.8, lineHeight: LINE_HEIGHT, letterSpacing: -0.04, color: colors.text },
+  body: { fontFamily: fonts.reading, fontSize: 17.8, lineHeight: LINE_HEIGHT, letterSpacing: -0.04, color: READER_TEXT },
 
   // Preview (AutoLayouted-18): header 45 to a 1px #E9E9E9 rule; title Inter ExtraBold 31 / 43.7 (−0.75) at 93;
   // "N pages · N min read" Inter Medium 12.3 27 under it; subtitle Inter 16.3 / 26.4 #0F1419 (TH); the picture 360x272 at
   // x 15, 25 under the subtitle; share (18.4) + count and bookmark 50 above the safe area.
-  preview: { backgroundColor: colors.bg },
+  preview: { backgroundColor: READER_BG },
   previewHead: { height: 45, borderBottomWidth: 1, borderBottomColor: '#E9E9E9' },
   previewBack: { position: 'absolute', left: 15.5, top: 8.5 },
   previewAuthor: { position: 'absolute', left: 60, right: 60, top: 8, flexDirection: 'row', justifyContent: 'center', transform: [{ translateX: -5.6 }] },
