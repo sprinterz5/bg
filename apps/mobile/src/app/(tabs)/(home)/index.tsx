@@ -328,7 +328,7 @@ export default function Home() {
       </Animated.View>
       {/* AutoLayouted-40: "Posting..." floats 8 above the tab bar (whose top is 47 above the home indicator) */}
       {publishing && !publishing.done ? (
-        <PostingRow publishing={publishing} bottom={insets.bottom + 49 + 8} onRetry={retryPublish} onCancel={cancelPublish} onOpen={(id) => push(`/article/${id}`)} />
+        <PostingRow publishing={publishing} bottom={insets.bottom + 48 + 8} onRetry={retryPublish} onCancel={cancelPublish} onOpen={(id) => push(`/article/${id}`)} />
       ) : null}
     </View>
   );
