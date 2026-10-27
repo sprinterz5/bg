@@ -4,7 +4,9 @@ import * as SecureStore from 'expo-secure-store';
 // Dev backend on the VPS. Override with EXPO_PUBLIC_API_URL (e.g. http://<PC LAN IP>:4000 for a local backend).
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://31.220.92.154/api';
 
-const REFRESH_KEY = 'bg.refreshToken';
+// Own key: Expo Go shares secure storage between projects, and the other app on this phone used 'bg.refreshToken'
+// too, so each sign-in wiped the other's session.
+const REFRESH_KEY = 'thoughts.refreshToken';
 
 export class ApiError extends Error {
   constructor(
