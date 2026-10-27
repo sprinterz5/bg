@@ -32,14 +32,15 @@ import type { Picture } from '@/lib/picture';
 // glass author card, ✕ in a grey circle, the serif text and comments / like / share / bookmark at the bottom. The
 // text pages' chrome comes in from the right with page 2 while the preview goes out to the left. y below are design
 // y − 47 (status bar).
-const LINE_HEIGHT = 26.5;
-const TEXT_SIDE = 43;
+// Text pages (AutoLayouted, page 2): serif ~18.6 on 32.5 lines, x 57 … 355, first line's ink at y ~100.
+const LINE_HEIGHT = 32.5;
+const TEXT_LEFT = 57;
+const TEXT_RIGHT = 35;
 // first text line at y ~100 of AutoLayouted-23 (no cover strip above the text any more)
 // Reading colours (asked for by the designer): white page, #191919 text.
 const READER_BG = '#FFFFFF';
 const READER_TEXT = '#191919';
-const TEXT_TOP = 52;
-const PAGE_BOTTOM_PAD = 10;
+const TEXT_TOP = 41.5;
 // Open / close (not in the design): the cover grows out of the tapped picture (feed, Explore, profile) into the
 // preview's picture and the rest of the reader comes in after it; closing shrinks it back into that picture.
 const OPEN_MS = 440;
@@ -84,7 +85,7 @@ function Reader({ article }: { article: Article }) {
 
   const top = insets.top;
   const BAR_H = 39 + Math.max(insets.bottom, 12);
-  const textWidth = W - TEXT_SIDE * 2;
+  const textWidth = W - TEXT_LEFT - TEXT_RIGHT;
   const pictureW = W - 30;
   const pictureH = (pictureW * 272) / 360;
 
@@ -92,9 +93,10 @@ function Reader({ article }: { article: Article }) {
 
   const pages = useMemo(() => {
     if (!lines) return null;
-    const room = H - BAR_H - top - TEXT_TOP - PAGE_BOTTOM_PAD;
+    // the text ends ~102 above the bottom (the page number sits under it)
+    const room = H - top - TEXT_TOP - (Math.max(insets.bottom, 12) + 68);
     return paginateLines(lines, LINE_HEIGHT, { first: room, rest: room });
-  }, [lines, H, BAR_H, top]);
+  }, [lines, H, insets.bottom, top]);
 
   // Which page is showing (0 = preview, 1.. text pages): the preview's buttons only take touches while it is.
   // `rise` goes 0 → 1 as the text comes up over the preview (pulled up from the bottom); `scrollX` is the horizontal
@@ -425,7 +427,7 @@ function Reader({ article }: { article: Article }) {
         </Animated.View>
 
         {pages && pages.length > 1 ? (
-          <Animated.View collapsable={false} pointerEvents="none" style={[styles.pageCount, { bottom: insets.bottom + 24 }, barIn, chromeFade]}>
+          <Animated.View collapsable={false} pointerEvents="none" style={[styles.pageCount, { bottom: insets.bottom + 10 }, barIn, chromeFade]}>
             <PageCount count={pages.length} width={W} scrollX={scrollX} />
           </Animated.View>
         ) : null}
@@ -599,7 +601,7 @@ function ReaderPage({ text, width, left, textWidth, top }: { text: string; width
   );
 }
 
-// "1 of 3" under the text (Frame AutoLayouted-24), following the page in view.
+// The page number under the text (newest frame: just "2", #999), following the page in view.
 function PageCount({ count, width, scrollX }: { count: number; width: number; scrollX: SharedValue<number> }) {
   const [page, setPage] = useState(1);
   useAnimatedReaction(
@@ -610,7 +612,7 @@ function PageCount({ count, width, scrollX }: { count: number; width: number; sc
   );
   return (
     <Text style={styles.pageCountText}>
-      {page} of {count}
+      {page}
     </Text>
   );
 }
@@ -636,9 +638,9 @@ const styles = StyleSheet.create({
   measure: { position: 'absolute', left: 0, top: 0, opacity: 0 },
   cover: { position: 'absolute', left: 0, right: 0, top: 0, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   fill: { width: '100%', height: '100%' },
-  pageText: { position: 'absolute', left: TEXT_SIDE },
+  pageText: { position: 'absolute', left: TEXT_LEFT },
   // ~17.8 / 26.5 in AutoLayouted 17 (cap 12.3).
-  body: { fontFamily: fonts.reading, fontSize: 17.8, lineHeight: LINE_HEIGHT, letterSpacing: -0.04, color: READER_TEXT },
+  body: { fontFamily: fonts.reading, fontSize: 18.6, lineHeight: LINE_HEIGHT, letterSpacing: -0.04, color: READER_TEXT },
 
   // Preview (AutoLayouted-18): header 45 to a 1px #E9E9E9 rule; title Inter ExtraBold 31 / 43.7 (−0.75) at 93;
   // "N pages · N min read" Inter Medium 12.3 27 under it; subtitle Inter 16.3 / 26.4 #0F1419 (TH); the picture 360x272 at
@@ -693,6 +695,6 @@ const styles = StyleSheet.create({
   railPlus: { position: 'absolute', left: 17, top: 21, width: 17, height: 17, borderRadius: 8.5, borderWidth: 1.5, borderColor: '#FFFFFF', backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   railItem: { flexDirection: 'column', alignItems: 'center', gap: 4 },
   pageCount: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  pageCountText: { fontFamily: fonts.reading, fontSize: 14, lineHeight: 18, color: '#9A9A9A' },
+  pageCountText: { fontFamily: fonts.reading, fontSize: 13, lineHeight: 16, color: '#999999' },
   barText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.6, lineHeight: 16, color: colors.text },
 });
