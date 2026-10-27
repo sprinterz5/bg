@@ -2,7 +2,7 @@ import { useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, useWindowDimensions, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeIn, FadeInDown, ZoomIn, ZoomOut, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, ZoomIn, ZoomOut, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -87,9 +87,6 @@ export default function Home() {
 
   // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
   const swap = useSharedValue(1);
-  const onTab = useCallback(() => {
-    swap.set(withSequence(withTiming(0, { duration: 120 }), withTiming(1, { duration: 260 })));
-  }, [swap]);
 
   // Each category remembers where its list was. A category seen for the first time opens just under the pinned
   // categories (the same height wherever you were), unless you were still near the top.
@@ -97,14 +94,26 @@ export default function Home() {
   const offsets = useRef<Record<string, number>>({});
   const pendingScroll = useRef<number | null>(null);
   const [hold, setHold] = useState(0); // list height kept while the new category's posts arrive
+  // While a category is being put in place its posts show no entrance animation (a post growing from 0 height shortens
+  // the list and the position is lost) and the list stays hidden until it is where it belongs.
+  const switching = useRef(false);
   const switchTab = (next: string, change: () => void) => {
     const here = Math.max(0, y.get());
     offsets.current[tab] = here;
     const pinned = Math.max(0, tabsY.get() - (insets.top - 1));
     const target = offsets.current[next] ?? Math.min(here, pinned);
     pendingScroll.current = target;
+    switching.current = true;
     setHold(target + windowH);
-    onTab();
+    swap.set(0);
+    // never stay hidden if the new category never arrives
+    setTimeout(() => {
+      if (pendingScroll.current !== null) {
+        pendingScroll.current = null;
+        switching.current = false;
+        swap.set(withTiming(1, { duration: 220 }));
+      }
+    }, 4000);
     change();
   };
 
@@ -162,10 +171,17 @@ export default function Home() {
     const offset = pendingScroll.current;
     pendingScroll.current = null;
     requestAnimationFrame(() => {
+      // a jump is not a scroll up or down: keep the categories (and the tab bar) showing where we land
+      prevY.set(offset);
+      hide.set(0);
+      homeChromeHidden.set(0);
       listRef.current?.scrollToOffset({ offset, animated: false });
-      setHold(0);
+      // an empty category keeps its height, or the list would drop back to the top
+      if (posts.length > 0) setHold(0);
+      swap.set(withTiming(1, { duration: 220 }));
+      setTimeout(() => (switching.current = false), 600);
     });
-  }, [posts, loadedTab, tab]);
+  }, [posts, loadedTab, tab, prevY, hide, swap]);
 
   // FlatList mounts posts lazily while scrolling and remounts ones it dropped off-screen: those must appear as they
   // are, not fade in mid-scroll. A post animates in only on its first mount, while the screen opens or at the top (new post).
@@ -179,7 +195,7 @@ export default function Home() {
     const intro = now < introUntil.current;
     // Opening the screen: posts rise in one after another. Later, a new post at the top (a published article)
     // opens up room for itself, so the posts below glide down instead of jumping.
-    if (first && !intro && index < 3) {
+    if (first && !intro && index < 3 && !switching.current) {
       return (
         <GrowIn>
           <FeedPost post={item} onHide={hidePost} />
@@ -187,7 +203,7 @@ export default function Home() {
         </GrowIn>
       );
     }
-    const entering = first && intro ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : undefined;
+    const entering = first && intro && !switching.current ? FadeInDown.delay(Math.min(index, 4) * 70).duration(380) : undefined;
     return (
       <Animated.View collapsable={false} entering={entering}>
         <Swap value={swap}>
