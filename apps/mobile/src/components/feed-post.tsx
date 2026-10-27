@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   root: { paddingTop: 12.91, paddingBottom: 16.8 },
   avatar: { position: 'absolute', left: 14.6, top: 16.8 },
   column: { marginLeft: 64 },
-  head: { marginLeft: -0.25, height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
+  head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 15.75, lineHeight: 19, color: colors.text },
   handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
   dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
