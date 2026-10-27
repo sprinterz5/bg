@@ -51,7 +51,7 @@ export default function Welcome() {
   };
 
   // Not designed: password recovery needs an email, which accounts no longer have.
-  const forgot = () => Alert.alert('Forgotten password?', 'Password recovery is coming soon.');
+  const forgot = () => Alert.alert('Recover your password', 'Password recovery is coming soon.');
 
   return (
     <View style={styles.root}>
@@ -101,7 +101,7 @@ export default function Welcome() {
         </PressableScale>
         {/* Not designed: a failed sign-in replaces the recovery link with the error for a moment */}
         <Pressable onPress={forgot} hitSlop={8} style={styles.forgot} accessibilityRole="button">
-          <Text style={[styles.forgotText, error && styles.errorText]}>{error ? 'Wrong username or password' : 'Forgotten password?'}</Text>
+          <Text style={[styles.forgotText, error && styles.errorText]}>{error ? 'Wrong username or password' : <>Forgot your password details? <Text style={styles.recover}>Recover it</Text></>}</Text>
         </Pressable>
       </Animated.View>
 
@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
   loginText: { fontFamily: INTER_FAMILIES['600'], fontSize: 14.6, lineHeight: 17.6, color: '#FFFFFF' },
   // ink 523.8 = 17.7 under the pill, 3.2 into a 16.9 line box
   forgot: { alignSelf: 'center', marginTop: 14.5 },
+  recover: { fontFamily: INTER_FAMILIES['600'], color: colors.text },
   forgotText: { fontFamily: INTER_FAMILIES['600'], fontSize: 14, lineHeight: 16.9, color: GRAY },
   errorText: { color: colors.danger },
   bottom: { position: 'absolute', left: 23, right: 22 },

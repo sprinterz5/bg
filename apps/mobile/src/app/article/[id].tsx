@@ -5,33 +5,15 @@ import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, {
-  Easing,
-  FadeIn,
-  Extrapolation,
-  interpolate,
-  interpolateColor,
-  runOnJS,
-  runOnUI,
-  useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
-  withDelay,
-  withSequence,
-  withSpring,
-  withTiming,
-  type SharedValue,
-} from 'react-native-reanimated';
+import Animated, { Easing, Extrapolation, FadeIn, interpolate, runOnJS, runOnUI, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthorAvatar } from '@/components/author-row';
-import { Glass } from '@/components/glass';
 import { Icon, type IconName } from '@/components/icon';
 import { LikeButton } from '@/components/like-button';
 import { PlaceholderScreen } from '@/components/placeholder-screen';
 import { PostActions } from '@/components/post-actions';
 import { PressableScale } from '@/components/pressable-scale';
-import { RollingLabel } from '@/components/rolling-label';
 import { ShareSheet } from '@/components/share-sheet';
 import { titleCase } from '@/lib/title-case';
 import { paginateLines } from '@/lib/paginate';
@@ -377,21 +359,35 @@ function Reader({ article }: { article: Article }) {
       ) : null}
 
       <Animated.View collapsable={false} pointerEvents={page === 0 ? 'none' : 'box-none'} style={StyleSheet.absoluteFill}>
-        <Animated.View collapsable={false} style={[styles.card, { top: top + 23.5 }, cardIn]}>
-          {/* Blur from the first frame: turning it on later made the card and the cover blink on Android. */}
-          <Glass blurTarget={targetRef} radius={13.5} style={styles.glassFill}>
-            <Pressable onPress={() => openProfile(article.author.username, true)} hitSlop={6} accessibilityRole="link" style={styles.author}>
+        {/* Frame AutoLayouted-23/-24: a rail on the left (x 1, y 259, 39 wide, r 20, hairline border): the author with a
+            follow "+" (tap the face for the profile), like, comments, share, bookmark, counts under the icons. */}
+        <Animated.View collapsable={false} style={[styles.rail, { top: top + 212 }, cardIn]}>
+          <View style={styles.railAuthor}>
+            <Pressable onPress={() => openProfile(article.author.username, true)} hitSlop={6} accessibilityRole="link" accessibilityLabel={article.author.username}>
               <AuthorAvatar author={article.author} size={32} />
-              <View style={styles.authorNames}>
-                <Text style={styles.authorName}>{article.author.username}</Text>
-                <Text style={styles.authorSub}>{following ? 'You Follow' : 'Suggested'}</Text>
-              </View>
             </Pressable>
-            {pages && pages.length > 1 ? <PageDots count={pages.length} width={W} scrollX={scrollX} /> : null}
-            <View style={styles.followAt}>
-              <FollowPill following={following} onPress={toggleFollow} />
-            </View>
-          </Glass>
+            {following ? null : (
+              <PressableScale onPress={toggleFollow} hitSlop={8} scaleTo={0.8} style={styles.railPlus} accessibilityRole="button" accessibilityLabel="Follow">
+                <Icon name="profilePlus" width={9} height={9} tintColor="#FFFFFF" />
+              </PressableScale>
+            )}
+          </View>
+          <LikeButton
+            liked={liked}
+            onToggle={toggleLike}
+            count={likes}
+            icons={{ off: 'readerLike', on: 'readerLikeFilled' }}
+            width={23.5}
+            height={19.5}
+            gap={4}
+            style={styles.railItem}
+            countStyle={styles.barText}
+          />
+          <RailItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments + addedComments)} onPress={() => setCommenting(true)} />
+          <RailItem icon="readerShare" w={16.4} h={16.4} label={String(article.shares)} onPress={() => setSharing(true)} />
+          <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel="Bookmark" style={styles.railItem}>
+            <Icon name="readerBookmark" width={16.5} height={18.5} tintColor={saved ? colors.primary : undefined} />
+          </PressableScale>
         </Animated.View>
 
         <Animated.View collapsable={false} style={[styles.close, { top: top - 16 }, cardIn]}>
@@ -400,23 +396,11 @@ function Reader({ article }: { article: Article }) {
           </PressableScale>
         </Animated.View>
 
-        <Animated.View collapsable={false} style={[styles.bar, { height: BAR_H }, barIn]}>
-          <BarItem icon="readerComment" w={20.5} h={20.5} label={String(article.comments + addedComments)} x={43.75} iconTop={11.62} onPress={() => setCommenting(true)} />
-          <LikeButton
-            liked={liked}
-            onToggle={toggleLike}
-            count={likes}
-            icons={{ off: 'readerLike', on: 'readerLikeFilled' }}
-            width={23.5}
-            height={19.5}
-            style={[styles.barItem, { left: 133.75, top: 12.75 }]}
-            countStyle={styles.barText}
-          />
-          <BarItem icon="readerShare" w={16.4} h={16.4} label={String(article.shares)} x={232.8} iconTop={14.3} onPress={() => setSharing(true)} />
-          <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel="Bookmark" style={styles.barBookmark}>
-            <Icon name="readerBookmark" width={16.5} height={18.5} tintColor={saved ? colors.primary : undefined} />
-          </PressableScale>
-        </Animated.View>
+        {pages && pages.length > 1 ? (
+          <Animated.View collapsable={false} pointerEvents="none" style={[styles.pageCount, { bottom: insets.bottom + 24 }, barIn]}>
+            <PageCount count={pages.length} width={W} scrollX={scrollX} />
+          </Animated.View>
+        ) : null}
       </Animated.View>
 
       <Animated.View collapsable={false} pointerEvents={page === 0 ? 'box-none' : 'none'} style={[StyleSheet.absoluteFill, styles.preview, previewOut]}>
@@ -550,22 +534,6 @@ function FlyingCover({
 }
 
 /** Follow ↔ Following: the fill and text colour cross-fade, the word rolls. */
-function FollowPill({ following, onPress }: { following: boolean; onPress: () => void }) {
-  const on = useSharedValue(following ? 1 : 0);
-  useEffect(() => {
-    on.set(withTiming(following ? 1 : 0, { duration: 220, easing: Easing.out(Easing.cubic) }));
-  }, [following, on]);
-  const bg = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.get(), [0, 1], ['#000000', 'rgba(15,20,25,0.08)']) }));
-  const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.get(), [0, 1], ['#FFFFFF', colors.text]) }));
-  return (
-    <PressableScale onPress={onPress} scaleTo={0.94} accessibilityRole="button" accessibilityLabel={following ? 'Following' : 'Follow'}>
-      <Animated.View collapsable={false} style={[styles.follow, bg]}>
-        <RollingLabel text={following ? 'Following' : 'Follow'} style={[styles.followText, fg]} />
-      </Animated.View>
-    </PressableScale>
-  );
-}
-
 const HEART_W = 92;
 const HEART_H = (HEART_W * 19.75) / 23.5;
 
@@ -603,27 +571,25 @@ function ReaderPage({ text, width, left, textWidth, top }: { text: string; width
   );
 }
 
-function PageDots({ count, width, scrollX }: { count: number; width: number; scrollX: SharedValue<number> }) {
+// "1 of 3" under the text (Frame AutoLayouted-24), following the page in view.
+function PageCount({ count, width, scrollX }: { count: number; width: number; scrollX: SharedValue<number> }) {
+  const [page, setPage] = useState(1);
+  useAnimatedReaction(
+    () => Math.min(count, Math.max(1, Math.round(scrollX.get() / width) + 1)),
+    (n, prev) => {
+      if (n !== prev) runOnJS(setPage)(n);
+    },
+  );
   return (
-    <View style={styles.dots}>
-      {Array.from({ length: count }, (_, i) => (
-        <Dot key={i} index={i} width={width} scrollX={scrollX} />
-      ))}
-    </View>
+    <Text style={styles.pageCountText}>
+      {page} of {count}
+    </Text>
   );
 }
 
-function Dot({ index, width, scrollX }: { index: number; width: number; scrollX: SharedValue<number> }) {
-  const style = useAnimatedStyle(() => {
-    const distance = Math.min(1, Math.abs(scrollX.get() / width - index));
-    return { backgroundColor: interpolateColor(distance, [0, 1], ['#000000', colors.textSubtle]) };
-  });
-  return <Animated.View collapsable={false} style={[styles.dot, style]} />;
-}
-
-function BarItem({ icon, w, h, label, x, iconTop, onPress }: { icon: IconName; w: number; h: number; label: string; x: number; iconTop: number; onPress?: () => void }) {
+function RailItem({ icon, w, h, label, onPress }: { icon: IconName; w: number; h: number; label: string; onPress?: () => void }) {
   return (
-    <PressableScale onPress={onPress} disabled={!onPress} hitSlop={8} style={[styles.barItem, { left: x, top: iconTop }]}>
+    <PressableScale onPress={onPress} disabled={!onPress} hitSlop={8} style={styles.railItem}>
       <Icon name={icon} width={w} height={h} />
       <Text style={styles.barText}>{label}</Text>
     </PressableScale>
@@ -694,5 +660,11 @@ const styles = StyleSheet.create({
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.bg, borderTopWidth: 0.5, borderTopColor: '#E5E5E5' },
   barItem: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 9.5 },
   barBookmark: { position: 'absolute', left: 323.75, top: 12.75 },
+  rail: { position: 'absolute', left: 1, width: 39, paddingTop: 9.5, paddingBottom: 14, borderRadius: 20, borderWidth: 1, borderColor: '#EDEDED', backgroundColor: colors.bg, alignItems: 'center', gap: 20 },
+  railAuthor: { width: 32, height: 38 },
+  railPlus: { position: 'absolute', left: 17, top: 21, width: 17, height: 17, borderRadius: 8.5, borderWidth: 1.5, borderColor: '#FFFFFF', backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
+  railItem: { alignItems: 'center', gap: 4 },
+  pageCount: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  pageCountText: { fontFamily: fonts.reading, fontSize: 14, lineHeight: 18, color: '#9A9A9A' },
   barText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.6, lineHeight: 16, color: colors.text },
 });
