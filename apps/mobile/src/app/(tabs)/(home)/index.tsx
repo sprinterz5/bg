@@ -128,6 +128,8 @@ export default function Home() {
 
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
   // The status-bar cover is for posts passing under the status bar: it goes as the top bar comes back over it.
+  // the hairline under the status bar is for scrolling down; scrolling up the categories sit there with their own line
+  const fadeLineStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, hide.get() / BAR)) }));
   const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(y.get(), 0) / top) }));
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
