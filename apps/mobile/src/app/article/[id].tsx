@@ -1,11 +1,10 @@
-import { BlurTargetView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent, type HostInstance } from 'react-native';
+import { Alert, BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { Easing, Extrapolation, FadeIn, interpolate, runOnJS, runOnUI, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, Extrapolation, FadeIn, interpolate, runOnJS, runOnUI, useAnimatedReaction, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthorAvatar } from '@/components/author-row';
@@ -35,10 +34,9 @@ import type { Picture } from '@/lib/picture';
 // y − 47 (status bar).
 const LINE_HEIGHT = 26.5;
 const TEXT_SIDE = 43;
-const TEXT_TOP = 107.3;
-const STRIP_H = 59;
+// first text line at y ~100 of AutoLayouted-23 (no cover strip above the text any more)
+const TEXT_TOP = 52;
 const PAGE_BOTTOM_PAD = 10;
-const noop = () => {};
 // Open / close (not in the design): the cover grows out of the tapped picture (feed, Explore, profile) into the
 // preview's picture and the rest of the reader comes in after it; closing shrinks it back into that picture.
 const OPEN_MS = 440;
@@ -70,7 +68,6 @@ type Rect = { x: number; y: number; w: number; h: number };
 function Reader({ article }: { article: Article }) {
   const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const targetRef = useRef<HostInstance>(null);
   const scrollX = useSharedValue(0);
 
   const [lines, setLines] = useState<string[] | null>(null);
@@ -103,14 +100,12 @@ function Reader({ article }: { article: Article }) {
   const [page, setPage] = useState(captureParam('text') ? 1 : 0);
   const rise = useSharedValue(captureParam('text') ? 1 : 0);
   const textCount = pages ? pages.length : 0;
-  // Preview → text (not in the design): the text flows out of the preview. Its picture morphs into the cover strip at
-  // the top of the text pages (MorphCover below), the preview's words drift up and fade, the text rises from below,
-  // the author card settles in from the top and the bar slides up from the bottom — all with the finger.
+  // Preview → text (not in the design): the preview drifts up and fades while the text rises from below and the
+  // rail settles in — all with the finger.
   const previewOut = useAnimatedStyle(() => {
     const p = rise.get();
     return { opacity: interpolate(p, [0, 0.6], [1, 0], Extrapolation.CLAMP), transform: [{ translateY: -H * 0.18 * p }] };
   });
-  const stripIn = useAnimatedStyle(() => ({ opacity: rise.get() > 0.995 ? 1 : 0 }));
   // The author card slides down from above the screen (no fading: its blur jumps in on iOS when faded); ✕ comes with it.
   const cardIn = useAnimatedStyle(() => {
     const p = interpolate(rise.get(), [0.35, 1], [0, 1], Extrapolation.CLAMP);
@@ -118,7 +113,6 @@ function Reader({ article }: { article: Article }) {
     return { transform: [{ translateY: -(top + 90) * (1 - eased) }] };
   });
   const barIn = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * (BAR_H + 20) }] }));
-  const morphing = useDerivedValue<number>(() => (rise.get() > 0.001 && rise.get() < 0.995 ? 1 : 0));
 
   // Double tap on the text likes the article (never unlikes) and pops a big heart where the finger was.
   const [hearts, setHearts] = useState<{ id: number; x: number; y: number; tilt: number }[]>([]);
@@ -152,7 +146,6 @@ function Reader({ article }: { article: Article }) {
   // Where the preview's picture is (window coordinates), known after its first layout.
   const [picture, setPicture] = useState<Rect | null>(null);
   // The cover's own width / height: the preview → text morph crops it exactly like both pictures it joins.
-  const [coverAspect, setCoverAspect] = useState<number | null>(null);
   // The copy of the cover is a new image view: start flying once it is on screen (it sits exactly over the
   // picture in the list until then), or after a short wait if it never says so.
   const [coverReady, setCoverReady] = useState(!origin);
@@ -327,26 +320,6 @@ function Reader({ article }: { article: Article }) {
       </View>
 
       {/* Text pages' cover strip: the blur source of the author card. */}
-      <Animated.View collapsable={false} pointerEvents="none" style={[StyleSheet.absoluteFill, stripIn]}>
-        <BlurTargetView ref={targetRef} style={StyleSheet.absoluteFill}>
-          <View style={[styles.cover, { height: top + STRIP_H }]}>
-            <Image source={article.cover} style={styles.fill} contentFit="cover" />
-          </View>
-        </BlurTargetView>
-      </Animated.View>
-
-      {/* The preview's picture on its way to the strip (under the author card, so the card's glass blurs it). */}
-      {picture ? (
-        <FlyingCover
-          origin={{ ...picture, radius: 1, aspect: coverAspect }}
-          source={article.cover}
-          t={rise}
-          flying={morphing}
-          target={{ x: 0, y: 0, w: W, h: top + STRIP_H }}
-          onShown={noop}
-        />
-      ) : null}
-
       {/* Mounted once the cover has landed: building the pages during the flight cost frames. Text page i sits at
           (i + 1) screens; the preview above them slides with the same offset. */}
       {pages && opened ? (
@@ -434,7 +407,7 @@ function Reader({ article }: { article: Article }) {
           pointerEvents="none"
           onLayout={measurePicture}
           style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 40.96 : 51.7 }, pictureVisible]}>
-          <Image source={article.cover} style={styles.fill} contentFit="cover" onLoad={(e) => e.source.width && e.source.height && setCoverAspect(e.source.width / e.source.height)} />
+          <Image source={article.cover} style={styles.fill} contentFit="cover" />
         </Animated.View>
         <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 55 }, chromeStyle]}>
           <PressableScale onPress={() => setSharing(true)} hitSlop={8} accessibilityLabel="Share" style={styles.previewShare}>
@@ -664,7 +637,7 @@ const styles = StyleSheet.create({
   rail: { position: 'absolute', left: 1, width: 39, paddingTop: 9.5, paddingBottom: 14, borderRadius: 20, borderWidth: 1, borderColor: '#EDEDED', backgroundColor: colors.bg, alignItems: 'center', gap: 20 },
   railAuthor: { width: 32, height: 38 },
   railPlus: { position: 'absolute', left: 17, top: 21, width: 17, height: 17, borderRadius: 8.5, borderWidth: 1.5, borderColor: '#FFFFFF', backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
-  railItem: { alignItems: 'center', gap: 4 },
+  railItem: { flexDirection: 'column', alignItems: 'center', gap: 4 },
   pageCount: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   pageCountText: { fontFamily: fonts.reading, fontSize: 14, lineHeight: 18, color: '#9A9A9A' },
   barText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.6, lineHeight: 16, color: colors.text },
