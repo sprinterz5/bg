@@ -433,12 +433,14 @@ function Reader({ article }: { article: Article }) {
           </PressableScale>
         </Animated.View>
 
-        {pages && pages.length > 1 ? (
-          <Animated.View collapsable={false} pointerEvents="none" style={[styles.pageCount, { bottom: insets.bottom + 10 }, barIn, chromeFade]}>
-            <PageCount count={pages.length} width={W} scrollX={scrollX} />
-          </Animated.View>
-        ) : null}
       </Animated.View>
+
+      {/* the page number stays while reading: it does not go with the chrome that fades after a moment */}
+      {pages && pages.length > 1 ? (
+        <Animated.View collapsable={false} pointerEvents="none" style={[styles.pageCount, { bottom: insets.bottom + 10 }, barIn]}>
+          <PageCount count={pages.length} width={W} scrollX={scrollX} />
+        </Animated.View>
+      ) : null}
 
       <Animated.View collapsable={false} pointerEvents={page === 0 ? 'box-none' : 'none'} style={[StyleSheet.absoluteFill, styles.preview, previewOut]}>
         <Animated.View collapsable={false} style={[styles.previewHead, { marginTop: top }, chromeStyle]}>
