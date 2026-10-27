@@ -8,7 +8,7 @@ import type { Story } from '@/mock/data';
 import { colors } from '@/theme';
 import { PressableScale } from './pressable-scale';
 import { RingSweep, SeenRing, StoryRing } from './ring-sweep';
-import { INTER_FAMILIES, Text } from '@/components/text';
+import { Text, sf } from '@/components/text';
 import { push } from '@/lib/nav';
 import { onStoriesClosing, setStoryOrigin } from '@/lib/story-origin';
 import { useSeenStories } from '@/state/feed';
@@ -167,5 +167,5 @@ const styles = StyleSheet.create({
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
-  name: { marginTop: 3.3, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 11.95, lineHeight: 15, letterSpacing: 0, color: colors.text },
+  name: { marginTop: 3.3, maxWidth: 92, ...sf('400'), fontSize: 11.95, lineHeight: 15, letterSpacing: 0, color: colors.text },
 });

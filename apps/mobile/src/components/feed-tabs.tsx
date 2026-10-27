@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
-import { AnimatedText, INTER_FAMILIES } from '@/components/text';
+import { AnimatedText, sf } from '@/components/text';
 import { colors } from '@/theme';
 
 const TABS = ['For you', 'Following', 'Saved', 'History'] as const;
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   tab: { position: 'absolute', top: 18.15 },
   // "For you" alone sits 1 higher (asked for)
   firstTab: { top: 17.15 },
-  label: { fontFamily: INTER_FAMILIES['500'], fontSize: 15, lineHeight: 19, color: '#999999' },
+  label: { ...sf('500'), fontSize: 15, lineHeight: 19, color: '#999999' },
   line: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 0.75, backgroundColor: '#E9E9E9' },
   bar: { position: 'absolute', left: 0, bottom: 0.25, width: BAR, height: 2.5, borderRadius: 1.25, backgroundColor: '#2A2121' },
 });

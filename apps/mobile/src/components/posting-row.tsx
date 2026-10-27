@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, FadeIn, FadeOutDown, SlideInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { Icon } from '@/components/icon';
-import { INTER_FAMILIES, Text } from '@/components/text';
+import { Text, sf } from '@/components/text';
 import type { Publishing } from '@/state/feed';
 
 // AutoLayouted-40 (TH(2)): a card floating 8 above the tab bar — 372×51 (r 13) #C9C8CC at x 9 with a soft shadow
@@ -76,9 +76,9 @@ const styles = StyleSheet.create({
   // the label keeps the frame's x; with the title under it the pair is centred in the card
   texts: { position: 'absolute', left: 18.2, right: 100, top: 7.5 },
   labelRow: { flexDirection: 'row', alignItems: 'center' },
-  label: { fontFamily: INTER_FAMILIES['400'], fontSize: 14.4, lineHeight: 17.3, color: '#FFFFFF' },
+  label: { ...sf('400'), fontSize: 14.4, lineHeight: 17.3, color: '#FFFFFF' },
   check: { marginLeft: 6 },
-  title: { marginTop: 1, fontFamily: INTER_FAMILIES['500'], fontSize: 12, lineHeight: 15, color: 'rgba(255,255,255,0.85)' },
+  title: { marginTop: 1, ...sf('500'), fontSize: 12, lineHeight: 15, color: 'rgba(255,255,255,0.85)' },
   cancel: { position: 'absolute', left: 280, top: 19.5 },
   thumb: { position: 'absolute', left: 311, top: 9, width: 48, height: 34, borderRadius: 5, overflow: 'hidden' },
   faded: { opacity: 0.5 },

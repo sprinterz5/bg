@@ -17,7 +17,7 @@ import { PullSpinner } from '@/components/pull-spinner';
 import type { Post } from '@/mock/data';
 import { useFeed } from '@/state/feed';
 import { colors, fonts } from '@/theme';
-import { INTER_FAMILIES, Text } from '@/components/text';
+import { Text, sf } from '@/components/text';
 import { homeChromeHidden } from '@/lib/chrome';
 import { push } from '@/lib/nav';
 import { CAPTURE } from '@/lib/capture';
@@ -290,6 +290,6 @@ const styles = StyleSheet.create({
   // 1 more between the stories and the tabs (everything below moves down with them)
   tabsGap: { marginTop: 1 },
   bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: colors.bg },
-  empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
+  empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', ...sf('400'), fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
   stories: { marginTop: -2, marginLeft: -2.5 },
 });
