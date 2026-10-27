@@ -251,9 +251,7 @@ export default function Home() {
       {/* Content scrolls under the status bar and fades out there (69px in the frame = status bar + 22). */}
       {/* SVG gradient via expo-image: expo-linear-gradient is not in the Android dev build. */}
       {/* While the bar is away: solid white behind the status bar down to design y 45, then a 0.75 #E9E9E9 line */}
-      <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 2 }, fadeStyle]}>
-        <View style={styles.fadeLine} />
-      </Animated.View>
+      <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 2 }, fadeStyle]} />
       {/* the feed tabs again, over the page: pinned under the status bar while scrolling up */}
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.pinnedTabs, pinnedStyle]}>
         <FeedTabs
@@ -304,7 +302,6 @@ const styles = StyleSheet.create({
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
   logo: { marginTop: -1.3, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39, lineHeight: 50, color: colors.text, transform: [{ translateX: -4.35 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: colors.bg },
-  fadeLine: { position: 'absolute', left: 0, right: 0, bottom: -0.75, height: 0.75, backgroundColor: '#E9E9E9' },
   content: { paddingBottom: 24 },
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
