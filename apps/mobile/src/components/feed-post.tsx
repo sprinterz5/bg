@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   comment: { position: 'absolute', left: 91.9, top: 0.7 },
   views: { position: 'absolute', left: 180.3, top: 0.85 },
   bookmark: { position: 'absolute', left: 265.3, top: 0.6 },
-  share: { position: 'absolute', left: 299.3, top: 1.2 },
+  share: { position: 'absolute', left: 298.3, top: 1.2 },
   count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countDark: { color: '#424242' },
