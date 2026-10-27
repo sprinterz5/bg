@@ -256,6 +256,7 @@ export default function Home() {
       <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 2 }, fadeStyle]} />
       {/* the feed tabs again, over the page: pinned under the status bar while scrolling up */}
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.pinnedTabs, pinnedStyle]}>
+        <View style={styles.pinnedCap} />
         <FeedTabs
           value={tab}
           onChange={(t) => {
@@ -310,6 +311,7 @@ const styles = StyleSheet.create({
   storiesGap: { marginBottom: 0.7 },
   // 1 more between the stories and the tabs (everything below moves down with them)
   tabsGap: { marginTop: 1 },
+  pinnedCap: { position: 'absolute', left: 0, right: 0, top: -6, height: 6, backgroundColor: colors.bg },
   pinnedTabs: { position: 'absolute', top: 0, left: 0, right: 0, height: TABS_H, backgroundColor: colors.bg },
   bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: colors.bg },
   empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
