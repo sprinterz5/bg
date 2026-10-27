@@ -136,7 +136,7 @@ export const FeedSeparator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
-  root: { paddingTop: 10.91, paddingBottom: 21.8 },
+  root: { paddingTop: 10.91, paddingBottom: 17.8 },
   avatar: { position: 'absolute', left: 14.1, top: 15.05 },
   column: { marginLeft: 63.5 },
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   text: { marginTop: 4.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 15.05, lineHeight: 21.7, color: colors.text },
   media: { marginTop: 18.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
-  actions: { height: 18.5, marginTop: 10.9, marginLeft: 1.75, marginRight: 0 },
+  actions: { height: 18.5, marginTop: 12.9, marginLeft: 1.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
   like: { position: 'absolute', left: 0.08, top: 1.39 },
   comment: { position: 'absolute', left: 91.9, top: 0.7 },
