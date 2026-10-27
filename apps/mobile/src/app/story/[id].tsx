@@ -609,9 +609,11 @@ function CubeFace({ at, idx, mode, progress, width, children }: { at: number; id
   const face = useAnimatedStyle(() => {
     const m = mode.get();
     const p = at - (idx.get() + (m === 1 ? progress.get() : m === -1 ? progress.get() - 1 : 0));
-    // Seen from outside: the faces sit on a cube whose centre is W/2 behind the screen. A face p pages away is turned
-    // by p·90° about that centre: Ry(θ) plus the move of its own centre, (r·sinθ, 0, r·cosθ − r), then the perspective
-    // divide (w = 1 − z/d). One 4×4 matrix, column-major (RN has no translateZ).
+    // Seen from outside: the faces sit on a cube whose centre is W/2 behind the screen, a face p pages away turned by
+    // p·90° about it. Android drops the z move and the off-centre vanishing point of a general matrix, so the seams
+    // drifted. Here each face is the same projected quad written as [translateX, perspective, rotateY, scale] (which
+    // every platform applies as is): the true edge x and edge heights are computed, then the scale s, the turn φ, the
+    // camera distance dc and the shift a that reproduce exactly those four numbers.
     const r = width / 2;
     const d = width * 3;
     const t = Math.max(-1, Math.min(1, p)) * (Math.PI / 2);
@@ -619,9 +621,22 @@ function CubeFace({ at, idx, mode, progress, width, children }: { at: number; id
     const sn = Math.sin(t);
     const tx = r * sn;
     const tz = r * c - r;
+    const hR = d / (d - (tz - r * sn));
+    const hL = d / (d - (tz + r * sn));
+    const xR = (tx + r * c) * hR;
+    const xL = (tx - r * c) * hL;
+    const s = (2 * hL * hR) / (hL + hR);
+    const k = (s * (1 / hR - 1 / hL)) / (2 * r);
+    let phi = t;
+    let dc = d;
+    if (Math.abs(k * r) > 1e-4) {
+      phi = Math.sign(k) * Math.acos(Math.min(1, ((xR - xL) * (1 - k * r * k * r)) / (2 * s * r)));
+      dc = (s * Math.sin(phi)) / k;
+    }
+    const a = xR - (s * r * Math.cos(phi)) / (1 + k * r);
     return {
       opacity: Math.abs(p) >= 0.999 ? 0 : 1,
-      transform: [{ matrix: [c, 0, -sn, sn / d, 0, 1, 0, 0, sn, 0, c, -c / d, tx, 0, tz, 1 - tz / d] }],
+      transform: [{ translateX: a }, { perspective: dc }, { rotateY: `${phi}rad` }, { scale: s }],
     };
   });
   const shade = useAnimatedStyle(() => {

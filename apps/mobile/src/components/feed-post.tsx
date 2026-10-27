@@ -101,16 +101,16 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
           <View style={styles.views}>
             {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
-            <Icon name="feedViews" width={14.86} height={15.8} />
+            <Icon name="feedViewsBlack" width={14.86} height={15.8} />
           </View>
-          <Text style={[styles.count, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
+          <Text style={[styles.count, styles.countDark, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
             <PopIcon active={saved}>
-              <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmark'} width={14.5} height={16.1} />
+              <Icon name={saved ? 'feedBookmarkFilled' : 'feedBookmarkBlack'} width={14.5} height={16.1} />
             </PopIcon>
           </PressableScale>
           <PressableScale onPress={share} hitSlop={10} accessibilityLabel="Share" style={styles.share}>
-            <Icon name="feedShare" width={15.5} height={15.5} />
+            <Icon name="feedShareBlack" width={15.5} height={15.5} />
           </PressableScale>
         </View>
       </View>
