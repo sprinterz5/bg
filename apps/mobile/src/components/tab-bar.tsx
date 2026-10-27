@@ -44,7 +44,7 @@ const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
   },
 };
 
-const BAR_H = 46.5; // hairline → where the home indicator area starts (81 - 34 in the frame); the icons sit as if it were 48
+const BAR_H = 48.5; // hairline → where the home indicator area starts (81 - 34 in the frame); the icons sit as if it were 48
 const TAB_W = 64;
 
 export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {

@@ -47,7 +47,7 @@ export default function Home() {
   // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
   // overscroll, so there a pan gesture drags the list down past the top.
   // Header and list sit 1 above the design's status-bar line (asked for after checking on the phone).
-  const headerTop = insets.top - 1;
+  const headerTop = insets.top - 2;
   const top = headerTop + HEADER_H;
   const y = useSharedValue(0);
   // where the in-list feed tabs sit in the page (content y), measured on layout
@@ -74,7 +74,7 @@ export default function Home() {
   const headerLineStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, (y.get() - BAR) / 12)) }));
   // The feed tabs follow the page up to just under the status bar. Scrolling up they come back there (sliding down from
   // above); near the top this is the same spot as the in-list row, so the hand-over is seamless.
-  const pinTop = insets.top - 1;
+  const pinTop = insets.top - 2;
   const pinnedStyle = useAnimatedStyle(() => {
     const p = 1 - hide.get() / BAR;
     const pinned = pinTop - (1 - p) * (TABS_H + pinTop);
@@ -316,7 +316,7 @@ export default function Home() {
       {/* Content scrolls under the status bar and fades out there (69px in the frame = status bar + 22). */}
       {/* SVG gradient via expo-image: expo-linear-gradient is not in the Android dev build. */}
       {/* While the bar is away: solid white behind the status bar down to design y 45, then a 0.75 #E9E9E9 line */}
-      <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 2 }, fadeStyle]} />
+      <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 3 }, fadeStyle]} />
       {/* the feed tabs again, over the page: pinned under the status bar while scrolling up */}
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.pinnedTabs, pinnedStyle]}>
         <View style={styles.pinnedCap} />
@@ -328,7 +328,7 @@ export default function Home() {
       </Animated.View>
       {/* AutoLayouted-40: "Posting..." floats 8 above the tab bar (whose top is 47 above the home indicator) */}
       {publishing && !publishing.done ? (
-        <PostingRow publishing={publishing} bottom={insets.bottom + 46.5 + 8} onRetry={retryPublish} onCancel={cancelPublish} onOpen={(id) => push(`/article/${id}`)} />
+        <PostingRow publishing={publishing} bottom={insets.bottom + 48.5 + 8} onRetry={retryPublish} onCancel={cancelPublish} onOpen={(id) => push(`/article/${id}`)} />
       ) : null}
     </View>
   );
