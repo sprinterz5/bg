@@ -130,6 +130,19 @@ function Reader({ article }: { article: Article }) {
     setChromeOn(true);
     arm();
   };
+  // A touch shows hidden controls; a tap while they're shown hides them (not on the rail or ✕ themselves).
+  const wasOn = useRef(true);
+  const touch = () => {
+    wasOn.current = chromeOn;
+    if (chromeOn) arm();
+    else wake();
+  };
+  const tapped = (x: number, y: number) => {
+    if (page === 0 || !wasOn.current || x < 50 || (y < top + 50 && x > W - 70)) return;
+    if (idle.current) clearTimeout(idle.current);
+    chrome.set(withTiming(0, { duration: 300 }));
+    setChromeOn(false);
+  };
   useEffect(() => {
     arm();
     return () => {
@@ -310,7 +323,13 @@ function Reader({ article }: { article: Article }) {
     .onFinalize(() => {
       axis.set(0);
     });
-  const readerGestures = Gesture.Simultaneous(pan, doubleTap);
+  const singleTap = Gesture.Tap()
+    .requireExternalGestureToFail(doubleTap)
+    // eslint-disable-next-line react-hooks/refs -- gesture callbacks run on gesture events, not during render
+    .onEnd((e, ok) => {
+      if (ok) runOnJS(tapped)(e.absoluteX, e.absoluteY);
+    });
+  const readerGestures = Gesture.Simultaneous(pan, doubleTap, singleTap);
   const pagesRow = useAnimatedStyle(() => ({
     opacity: interpolate(rise.get(), [0.25, 0.9], [0, 1], Extrapolation.CLAMP),
     transform: [{ translateY: (1 - rise.get()) * H * 0.55 }, { translateX: -scrollX.get() }],
@@ -333,7 +352,7 @@ function Reader({ article }: { article: Article }) {
 
 
   return (
-    <View style={styles.root} onTouchStart={wake}>
+    <View style={styles.root} onTouchStart={touch}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
       <GestureDetector gesture={readerGestures}>
       <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, styles.slide, slideStyle]}>
