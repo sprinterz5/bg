@@ -112,6 +112,31 @@ function Reader({ article }: { article: Article }) {
     const eased = 1 - (1 - p) * (1 - p) * (1 - p);
     return { transform: [{ translateY: -(top + 90) * (1 - eased) }] };
   });
+  // Not designed: while reading, the rail, ✕ and the page count fade out after 3.5 s without a touch; any touch
+  // brings them back (the first touch only wakes them, it doesn't press a hidden button).
+  const chrome = useSharedValue(1);
+  const [chromeOn, setChromeOn] = useState(true);
+  const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const arm = useCallback(() => {
+    if (idle.current) clearTimeout(idle.current);
+    if (page === 0) return;
+    idle.current = setTimeout(() => {
+      chrome.set(withTiming(0, { duration: 700 }));
+      setChromeOn(false);
+    }, 3500);
+  }, [chrome, page]);
+  const wake = () => {
+    chrome.set(withTiming(1, { duration: 200 }));
+    setChromeOn(true);
+    arm();
+  };
+  useEffect(() => {
+    arm();
+    return () => {
+      if (idle.current) clearTimeout(idle.current);
+    };
+  }, [arm]);
+  const chromeFade = useAnimatedStyle(() => ({ opacity: chrome.get() }));
   const barIn = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - rise.get()) * (BAR_H + 20) }] }));
 
   // Double tap on the text likes the article (never unlikes) and pops a big heart where the finger was.
@@ -308,7 +333,7 @@ function Reader({ article }: { article: Article }) {
 
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onTouchStart={wake}>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
       <GestureDetector gesture={readerGestures}>
       <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, styles.slide, slideStyle]}>
@@ -332,7 +357,7 @@ function Reader({ article }: { article: Article }) {
         </Animated.View>
       ) : null}
 
-      <Animated.View collapsable={false} pointerEvents={page === 0 ? 'none' : 'box-none'} style={StyleSheet.absoluteFill}>
+      <Animated.View collapsable={false} pointerEvents={page === 0 || !chromeOn ? 'none' : 'box-none'} style={[StyleSheet.absoluteFill, chromeFade]}>
         {/* Frame AutoLayouted-23/-24: a rail on the left (x 1, y 259, 39 wide, r 20, hairline border): the author with a
             follow "+" (tap the face for the profile), like, comments, share, bookmark, counts under the icons. */}
         <Animated.View collapsable={false} style={[styles.rail, { top: top + 212 }, cardIn]}>
@@ -371,7 +396,7 @@ function Reader({ article }: { article: Article }) {
         </Animated.View>
 
         {pages && pages.length > 1 ? (
-          <Animated.View collapsable={false} pointerEvents="none" style={[styles.pageCount, { bottom: insets.bottom + 24 }, barIn]}>
+          <Animated.View collapsable={false} pointerEvents="none" style={[styles.pageCount, { bottom: insets.bottom + 24 }, barIn, chromeFade]}>
             <PageCount count={pages.length} width={W} scrollX={scrollX} />
           </Animated.View>
         ) : null}
