@@ -16,7 +16,7 @@ import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 import { useReaction } from '@/lib/reactions';
 import { report } from '@/lib/moderation';
-import { openComments, openShare } from '@/components/share-host';
+import { openShare } from '@/components/share-host';
 import { useAddedComments } from '@/components/comments-sheet';
 
 const GRAY = '#999999';
@@ -41,16 +41,12 @@ function shortAge(ago: string) {
 // picture: like 520, comment 270, views 3K, bookmark, share (all #999, counts Inter 12.35); 16.3 to the separator.
 export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; onHide: (id: string) => void }) {
   const addedComments = useAddedComments(post.articleId);
-  const { liked, saved, likes, toggleLike: like, toggleSave: save } = useReaction(post.articleId, { liked: !!post.liked, saved: !!post.saved, likes: post.likes });
+  const { liked, saved, likes, toggleSave: save } = useReaction(post.articleId, { liked: !!post.liked, saved: !!post.saved, likes: post.likes });
   const [menu, setMenu] = useState(false);
   // The reader grows its cover out of this picture.
   const media = useRef<HostInstance>(null);
   const openArticle = () => openArticleFrom(post.articleId, media.current, post.image, RADIUS);
   const name = post.author.name ?? post.author.username;
-  const toggleLike = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    like();
-  };
   const toggleSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     save();
@@ -91,19 +87,18 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         </PressableScale>
 
         <View style={styles.actions}>
-          <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
-            <PopIcon active={liked}>
-              <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={17.85} height={15.725} />
-            </PopIcon>
-          </PressableScale>
+          {/* not pressable here: a post is liked and commented in the reader, after reading it */}
+          <View style={styles.like} accessibilityLabel="Likes">
+            <Icon name={liked ? 'feedLikeFilled' : 'feedLikeBlack'} width={17.85} height={15.725} />
+          </View>
           {/* the count rolls to its new value */}
           <View style={[styles.countBox, styles.likeCount]}>
-            <RollingLabel text={formatCount(likes)} style={styles.countText} />
+            <RollingLabel text={formatCount(likes)} style={[styles.countText, styles.countDark]} />
           </View>
-          <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
-            <Icon name="feedComment" width={16.4} height={16.4} />
-          </PressableScale>
-          <Text style={[styles.count, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
+          <View style={styles.comment} accessibilityLabel="Comments">
+            <Icon name="feedCommentBlack" width={16.4} height={16.4} />
+          </View>
+          <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
           <View style={styles.views}>
             {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
             <Icon name="feedViews" width={14.86} height={15.8} />
@@ -161,6 +156,7 @@ const styles = StyleSheet.create({
   share: { position: 'absolute', left: 301.3, top: 1.2 },
   count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   caption: { color: colors.text },
+  countDark: { color: colors.text },
   countBox: { position: 'absolute', top: 1.9, height: 16, overflow: 'hidden' },
   countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   likeCount: { left: 23.26 },

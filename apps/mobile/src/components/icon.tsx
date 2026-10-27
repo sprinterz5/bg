@@ -43,6 +43,8 @@ const icons = {
   feedLike: require('@/assets/icons/feed-like.svg'),
   feedLikeFilled: require('@/assets/icons/feed-like-filled.svg'),
   feedComment: require('@/assets/icons/feed-comment.svg'),
+  feedLikeBlack: require('@/assets/icons/feed-like-black.svg'),
+  feedCommentBlack: require('@/assets/icons/feed-comment-black.svg'),
   feedViews: require('@/assets/icons/feed-views.svg'),
   feedBookmark: require('@/assets/icons/feed-bookmark.svg'),
   feedBookmarkFilled: require('@/assets/icons/feed-bookmark-filled.svg'),
