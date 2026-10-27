@@ -609,11 +609,19 @@ function CubeFace({ at, idx, mode, progress, width, children }: { at: number; id
   const face = useAnimatedStyle(() => {
     const m = mode.get();
     const p = at - (idx.get() + (m === 1 ? progress.get() : m === -1 ? progress.get() - 1 : 0));
-    // the hinge goes to the shared edge: translate there, turn, translate back (same transform shape every frame)
-    const edge = p > 0 ? -width / 2 : width / 2;
+    // Seen from outside: the faces sit on a cube whose centre is W/2 behind the screen. A face p pages away is turned
+    // by p·90° about that centre: Ry(θ) plus the move of its own centre, (r·sinθ, 0, r·cosθ − r), then the perspective
+    // divide (w = 1 − z/d). One 4×4 matrix, column-major (RN has no translateZ).
+    const r = width / 2;
+    const d = width * 3;
+    const t = Math.max(-1, Math.min(1, p)) * (Math.PI / 2);
+    const c = Math.cos(t);
+    const sn = Math.sin(t);
+    const tx = r * sn;
+    const tz = r * c - r;
     return {
       opacity: Math.abs(p) >= 0.999 ? 0 : 1,
-      transform: [{ perspective: width * 3 }, { translateX: p * width + edge }, { rotateY: `${-p * 90}deg` }, { translateX: -edge }],
+      transform: [{ matrix: [c, 0, -sn, sn / d, 0, 1, 0, 0, sn, 0, c, -c / d, tx, 0, tz, 1 - tz / d] }],
     };
   });
   const shade = useAnimatedStyle(() => {
