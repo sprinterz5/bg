@@ -61,7 +61,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   return (
     <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={styles.root}>
       <Pressable onPress={() => openProfile(post.author.username)} hitSlop={4} accessibilityRole="link" accessibilityLabel={`${post.author.username} profile`} style={styles.avatar}>
-        <AuthorAvatar author={post.author} size={41} />
+        <AuthorAvatar author={post.author} size={44} />
       </Pressable>
 
       <View style={styles.column}>
@@ -93,7 +93,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         <View style={styles.actions}>
           <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
             <PopIcon active={liked}>
-              <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={21} height={18.5} />
+              <Icon name={liked ? 'feedLikeFilled' : 'feedLike'} width={17.85} height={15.725} />
             </PopIcon>
           </PressableScale>
           {/* the count rolls to its new value */}
@@ -142,18 +142,19 @@ export const FeedSeparator = () => <View style={styles.separator} />;
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
   root: { paddingTop: 10.91, paddingBottom: 21.8 },
-  avatar: { position: 'absolute', left: 8.5, top: 14.05 },
+  avatar: { position: 'absolute', left: 9.5, top: 14.05 },
   column: { marginLeft: 59.5 },
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
-  name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 15.4, lineHeight: 19, color: colors.text },
-  handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.4, lineHeight: 19, color: GRAY, opacity: 0.95 },
+  name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 15.75, lineHeight: 19, color: colors.text },
+  handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
   dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
-  age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 15.4, lineHeight: 19, color: GRAY, opacity: 0.95 },
-  text: { marginTop: 1.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.9, lineHeight: 21.7, color: colors.text },
-  media: { marginTop: 14.3, marginLeft: 0.7, width: 323.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
+  age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
+  text: { marginTop: 1.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 15.05, lineHeight: 21.7, color: colors.text },
+  media: { marginTop: 14.3, marginLeft: -0.8, width: 323.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
-  actions: { height: 18.5, marginTop: 10.9, marginLeft: 1 },
-  like: { position: 'absolute', left: -1.5, top: 0 },
+  actions: { height: 18.5, marginTop: 10.9, marginLeft: -0.5 },
+  // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
+  like: { position: 'absolute', left: 0.08, top: 1.39 },
   comment: { position: 'absolute', left: 91.9, top: 0.7 },
   views: { position: 'absolute', left: 180.3, top: 0.85 },
   bookmark: { position: 'absolute', left: 265.3, top: 0.6 },

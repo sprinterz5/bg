@@ -197,7 +197,7 @@ export default function Home() {
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
               <HomeStories stories={stories} />
             </Animated.View>
-            <View>
+            <View style={styles.tabsGap}>
               <FeedTabs
                 onChange={(t) => {
                   onTab();
@@ -287,6 +287,8 @@ const styles = StyleSheet.create({
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
   storiesGap: { marginBottom: 0.7 },
+  // 1 more between the stories and the tabs (everything below moves down with them)
+  tabsGap: { marginTop: 1 },
   bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: colors.bg },
   empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
   stories: { marginTop: -2, marginLeft: -2.5 },

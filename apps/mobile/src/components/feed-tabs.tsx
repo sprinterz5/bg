@@ -51,7 +51,7 @@ export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
             const c = lx + width / 2 + 2;
             if (i > 0) centers.current[i] = c;
           }}
-          style={[styles.tab, { left: LEFTS[i] }]}>
+          style={[styles.tab, { left: LEFTS[i] }, i === 0 && styles.firstTab]}>
           <TabLabel label={label} index={i} sel={sel} />
         </Pressable>
       ))}
@@ -71,6 +71,8 @@ function TabLabel({ label, index, sel }: { label: string; index: number; sel: Sh
 const styles = StyleSheet.create({
   root: { height: 51.5 },
   tab: { position: 'absolute', top: 18.15 },
+  // "For you" alone sits 1 higher (asked for)
+  firstTab: { top: 17.15 },
   label: { fontFamily: INTER_FAMILIES['500'], fontSize: 15, lineHeight: 19, color: '#999999' },
   line: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 0.75, backgroundColor: '#E9E9E9' },
   bar: { position: 'absolute', left: 0, bottom: 0.25, width: BAR, height: 2.5, borderRadius: 1.25, backgroundColor: '#2A2121' },
