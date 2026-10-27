@@ -1,6 +1,6 @@
 import { useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Platform, RefreshControl, StyleSheet, View, type FlatList } from 'react-native';
+import { Platform, RefreshControl, StyleSheet, useWindowDimensions, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeInDown, ZoomIn, ZoomOut, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -91,6 +91,23 @@ export default function Home() {
     swap.set(withSequence(withTiming(0, { duration: 120 }), withTiming(1, { duration: 260 })));
   }, [swap]);
 
+  // Each category remembers where its list was. A category seen for the first time opens just under the pinned
+  // categories (the same height wherever you were), unless you were still near the top.
+  const { height: windowH } = useWindowDimensions();
+  const offsets = useRef<Record<string, number>>({});
+  const pendingScroll = useRef<number | null>(null);
+  const [hold, setHold] = useState(0); // list height kept while the new category's posts arrive
+  const switchTab = (next: string, change: () => void) => {
+    const here = Math.max(0, y.get());
+    offsets.current[tab] = here;
+    const pinned = Math.max(0, tabsY.get() - (insets.top - 1));
+    const target = offsets.current[next] ?? Math.min(here, pinned);
+    pendingScroll.current = target;
+    setHold(target + windowH);
+    onTab();
+    change();
+  };
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     // at least as long as the spinner's turn, so a fast answer doesn't make it blink
@@ -131,8 +148,6 @@ export default function Home() {
 
   const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? 0 : drag.value }] }));
   // The status-bar cover is for posts passing under the status bar: it goes as the top bar comes back over it.
-  // the hairline under the status bar is for scrolling down; scrolling up the categories sit there with their own line
-  const fadeLineStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, hide.get() / BAR)) }));
   const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(y.get(), 0) / top) }));
 
   // Tapping the Home tab again scrolls back to the top (on iOS the list's top is -top: it sits under the header via contentInset).
@@ -142,6 +157,15 @@ export default function Home() {
     [],
   );
   useScrollToTop(scrollTarget);
+  useEffect(() => {
+    if (pendingScroll.current === null || !loadedTab) return;
+    const offset = pendingScroll.current;
+    pendingScroll.current = null;
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToOffset({ offset, animated: false });
+      setHold(0);
+    });
+  }, [posts, loadedTab, tab]);
 
   // FlatList mounts posts lazily while scrolling and remounts ones it dropped off-screen: those must appear as they
   // are, not fade in mid-scroll. A post animates in only on its first mount, while the screen opens or at the top (new post).
@@ -215,10 +239,7 @@ export default function Home() {
             <View style={styles.tabsGap} onLayout={(e) => tabsY.set(top + e.nativeEvent.layout.y)}>
               <FeedTabs
                 value={tab}
-                onChange={(t) => {
-                  onTab();
-                  setTab(t);
-                }}
+                onChange={(t) => switchTab(t, () => setTab(t))}
               />
             </View>
           </>
@@ -228,7 +249,7 @@ export default function Home() {
         // Plain top padding on both platforms: with contentInset iOS sometimes came back short of the top after a
         // long scroll and the story rings stayed half under the header.
         // the tab bar floats over Home (it slides away), so the feed leaves room for it at the end
-        contentContainerStyle={[styles.content, { paddingTop: top, paddingBottom: 24 + 48 + insets.bottom }]}
+        contentContainerStyle={[styles.content, { paddingTop: top, paddingBottom: 24 + 48 + insets.bottom, minHeight: hold }]}
         showsVerticalScrollIndicator={false}
         refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
       />
@@ -263,10 +284,7 @@ export default function Home() {
         <FeedTabs
           fontSize={15.75}
           value={tab}
-          onChange={(t) => {
-            onTab();
-            setTab(t);
-          }}
+          onChange={(t) => switchTab(t, () => setTab(t))}
         />
       </Animated.View>
       {/* AutoLayouted-40: "Posting..." floats 8 above the tab bar (whose top is 47 above the home indicator) */}
