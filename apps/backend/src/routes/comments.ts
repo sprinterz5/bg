@@ -61,7 +61,17 @@ export const commentRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    return asApi<Page<ApiComment>>(pageResult(comments, query.limit));
+    // Likes of the listed comments: how many and whether the viewer liked each.
+    const ids = comments.map((c) => c.id);
+    const [counts, mine] = await Promise.all([
+      app.prisma.like.groupBy({ by: ["targetId"], where: { targetType: "COMMENT", targetId: { in: ids } }, _count: { _all: true } }),
+      app.prisma.like.findMany({ where: { userId: request.user.sub, targetType: "COMMENT", targetId: { in: ids } }, select: { targetId: true } })
+    ]);
+    const countOf = new Map(counts.map((c) => [c.targetId, c._count._all]));
+    const liked = new Set(mine.map((l) => l.targetId));
+    const withLikes = comments.map((c) => ({ ...c, likesCount: countOf.get(c.id) ?? 0, liked: liked.has(c.id) }));
+
+    return asApi<Page<ApiComment>>(pageResult(withLikes, query.limit));
   });
 
   app.post("/comments", { preHandler: [app.authenticate, endpointRateLimit({ key: "comments", limit: 40, windowSeconds: 60, by: "userOrIp" })] }, async (request, reply) => {

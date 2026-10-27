@@ -71,6 +71,9 @@ export type ApiComment = {
   user: ApiUserSummary;
   /** GET only: how many replies it has. */
   _count?: { children: number };
+  /** GET only: likes and whether the viewer liked it. */
+  likesCount?: number;
+  liked?: boolean;
 };
 
 /** GET /notifications (page, newest first). */
