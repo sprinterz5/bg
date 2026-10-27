@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { Text as RNText, TextInput as RNTextInput, type StyleProp, type TextInputProps, type TextProps, type TextStyle, type HostInstance, type TextInputInstance, Platform } from 'react-native';
+import { Text as RNText, TextInput as RNTextInput, type StyleProp, type TextInputProps, type TextProps, type TextStyle, type HostInstance, type TextInputInstance } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 /**
@@ -16,14 +16,6 @@ export const INTER_FAMILIES = {
   '800': 'Inter_800ExtraBold',
   '900': 'Inter_900Black',
 } as const;
-
-/**
- * SF Pro (the iOS system font) at a weight, for screens set in it. Apple's licence allows SF Pro on Apple platforms
- * only, so Android keeps Inter at the same weight.
- */
-export function sf(weight: keyof typeof INTER_FAMILIES): Pick<TextStyle, 'fontFamily' | 'fontWeight'> {
-  return Platform.OS === 'ios' ? { fontFamily: 'System', fontWeight: weight } : { fontFamily: INTER_FAMILIES[weight] };
-}
 
 const WEIGHT_ALIASES: Record<string, keyof typeof INTER_FAMILIES> = { normal: '400', bold: '700' };
 

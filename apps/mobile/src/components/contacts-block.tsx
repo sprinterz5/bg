@@ -5,7 +5,7 @@ import Animated, { FadeOut } from 'react-native-reanimated';
 import { AuthorAvatar } from '@/components/author-row';
 import { PressableScale } from '@/components/pressable-scale';
 import { RollingLabel } from '@/components/rolling-label';
-import { Text, sf } from '@/components/text';
+import { INTER_FAMILIES, Text } from '@/components/text';
 import { appearSideways } from '@/lib/appear';
 import { allowContacts, useContacts, type ContactPerson } from '@/lib/contacts';
 import { openProfile } from '@/lib/nav';
@@ -90,16 +90,16 @@ function ContactCard({ person }: { person: ContactPerson }) {
 
 const styles = StyleSheet.create({
   root: { paddingBottom: 20 },
-  title: { marginTop: 17.1, marginLeft: 7.4, ...sf('600'), fontSize: 13.7, lineHeight: 16.4, color: '#999999' },
+  title: { marginTop: 17.1, marginLeft: 7.4, fontFamily: INTER_FAMILIES['600'], fontSize: 13.7, lineHeight: 16.4, color: '#999999' },
   row: { gap: 8, paddingHorizontal: 8, paddingTop: 12.5 },
   card: { width: 172, height: 203, borderRadius: 18, backgroundColor: '#F4F5F5', alignItems: 'center' },
   open: { position: 'absolute', left: 0, top: 0, right: 0, height: 158 },
   avatar: { marginTop: 8 },
-  name: { position: 'absolute', top: 103, left: 8, right: 8, textAlign: 'center', ...sf('700'), fontSize: 14.2, lineHeight: 17, color: colors.text },
-  handle: { position: 'absolute', top: 124.7, left: 8, right: 8, textAlign: 'center', ...sf('400'), fontSize: 11.9, lineHeight: 14.3, color: '#999999', opacity: 0.95 },
+  name: { position: 'absolute', top: 103, left: 8, right: 8, textAlign: 'center', fontFamily: INTER_FAMILIES['700'], fontSize: 14.2, lineHeight: 17, color: colors.text },
+  handle: { position: 'absolute', top: 124.7, left: 8, right: 8, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 11.9, lineHeight: 14.3, color: '#999999', opacity: 0.95 },
   follow: { position: 'absolute', top: 164, width: 116, height: 31, borderRadius: 10, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   following: { backgroundColor: '#F4F5F5', borderWidth: 1, borderColor: '#D9D9D9' },
-  followText: { ...sf('600'), fontSize: 12.4, lineHeight: 15, color: '#FFFFFF' },
+  followText: { fontFamily: INTER_FAMILIES['600'], fontSize: 12.4, lineHeight: 15, color: '#FFFFFF' },
   followingText: { color: colors.text },
   askTitle: { top: 52 },
   askText: { top: 76, left: 18, right: 18, lineHeight: 16 },

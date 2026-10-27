@@ -11,7 +11,7 @@ import { PopIcon } from './pop-icon';
 import { PostActions } from './post-actions';
 import { RollingLabel } from './rolling-label';
 import { PressableScale } from './pressable-scale';
-import { Text, sf } from '@/components/text';
+import { INTER_FAMILIES, Text } from '@/components/text';
 import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 import { useReaction } from '@/lib/reactions';
@@ -145,11 +145,11 @@ const styles = StyleSheet.create({
   avatar: { position: 'absolute', left: 8.85, top: 14.05 },
   column: { marginLeft: 60 },
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
-  name: { flexShrink: 1, ...sf('700'), fontSize: 15.75, lineHeight: 19, color: colors.text },
-  handle: { flexShrink: 2, marginLeft: 4, ...sf('400'), fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
+  name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 15.75, lineHeight: 19, color: colors.text },
+  handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
   dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
-  age: { marginLeft: 3.2, ...sf('400'), fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
-  text: { marginTop: 0.94, marginRight: 16, ...sf('400'), fontSize: 15.5, lineHeight: 21.7, color: colors.text },
+  age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
+  text: { marginTop: 0.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 15.5, lineHeight: 21.7, color: colors.text },
   media: { marginTop: 14.3, marginLeft: -0.8, width: 322.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   actions: { height: 18.5, marginTop: 10.9, marginLeft: -0.5, marginRight: 1 },
@@ -159,10 +159,10 @@ const styles = StyleSheet.create({
   views: { position: 'absolute', left: 180.3, top: 0.85 },
   bookmark: { position: 'absolute', left: 265.3, top: 0.6 },
   share: { position: 'absolute', left: 301.3, top: 1.2 },
-  count: { position: 'absolute', top: 2.4, ...sf('400'), fontSize: 13.25, lineHeight: 16, color: INK },
+  count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countBox: { position: 'absolute', top: 1.9, height: 16, overflow: 'hidden' },
-  countText: { ...sf('400'), fontSize: 13.25, lineHeight: 16, color: INK },
+  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
   viewsCount: { left: 200.46 }, // TH(2): 3K, bookmark and share 1 further left
