@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 
@@ -17,8 +17,10 @@ const LEFTS = [19.7, 115.3, 228, 316];
 const BAR = 67; // 59 in the frame, +4 each side asked for
 
 /** Not designed: the tabs only switch the highlighted label for now (the feed is the same mock for each). */
-export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
-  const [active, setActive] = useState(0);
+export function FeedTabs({ value, onChange }: { value?: FeedTab; onChange?: (tab: FeedTab) => void }) {
+  // `value` makes the row follow the feed's tab, so a second copy (the one pinned on scroll up) stays in step
+  const [local, setLocal] = useState(0);
+  const active = value ? TABS.indexOf(value) : local;
   // label centres, measured on layout (a JS ref: writing a shared value from several onLayout calls lost updates and
   // left 0s, which sent the bar off to the left)
   const centers = useRef<number[]>([46.5, 0, 0, 0]);
@@ -26,13 +28,20 @@ export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
   const sel = useSharedValue(0); // active index, animated: the labels cross-fade their colour
   const barStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
 
+  const first = useRef(true);
+  useEffect(() => {
+    // eased, no spring: the bar slides and stops without wobbling (a copy mounted on a later tab just starts there)
+    const instant = first.current;
+    first.current = false;
+    const to = centers.current[active] - BAR / 2;
+    x.set(instant ? to : withTiming(to, { duration: 260, easing: Easing.out(Easing.cubic) }));
+    sel.set(instant ? active : withTiming(active, { duration: 220 }));
+  }, [active, x, sel]);
+
   const select = (i: number) => {
     if (i === active) return;
     Haptics.selectionAsync();
-    setActive(i);
-    // eased, no spring: the bar slides and stops without wobbling
-    x.set(withTiming(centers.current[i] - BAR / 2, { duration: 260, easing: Easing.out(Easing.cubic) }));
-    sel.set(withTiming(i, { duration: 220 }));
+    setLocal(i);
     onChange?.(TABS[i]);
   };
 
@@ -50,6 +59,7 @@ export function FeedTabs({ onChange }: { onChange?: (tab: FeedTab) => void }) {
             // "For you" keeps the frame's bar position; the others centre the bar under their label the same way
             const c = lx + width / 2 + 2;
             if (i > 0) centers.current[i] = c;
+            if (i === active && i > 0) x.set(c - BAR / 2);
           }}
           style={[styles.tab, { left: LEFTS[i] }, i === 0 && styles.firstTab]}>
           <TabLabel label={label} index={i} sel={sel} />

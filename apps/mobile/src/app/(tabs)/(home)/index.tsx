@@ -50,6 +50,8 @@ export default function Home() {
   const headerTop = insets.top - 1;
   const top = headerTop + HEADER_H;
   const y = useSharedValue(0);
+  // where the in-list feed tabs sit in the page (content y), measured on layout
+  const tabsY = useSharedValue(1000);
   // X-style chrome: the logo row and the tab bar slide away while scrolling down and come back as soon as the feed is
   // scrolled up. `hide` is how many points of the logo row are tucked away (0…BAR). The feed tabs stay in the page.
   const BAR = top;
@@ -70,6 +72,14 @@ export default function Home() {
   );
   // The logo row scrolls away with the list near the top; further down it stays away (only the tab bar comes back on scroll up).
   const headerLineStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, (y.get() - BAR) / 12)) }));
+  // The feed tabs follow the page up to just under the status bar. Scrolling up they come back there (sliding down from
+  // above); near the top this is the same spot as the in-list row, so the hand-over is seamless.
+  const pinTop = insets.top - 1;
+  const pinnedStyle = useAnimatedStyle(() => {
+    const p = 1 - hide.get() / BAR;
+    const pinned = pinTop - (1 - p) * (TABS_H + pinTop);
+    return { transform: [{ translateY: Math.max(pinned, tabsY.get() - y.get()) }] };
+  });
   const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.max(y.get(), 0) }] }));
 
   // Switching feed tabs: the posts dip and come back (the mock feed is the same for every tab).
@@ -197,8 +207,9 @@ export default function Home() {
             <Animated.View collapsable={false} entering={FadeInDown.duration(380)} style={styles.stories}>
               <HomeStories stories={stories} />
             </Animated.View>
-            <View style={styles.tabsGap}>
+            <View style={styles.tabsGap} onLayout={(e) => tabsY.set(top + e.nativeEvent.layout.y)}>
               <FeedTabs
+                value={tab}
                 onChange={(t) => {
                   onTab();
                   setTab(t);
@@ -243,6 +254,16 @@ export default function Home() {
       <Animated.View pointerEvents="none" style={[styles.fade, { height: insets.top - 2 }, fadeStyle]}>
         <View style={styles.fadeLine} />
       </Animated.View>
+      {/* the feed tabs again, over the page: pinned under the status bar while scrolling up */}
+      <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.pinnedTabs, pinnedStyle]}>
+        <FeedTabs
+          value={tab}
+          onChange={(t) => {
+            onTab();
+            setTab(t);
+          }}
+        />
+      </Animated.View>
       {/* AutoLayouted-40: "Posting..." floats 8 above the tab bar (whose top is 47 above the home indicator) */}
       {publishing && !publishing.done ? (
         <PostingRow publishing={publishing} bottom={insets.bottom + 49 + 8} onRetry={retryPublish} onCancel={cancelPublish} onOpen={(id) => push(`/article/${id}`)} />
@@ -259,6 +280,7 @@ function Swap({ value, children }: { value: SharedValue<number>; children: React
 const IOS = Platform.OS === 'ios';
 const HEADER_H = 60;
 // Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
+const TABS_H = 51.5;
 const THRESHOLD = 64;
 const HOLD = 52;
 const MAX_PULL = 140;
@@ -289,6 +311,7 @@ const styles = StyleSheet.create({
   storiesGap: { marginBottom: 0.7 },
   // 1 more between the stories and the tabs (everything below moves down with them)
   tabsGap: { marginTop: 1 },
+  pinnedTabs: { position: 'absolute', top: 0, left: 0, right: 0, height: TABS_H, backgroundColor: colors.bg },
   bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: colors.bg },
   empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
   stories: { marginTop: -2, marginLeft: -2.5 },
