@@ -2,6 +2,9 @@ import { Stack } from 'expo-router';
 
 import { colors } from '@/theme';
 
+// Sign-up and log-in start on Welcome (without this the stack opened on its first route by name, the age step).
+export const unstable_settings = { initialRouteName: 'welcome' };
+
 export default function AuthLayout() {
   return (
     <Stack
