@@ -38,9 +38,9 @@ function photoHeight(story: Story, width: number) {
 // next pages are mounted on top of each other (current on top) and snapshotted. During a turn the curl canvas
 // paints the whole frame over the live pages: the current snapshot turning away over the next one, or the
 // previous one coming back over the current one; when the turn is done the live page under it is the same.
-const TURN_EASING = Easing.bezier(0.45, 0.05, 0.25, 1);
+const TURN_EASING = Easing.out(Easing.cubic);
 const RELEASE_EASING = Easing.out(Easing.cubic);
-const TURN_MS = 620;
+const TURN_MS = 420;
 // How long an early tap waits for the page snapshots before switching without the curl.
 const PENDING_MS = 450;
 const AVATAR_PLACEHOLDER = require('@/assets/icons/avatar-placeholder.png');
@@ -611,13 +611,14 @@ function CubeFace({ at, idx, mode, progress, width, children }: { at: number; id
     const pos = m === 1 ? progress.get() : m === -1 ? progress.get() - 1 : 0;
     return at - (idx.get() + pos);
   };
+  // The hinge is moved to the face's edge by translating there and back around the turn (same transform shape
+  // every frame; transformOrigin didn't apply in an animated style).
   const face = useAnimatedStyle(() => {
     const p = place();
-    if (Math.abs(p) >= 0.999) return { opacity: 0, transform: [{ translateX: 0 }] };
+    const edge = p > 0 ? -width / 2 : width / 2;
     return {
-      opacity: 1,
-      transformOrigin: p > 0 ? 'left center' : 'right center',
-      transform: [{ perspective: width * 3 }, { translateX: p * width }, { rotateY: `${p * 90}deg` }],
+      opacity: Math.abs(p) >= 0.999 ? 0 : 1,
+      transform: [{ perspective: width * 3 }, { translateX: p * width + edge }, { rotateY: `${p * 90}deg` }, { translateX: -edge }],
     };
   });
   const shade = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.abs(place())) * 0.55 }));
