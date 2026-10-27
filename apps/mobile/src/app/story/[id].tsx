@@ -605,23 +605,22 @@ type PageProps = {
 // around their shared edge, with perspective and the far side shaded. `p` = the face's place relative to the front
 // (−1 … 1); hinged on its left edge when it's to the right and on its right edge when it's to the left.
 function CubeFace({ at, idx, mode, progress, width, children }: { at: number; idx: SharedValue<number>; mode: SharedValue<number>; progress: SharedValue<number>; width: number; children: ReactNode }) {
-  const place = () => {
-    'worklet';
-    const m = mode.get();
-    const pos = m === 1 ? progress.get() : m === -1 ? progress.get() - 1 : 0;
-    return at - (idx.get() + pos);
-  };
-  // The hinge is moved to the face's edge by translating there and back around the turn (same transform shape
-  // every frame; transformOrigin didn't apply in an animated style).
+  // Reanimated subscribes a style to the shared values read in its own body, so each style reads them directly.
   const face = useAnimatedStyle(() => {
-    const p = place();
+    const m = mode.get();
+    const p = at - (idx.get() + (m === 1 ? progress.get() : m === -1 ? progress.get() - 1 : 0));
+    // the hinge goes to the shared edge: translate there, turn, translate back (same transform shape every frame)
     const edge = p > 0 ? -width / 2 : width / 2;
     return {
       opacity: Math.abs(p) >= 0.999 ? 0 : 1,
-      transform: [{ perspective: width * 3 }, { translateX: p * width + edge }, { rotateY: `${p * 90}deg` }, { translateX: -edge }],
+      transform: [{ perspective: width * 3 }, { translateX: p * width + edge }, { rotateY: `${-p * 90}deg` }, { translateX: -edge }],
     };
   });
-  const shade = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.abs(place())) * 0.55 }));
+  const shade = useAnimatedStyle(() => {
+    const m = mode.get();
+    const p = at - (idx.get() + (m === 1 ? progress.get() : m === -1 ? progress.get() - 1 : 0));
+    return { opacity: Math.min(1, Math.abs(p)) * 0.55 };
+  });
   return (
     <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, face]}>
       {children}
