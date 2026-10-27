@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { StyleSheet, View, type HostInstance } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { INTER_FAMILIES, Text } from '@/components/text';
@@ -15,6 +15,7 @@ import { PostActions } from './post-actions';
 import { openShare } from './share-host';
 import { push } from '@/lib/nav';
 import { usePathname, type Href } from 'expo-router';
+import type { Picture } from '@/lib/picture';
 
 // Profile frames from the AutoLayouts export (other user / own): Inter throughout, name 26 bold on the left, avatar
 // 106 on the right, "@username", three stat columns, two 42px buttons, bio, list / liked tabs, article rows.
@@ -27,7 +28,7 @@ const EASE = { duration: motion.base, easing: Easing.out(Easing.cubic) };
 type SummaryProps = {
   username: string;
   name: string;
-  avatar: ImageSourcePropType | null;
+  avatar: Picture | null;
   articles: number;
   followers: string;
   following: number;
@@ -175,7 +176,7 @@ export function ProfileTabs({
 export function ProfilePostRow({ post, mine, onDeleted }: { post: ProfilePost; mine?: boolean; onDeleted?: () => void }) {
   const [menu, setMenu] = useState(false);
   // The reader grows its cover out of the thumbnail.
-  const thumb = useRef<View>(null);
+  const thumb = useRef<HostInstance>(null);
   const open = () => {
     if (post.articleId) openArticle(post.articleId, thumb.current, post.image, 12);
   };

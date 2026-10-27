@@ -3,7 +3,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { Alert, BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View, ScrollView } from 'react-native';
+import { Alert, BackHandler, Image, Keyboard, Pressable, StyleSheet, useWindowDimensions, View, ScrollView, type HostInstance, type ImageSource as RNImageSource } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import Animated, { Easing, Extrapolation, interpolateColor, FadeIn, FadeOut, interpolate, runOnJS, runOnUI, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
@@ -613,7 +613,7 @@ type PageProps = {
 function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTap, onSnapshot, onPhoto }: PageProps) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const ref = useRef<View>(null);
+  const ref = useRef<HostInstance>(null);
   const [expanded, setExpanded] = useState(false);
   const [cut, setCut] = useState<string | null>(null);
   // "...more" (Autolayouted-7 / -8): the photo shrinks into a card at the top and a dark sheet with the whole
@@ -708,7 +708,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
       style={[styles.page, hideStyle]}>
       <Animated.View style={[{ position: 'absolute', top: photoTop, width, height: photoH }, photoStyle]}>
         <Image
-          source={story.image}
+          source={story.image as RNImageSource}
           fadeDuration={0}
           onLoad={() => {
             setPhotoReady(true);
@@ -724,7 +724,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
       <Animated.View style={[styles.info, { bottom: barH + 2 }, infoStyle]} pointerEvents={expanded ? 'none' : 'box-none'}>
         <View style={styles.author}>
           {story.author.avatar ? (
-            <Image source={story.author.avatar} fadeDuration={0} onLoad={() => setAvatarReady(true)} style={styles.avatar} />
+            <Image source={story.author.avatar as RNImageSource} fadeDuration={0} onLoad={() => setAvatarReady(true)} style={styles.avatar} />
           ) : (
             // The placeholder through the core Image too: drawn by expo-image (a hardware bitmap) it was missing from the Android snapshot.
             <Image source={AVATAR_PLACEHOLDER} fadeDuration={0} style={styles.avatar} />
@@ -767,7 +767,7 @@ function StoryPage({ story, top, snapshot, closing, hidden, progress, barH, onTa
       {expanded ? <Pressable style={StyleSheet.absoluteFill} onPress={toggleCaption} accessibilityLabel="Close caption" /> : null}
       <Animated.View pointerEvents={expanded ? 'auto' : 'none'} style={[styles.card, { top: cardTop }, cardStyle]}>
         <Pressable onPress={toggleCaption} style={StyleSheet.absoluteFill} accessibilityLabel="Close caption">
-          <Image source={story.image} fadeDuration={0} resizeMode="contain" style={styles.cardPhoto} />
+          <Image source={story.image as RNImageSource} fadeDuration={0} resizeMode="contain" style={styles.cardPhoto} />
         </Pressable>
       </Animated.View>
       <GestureDetector gesture={sheetPan}>

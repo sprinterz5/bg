@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type ImageSourcePropType, type LayoutChangeEvent } from 'react-native';
+import { Alert, BackHandler, Pressable, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent, type HostInstance } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { Easing, Extrapolation, FadeIn, interpolate, runOnJS, runOnUI, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,6 +26,7 @@ import { useReaction } from '@/lib/reactions';
 import { CommentsSheet, useAddedComments } from '@/components/comments-sheet';
 import { captureParam } from '@/lib/capture';
 import { backWhenReady, openProfile } from '@/lib/nav';
+import type { Picture } from '@/lib/picture';
 
 // Page 1 is the preview (AutoLayouted-18): back · author · ⋯, the title, "N pages", the subtitle, the
 // cover and share / bookmark. Swiping on brings in the text pages (AutoLayouted 17): a strip of the cover behind a
@@ -69,7 +70,7 @@ type Rect = { x: number; y: number; w: number; h: number };
 function Reader({ article }: { article: Article }) {
   const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const targetRef = useRef<View>(null);
+  const targetRef = useRef<HostInstance>(null);
   const scrollX = useSharedValue(0);
 
   const [lines, setLines] = useState<string[] | null>(null);
@@ -484,7 +485,7 @@ function FlyingCover({
   onShown,
 }: {
   origin: ArticleOrigin;
-  source: ImageSourcePropType;
+  source: Picture;
   t: SharedValue<number>;
   flying: SharedValue<number>;
   target: Rect;

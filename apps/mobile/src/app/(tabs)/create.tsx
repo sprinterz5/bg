@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useRef, useState, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type TextInputInstance } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,7 +24,7 @@ export default function CreateArticle() {
   const insets = useSafeAreaInsets();
   const { draft, updateDraft } = useFeed();
   const [focused, setFocused] = useState(false);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
 
   const coverH = insets.top + COVER_BOTTOM;
   const canPost = !!draft.coverUri && draft.body.trim().length > 0;

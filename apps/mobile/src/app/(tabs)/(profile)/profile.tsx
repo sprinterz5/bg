@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useScrollToTop } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, Share, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,7 +27,7 @@ export default function Profile() {
   // Placeholders only for the first load; later visits refetch behind the shown profile.
   const [loaded, setLoaded] = useState(false);
   // Tapping the Profile tab again scrolls back to the top.
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   useScrollToTop(scrollRef);
   const username = user?.username;
 

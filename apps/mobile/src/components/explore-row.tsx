@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { memo, useRef, useState } from 'react';
-import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, Share, StyleSheet, View, type HostInstance } from 'react-native';
 
 import { ARTICLES, displayName, type ExplorePost } from '@/mock/data';
 import { colors } from '@/theme';
@@ -31,7 +31,7 @@ export const ExploreRow = memo(function ExploreRow({ post }: { post: ExplorePost
   // "Not interested": the row folds away (Explore is mock data, nothing to tell the server yet).
   const [hidden, setHidden] = useState(false);
   // The reader grows its cover out of the picture.
-  const thumb = useRef<View>(null);
+  const thumb = useRef<HostInstance>(null);
   const open = () => openArticle(post.articleId, thumb.current, post.image, 2);
   const toggleSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

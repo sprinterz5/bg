@@ -1,10 +1,10 @@
 import { BlurView } from 'expo-blur';
 import type { ReactNode, RefObject } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle, type HostInstance } from 'react-native';
 
 type Props = {
   children: ReactNode;
-  blurTarget?: RefObject<View | null>;
+  blurTarget?: RefObject<HostInstance | null>;
   style?: StyleProp<ViewStyle>;
   radius?: number;
   /** false renders only the white tint (used while the screen is still sliding in or out on Android). */

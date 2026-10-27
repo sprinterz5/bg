@@ -1,12 +1,5 @@
 import { forwardRef } from 'react';
-import {
-  Text as RNText,
-  TextInput as RNTextInput,
-  type StyleProp,
-  type TextInputProps,
-  type TextProps,
-  type TextStyle,
-} from 'react-native';
+import { Text as RNText, TextInput as RNTextInput, type StyleProp, type TextInputProps, type TextProps, type TextStyle, type HostInstance, type TextInputInstance } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 /**
@@ -45,7 +38,7 @@ function interStyle(style: StyleProp<TextStyle>): StyleProp<TextStyle> {
   return [style, { fontFamily, fontWeight: 'normal' }];
 }
 
-export const Text = forwardRef<RNText, TextProps>(function Text({ style, ...props }, ref) {
+export const Text = forwardRef<HostInstance, TextProps>(function Text({ style, ...props }, ref) {
   return <RNText ref={ref} {...props} style={interStyle(style)} />;
 });
 
@@ -59,7 +52,7 @@ function multilineShade(color: TextInputProps['selectionColor']) {
 }
 
 // The typing line (caret) and selection are black everywhere unless a screen sets its own (e.g. white on stories).
-export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput(
+export const TextInput = forwardRef<TextInputInstance, TextInputProps>(function TextInput(
   { style, selectionColor = '#000000', cursorColor = '#000000', ...props },
   ref,
 ) {

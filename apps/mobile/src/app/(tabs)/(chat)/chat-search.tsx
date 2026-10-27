@@ -158,7 +158,7 @@ export default function ChatSearch() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingTop: 20, paddingBottom: insets.bottom + 24 }}
             ListEmptyComponent={
-              loading ? null : (
+              loading ? undefined : (
                 <Animated.View collapsable={false} entering={FadeIn.duration(180)} style={styles.empty}>
                   <Icon name="chatSearchEmpty" width={127} height={127} style={styles.emptyIcon} />
                   <Text style={styles.emptyText}>No account and no messages were found</Text>

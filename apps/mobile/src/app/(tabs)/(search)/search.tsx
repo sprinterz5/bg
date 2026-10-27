@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useFocusEffect, useScrollToTop, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, FlatList, Pressable, RefreshControl, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
+import { BackHandler, FlatList, Pressable, RefreshControl, StyleSheet, useWindowDimensions, View, type LayoutChangeEvent, type TextInputInstance } from 'react-native';
 import Animated, { Easing, FadeIn, FadeOut, interpolate, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -61,7 +61,7 @@ function tokens(q: string) {
 export default function Search() {
   const insets = useSafeAreaInsets();
   const { width: W } = useWindowDimensions();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   // Tapping the Search tab again scrolls Explore back to the top.
   const feedRef = useRef<FlatList<ExplorePost>>(null);
   const scrollTarget = useMemo(() => ({ current: { scrollToTop: () => feedRef.current?.scrollToOffset({ offset: 0, animated: true }) } }), []);

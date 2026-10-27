@@ -1,6 +1,6 @@
 import { Canvas, Fill, Group, Image, ImageShader, Shader, Skia, makeImageFromView, type SkImage } from '@shopify/react-native-skia';
 import { useEffect, useMemo, useState, type RefObject } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type HostInstance } from 'react-native';
 import { useDerivedValue, type DerivedValue, type SharedValue } from 'react-native-reanimated';
 
 // Page turn: a snapshot of the page is wrapped around a cylinder lying on the screen (GPU shader).
@@ -13,9 +13,9 @@ export const CURL_SUPPORTED = true;
 export type Snapshot = SkImage;
 
 /** Snapshot of a mounted view (null when it can't be taken). The view must have collapsable={false}. */
-export async function snapshotView(ref: RefObject<View | null>): Promise<Snapshot | null> {
+export async function snapshotView(ref: RefObject<HostInstance | null>): Promise<Snapshot | null> {
   try {
-    return await makeImageFromView(ref as RefObject<View>);
+    return await makeImageFromView(ref as never);
   } catch {
     return null;
   }

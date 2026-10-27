@@ -14,7 +14,7 @@ jest.mock('expo-secure-store', () => {
 
 type FetchInit = { headers: Record<string, string>; signal: AbortSignal };
 const fetchMock = jest.fn<(url: string, init: FetchInit) => Promise<unknown>>();
-global.fetch = fetchMock as unknown as typeof fetch;
+globalThis.fetch = fetchMock as unknown as typeof fetch;
 
 const reply = (status: number, body: unknown) =>
   Promise.resolve({ status, ok: status >= 200 && status < 300, text: () => Promise.resolve(typeof body === 'string' ? body : JSON.stringify(body)) });

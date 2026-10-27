@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import type { ApiArticleCreated } from '@api/api';
-import type { ImageSourcePropType } from 'react-native';
 
 import { api, ApiError } from '@/lib/api';
 import { CAPTURE, captureParam } from '@/lib/capture';
@@ -11,6 +10,7 @@ import { reportError } from '@/lib/report-errors';
 import { useSession } from '@/state/session';
 import { ARTICLES, FEED, HOME_STORIES, type Article, type Author, type Post, type Story } from '@/mock/data';
 import { fetchFriendStories, viewStory } from '@/lib/stories';
+import type { Picture } from '@/lib/picture';
 
 /** How long the "Posted" card stays before folding away. */
 const POSTED_MS = 1600;
@@ -26,7 +26,7 @@ export type ArticleDraft = {
 /** The post being sent, shown in the card over the tab bar: uploading the cover, sending the text, "Posted" (with the
  *  new article's id, tap opens it), or failed (Retry / ✕). `done`: the card is folding away. */
 export type Publishing = {
-  cover: ImageSourcePropType;
+  cover: Picture;
   title: string;
   subtitle?: string;
   stage: 'upload' | 'post' | 'posted' | 'error';

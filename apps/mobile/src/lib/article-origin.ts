@@ -1,7 +1,8 @@
 import type { Href } from 'expo-router';
-import { Image, type ImageSourcePropType, type View } from 'react-native';
+import { Image, type HostInstance } from 'react-native';
 
 import { push } from './nav';
+import type { Picture } from '@/lib/picture';
 
 // Where an article's cover was on screen when it was opened (window coordinates), so the reader can grow its cover
 // out of that picture and shrink it back on close. `aspect` is the picture's width / height when known.
@@ -13,14 +14,14 @@ export function articleOrigin(id: string): ArticleOrigin | null {
   return origins.get(id) ?? null;
 }
 
-function aspectOf(source: ImageSourcePropType | null | undefined) {
+function aspectOf(source: Picture | null | undefined) {
   if (typeof source !== 'number') return null;
   const s = Image.resolveAssetSource(source);
   return s?.width && s?.height ? s.width / s.height : null;
 }
 
 /** Measures the tapped cover, remembers it and opens the article (opens anyway if measuring fails). */
-export function openArticle(id: string, cover: View | null, image: ImageSourcePropType | null | undefined, radius = 0) {
+export function openArticle(id: string, cover: HostInstance | null, image: Picture | null | undefined, radius = 0) {
   const href = { pathname: '/article/[id]', params: { id } } as Href;
   if (!cover) return push(href);
   let opened = false;

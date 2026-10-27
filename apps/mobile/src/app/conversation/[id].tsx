@@ -210,7 +210,7 @@ export default function Conversation() {
           data={messages}
           keyExtractor={(m) => m.key ?? m.id}
           itemLayoutAnimation={LinearTransition.duration(220)}
-          ListFooterComponent={loaded && !cursor ? card : null}
+          ListFooterComponent={loaded && !cursor ? card : undefined}
           renderItem={({ item, index }) => {
             const mine = item.senderId === user?.id;
             const older = messages[index + 1];

@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
-import { FlatList, StyleSheet, useWindowDimensions, View, type NativeSyntheticEvent, type TextLayoutEventData } from 'react-native';
+import { FlatList, StyleSheet, useWindowDimensions, View, type TextLayoutEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 
 import type { Story } from '@/mock/data';
@@ -53,7 +53,7 @@ function StoryPage({ story, width }: { story: Story; width: number }) {
 /** Two lines at most; a cut caption ends with "...more" like in the design. */
 function Caption({ text }: { text: string }) {
   const [cut, setCut] = useState<string | null>(null);
-  const onLayout = (e: NativeSyntheticEvent<TextLayoutEventData>) => {
+  const onLayout = (e: TextLayoutEvent) => {
     const lines = e.nativeEvent.lines;
     if (cut !== null || lines.length <= 2) return;
     // Room for "...more" at the end of the second line.

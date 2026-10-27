@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, type HostInstance } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 import type { Story } from '@/mock/data';
@@ -65,8 +65,8 @@ export function HomeStories({ stories }: { stories: Story[] }) {
   );
   // Opening a story: remember where every visible story photo is (the viewer grows out of the tapped one and
   // shrinks back into whichever story it is closed on), then open it once the tapped one is measured.
-  const rings = useRef(new Map<string, View>());
-  const registerRing = useCallback((id: string, view: View | null) => {
+  const rings = useRef(new Map<string, HostInstance>());
+  const registerRing = useCallback((id: string, view: HostInstance | null) => {
     if (view) rings.current.set(id, view);
     else rings.current.delete(id);
   }, []);
@@ -127,7 +127,7 @@ type ItemProps = {
   sweepDelay: number | null;
   onSweepDone: (id: string) => void;
   onOpen: (id: string) => void;
-  registerRing: (id: string, view: View | null) => void;
+  registerRing: (id: string, view: HostInstance | null) => void;
 };
 
 function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, onOpen, registerRing }: ItemProps) {

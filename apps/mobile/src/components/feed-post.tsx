@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { memo, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View, type HostInstance } from 'react-native';
 
 import type { Post } from '@/mock/data';
 import { colors } from '@/theme';
@@ -44,7 +44,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   const { liked, saved, likes, toggleLike: like, toggleSave: save } = useReaction(post.articleId, { liked: !!post.liked, saved: !!post.saved, likes: post.likes });
   const [menu, setMenu] = useState(false);
   // The reader grows its cover out of this picture.
-  const media = useRef<View>(null);
+  const media = useRef<HostInstance>(null);
   const openArticle = () => openArticleFrom(post.articleId, media.current, post.image, RADIUS);
   const name = post.author.name ?? post.author.username;
   const toggleLike = () => {

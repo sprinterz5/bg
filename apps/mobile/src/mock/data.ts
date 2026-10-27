@@ -1,4 +1,4 @@
-import type { ImageSourcePropType } from 'react-native';
+import type { Picture } from '@/lib/picture';
 
 export const INTERESTS = [
   { slug: 'world-history', label: 'World history' },
@@ -22,7 +22,7 @@ export const INTERESTS_MAX = 5;
 
 export type Author = {
   username: string;
-  avatar: ImageSourcePropType | null;
+  avatar: Picture | null;
   subtitle: string;
   verified?: boolean;
   /** Display name where the design shows one (Explore rows: "Bill Gates"); otherwise derived from the username. */
@@ -32,7 +32,7 @@ export type Author = {
 export type Story = {
   id: string;
   author: Author;
-  image: ImageSourcePropType;
+  image: Picture;
   caption: string;
   timeAgo: string;
   /** Already watched: grey ring on the home row. */
@@ -46,7 +46,7 @@ export type Story = {
 export type Post = {
   id: string;
   author: Author;
-  image: ImageSourcePropType;
+  image: Picture;
   title: string;
   caption: string;
   timeAgo: string;
@@ -64,7 +64,7 @@ export type Post = {
 export type Article = {
   id: string;
   author: Author;
-  cover: ImageSourcePropType;
+  cover: Picture;
   title: string;
   /** Shown on the reader's preview under "N pages · N min read". */
   subtitle?: string;
@@ -310,7 +310,7 @@ export const RESULT_TABS = ['Related', 'Detailed', 'Quick'] as const;
 
 export type ExplorePost = {
   id: string;
-  image: ImageSourcePropType;
+  image: Picture;
   title: string;
   /** Leading words in bold, like "How Tinkov" in the design. */
   lead: string;
@@ -636,7 +636,7 @@ export const SEARCH_PROFILES: Author[] = [
 /** Figma 3167:1542 — someone else's profile. */
 export type ProfilePost = {
   id: string;
-  image: ImageSourcePropType | null;
+  image: Picture | null;
   title: string;
   likes: string;
   timeAgo: string;
@@ -646,7 +646,7 @@ export type ProfilePost = {
 export type Profile = {
   username: string;
   name: string;
-  avatar: ImageSourcePropType | null;
+  avatar: Picture | null;
   articles: number;
   followers: string;
   following: number;
@@ -696,7 +696,7 @@ export function getProfile(username: string): Profile {
 }
 
 /** Figma 3184:1274 / 3185:1524 — Followers / Following rows (subtitle "robertus" as in the design). */
-export type Connection = { username: string; subtitle: string; avatar: ImageSourcePropType | null; following: boolean; /** Backend user id (real lists); mock rows have none. */ id?: string; isMe?: boolean };
+export type Connection = { username: string; subtitle: string; avatar: Picture | null; following: boolean; /** Backend user id (real lists); mock rows have none. */ id?: string; isMe?: boolean };
 
 export const CONNECTIONS: Connection[] = [
   { username: 'jobsie_popsi', subtitle: 'robertus', avatar: require('@/assets/mock/f-jobsie-popsi.png'), following: false },
@@ -845,7 +845,7 @@ function seeded(id: string, max: number, min = 0) {
   return min + (h % (max - min));
 }
 
-function articleFrom(id: string, author: Author, cover: ImageSourcePropType, title: string, body: string[], likes?: number, comments?: number, shares?: number, subtitle?: string) {
+function articleFrom(id: string, author: Author, cover: Picture, title: string, body: string[], likes?: number, comments?: number, shares?: number, subtitle?: string) {
   ARTICLES[id] = {
     id,
     author,
@@ -1008,7 +1008,7 @@ function authorPosts(username: string): ProfilePost[] {
 export type Notice = {
   id: string;
   /** One avatar, or two overlapping ones for grouped likes / comments. */
-  avatars: ImageSourcePropType[];
+  avatars: Picture[];
   /** Bold line: the actor(s). */
   who: string;
   /** Second line. */
@@ -1016,7 +1016,7 @@ export type Notice = {
   /** Profile opened by a tap on the row. */
   username: string;
   /** Article cover on the right… */
-  thumb?: ImageSourcePropType;
+  thumb?: Picture;
   /** …or a Follow / Following button. */
   follow?: boolean;
   /** From the server: the actor's id (Follow), the post the row opens, not seen yet. */

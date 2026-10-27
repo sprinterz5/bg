@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { memo, useRef, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, type HostInstance } from 'react-native';
 
 import { Icon } from './icon';
 
@@ -22,7 +22,7 @@ export const ARTICLE_TITLE_MAX = 80;
 
 export const ExploreCard = memo(function ExploreCard({ post }: { post: ExplorePost }) {
   // The reader grows its cover out of this photo.
-  const media = useRef<View>(null);
+  const media = useRef<HostInstance>(null);
   const open = () => openArticle(post.articleId, media.current, post.image);
   // Not designed: ⋮ opens the same menu as the Explore rows (send, not interested, report).
   const [menu, setMenu] = useState(false);

@@ -130,7 +130,7 @@ export function ConnectionsScreen({ title, withButtons, header, initialFollowing
             </Animated.View>
           ) : empty ? (
             <>{empty}</>
-          ) : null
+          ) : undefined
         }
         renderItem={({ item, index }) => (
           <Animated.View collapsable={false} entering={appear(index)}>

@@ -183,7 +183,7 @@ export default function Home() {
                 {tab === 'Following' ? 'Posts from people you follow will show up here.' : tab === 'For you' ? 'No posts yet.' : `No ${tab} posts yet.`}
               </Text>
             </Animated.View>
-          ) : null
+          ) : undefined
         }
         onEndReachedThreshold={1.5}
         // Posts are ~500pt tall: a few per batch keeps the JS thread free; Android detaches posts far off screen.

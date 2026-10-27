@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import type { View } from 'react-native';
+import type { HostInstance } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
 // Web preview has no Skia (CanvasKit isn't loaded): stories switch without the page turn.
@@ -7,7 +7,7 @@ import type { SharedValue } from 'react-native-reanimated';
 export const CURL_SUPPORTED = false;
 export type Snapshot = { dispose(): void };
 
-export async function snapshotView(_ref: RefObject<View | null>): Promise<Snapshot | null> {
+export async function snapshotView(_ref: RefObject<HostInstance | null>): Promise<Snapshot | null> {
   return null;
 }
 
