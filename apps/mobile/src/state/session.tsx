@@ -59,8 +59,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (CAPTURE) return;
     restoreSession()
-      .then((u) => u && setUser(u))
-      .catch(() => {})
+      .then((u) => {
+        if (u) setUser(u);
+        else console.warn('[auth] no stored session to restore');
+      })
+      .catch((e) => console.warn('[auth] restoring the session failed:', e))
       .finally(() => setReady(true));
   }, []);
   const [draft, setDraft] = useState<SignupDraft>(() => ({ ...emptyDraft, ...JSON.parse(captureParam('draft') ?? '{}') }));

@@ -109,9 +109,12 @@ async function doRefresh() {
   if (!refreshToken) return null;
   try {
     const data = await send<Tokens>('/auth/refresh', { body: { refreshToken } });
-    await saveTokens(data);
+    // The server has rotated the token: the new access token is usable even if the keystore refuses the write.
+    accessToken = data.accessToken;
+    await saveTokens(data).catch((e) => console.warn('[auth] could not store the refreshed session:', e));
     return data;
   } catch (e) {
+    console.warn('[auth] refresh failed:', e instanceof ApiError ? `API ${e.status}` : e);
     if (e instanceof ApiError && e.status === 401) {
       await clearTokens();
       onExpired?.();
