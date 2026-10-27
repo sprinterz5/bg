@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   // stops 7 short of the header's bottom: the story rings start 2 above it and their tops were cut off
   headerBg: { position: 'absolute', left: 0, right: 0, top: 0, height: HEADER_H - 7, backgroundColor: colors.bg },
-  headerLine: { position: 'absolute', left: 0, right: 0, top: HEADER_H - 7, height: 0.5, backgroundColor: '#E9E9E9' },
+  headerLine: { position: 'absolute', left: 0, right: 0, top: HEADER_H - 5, height: 0.5, backgroundColor: '#E9E9E9' },
   header: { height: HEADER_H, alignItems: 'center' },
   // AutoLayouted-34 (BG(2)): plus at (22.5, 61.5), bell at (343.5, 61) incl. their strokes; logo ink 107.3 wide from
   // 140.6 × 59.9; story rings 94 at x 12 + 113n, y 104.5.
