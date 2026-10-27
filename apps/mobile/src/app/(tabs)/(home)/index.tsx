@@ -78,7 +78,10 @@ export default function Home() {
   const pinnedStyle = useAnimatedStyle(() => {
     const p = 1 - hide.get() / BAR;
     const pinned = pinTop - (1 - p) * (TABS_H + pinTop);
-    return { transform: [{ translateY: Math.max(pinned, tabsY.get() - y.get()) }] };
+    // while it still rides with the in-list row (16.5 vs that row's 15) it fades out within a few points, so the
+    // hand-over at the top is a near-instant swap
+    const d = tabsY.get() - y.get() - pinned;
+    return { opacity: Math.min(1, Math.max(0, 1 - d / 6)), transform: [{ translateY: Math.max(pinned, tabsY.get() - y.get()) }] };
   });
   const headerStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -Math.max(y.get(), 0) }] }));
 
@@ -258,6 +261,7 @@ export default function Home() {
       <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.pinnedTabs, pinnedStyle]}>
         <View style={styles.pinnedCap} />
         <FeedTabs
+          fontSize={16.5}
           value={tab}
           onChange={(t) => {
             onTab();

@@ -17,7 +17,7 @@ const LEFTS = [19.7, 115.3, 228, 316];
 const BAR = 67; // 59 in the frame, +4 each side asked for
 
 /** Not designed: the tabs only switch the highlighted label for now (the feed is the same mock for each). */
-export function FeedTabs({ value, onChange }: { value?: FeedTab; onChange?: (tab: FeedTab) => void }) {
+export function FeedTabs({ value, onChange, fontSize }: { value?: FeedTab; onChange?: (tab: FeedTab) => void; fontSize?: number }) {
   // `value` makes the row follow the feed's tab, so a second copy (the one pinned on scroll up) stays in step
   const [local, setLocal] = useState(0);
   const active = value ? TABS.indexOf(value) : local;
@@ -62,7 +62,7 @@ export function FeedTabs({ value, onChange }: { value?: FeedTab; onChange?: (tab
             if (i === active && i > 0) x.set(c - BAR / 2);
           }}
           style={[styles.tab, { left: LEFTS[i] }, i === 0 && styles.firstTab]}>
-          <TabLabel label={label} index={i} sel={sel} />
+          <TabLabel label={label} index={i} sel={sel} fontSize={fontSize} />
         </Pressable>
       ))}
       <View style={styles.line} />
@@ -71,11 +71,11 @@ export function FeedTabs({ value, onChange }: { value?: FeedTab; onChange?: (tab
   );
 }
 
-function TabLabel({ label, index, sel }: { label: string; index: number; sel: SharedValue<number> }) {
+function TabLabel({ label, index, sel, fontSize }: { label: string; index: number; sel: SharedValue<number>; fontSize?: number }) {
   const style = useAnimatedStyle(() => ({
     color: interpolateColor(Math.min(1, Math.abs(sel.get() - index)), [0, 1], [colors.text, '#999999']),
   }));
-  return <AnimatedText style={[styles.label, style]}>{label}</AnimatedText>;
+  return <AnimatedText style={[styles.label, fontSize ? { fontSize } : null, style]}>{label}</AnimatedText>;
 }
 
 const styles = StyleSheet.create({
