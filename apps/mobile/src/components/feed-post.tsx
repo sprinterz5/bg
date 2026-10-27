@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   handle: { flexShrink: 2, marginLeft: 4, ...sf('400'), fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
   dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
   age: { marginLeft: 3.2, ...sf('400'), fontSize: 15.75, lineHeight: 19, color: GRAY, opacity: 0.95 },
-  text: { marginTop: 1.94, marginRight: 16, ...sf('400'), fontSize: 15.75, lineHeight: 21.7, color: colors.text },
+  text: { marginTop: 0.94, marginRight: 16, ...sf('400'), fontSize: 15.5, lineHeight: 21.7, color: colors.text },
   media: { marginTop: 14.3, marginLeft: -0.8, width: 323.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   actions: { height: 18.5, marginTop: 10.9, marginLeft: -0.5 },
