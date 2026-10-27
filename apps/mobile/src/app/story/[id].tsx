@@ -521,6 +521,7 @@ function StoryViewer() {
           {pages.map((s) => (
             <CubeFace key={s.id} at={s === prev ? index - 1 : s === next ? index + 1 : index} idx={idx} mode={mode} progress={progress} width={width}>
               <StoryPage story={captions[s.id] ? { ...s, caption: captions[s.id] } : s} top={s.id === story.id} onPhoto={s.id === story.id ? onTopPhoto : undefined} snapshot={false} closing={closing} hidden={hidden} progress={progress} barH={barH} onTap={turn} onSnapshot={onSnapshot} />
+              {s.id === story.id ? null : <StaticBar barH={barH} />}
             </CubeFace>
           ))}
         </View>
@@ -537,6 +538,8 @@ function StoryViewer() {
           <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} accessibilityLabel="Close the reply" />
         </Animated.View>
       ) : null}
+      {/* the field and the heart turn with their story (the neighbours carry a still copy) */}
+      <CubeFace at={index} idx={idx} mode={mode} progress={progress} width={width} passTouches>
       <KeyboardStickyView style={[styles.bar, { height: barH }, replying && styles.barTyping]} offset={{ closed: 0, opened: barH - 65 }}>
         <Animated.View style={[styles.pill, replying && [styles.pillTyping, { bottom: barH - 53 }], pillGrow]}>
           <TextInput
@@ -572,6 +575,7 @@ function StoryViewer() {
           </PressableScale>
         )}
       </KeyboardStickyView>
+      </CubeFace>
       </Animated.View>
       </Animated.View>
       <Animated.View collapsable={false} pointerEvents="none" style={[styles.ring, ringStyle]}>
@@ -604,7 +608,7 @@ type PageProps = {
 // Instagram-like cube (not designed): the story in front and the one coming in are two sides of a box turning
 // around their shared edge, with perspective and the far side shaded. `p` = the face's place relative to the front
 // (−1 … 1); hinged on its left edge when it's to the right and on its right edge when it's to the left.
-function CubeFace({ at, idx, mode, progress, width, children }: { at: number; idx: SharedValue<number>; mode: SharedValue<number>; progress: SharedValue<number>; width: number; children: ReactNode }) {
+function CubeFace({ at, idx, mode, progress, width, children, passTouches }: { at: number; idx: SharedValue<number>; mode: SharedValue<number>; progress: SharedValue<number>; width: number; children: ReactNode; passTouches?: boolean }) {
   // Reanimated subscribes a style to the shared values read in its own body, so each style reads them directly.
   const face = useAnimatedStyle(() => {
     const m = mode.get();
@@ -647,10 +651,24 @@ function CubeFace({ at, idx, mode, progress, width, children }: { at: number; id
     return { opacity: Math.min(1, Math.abs(p)) * 0.55 };
   });
   return (
-    <Animated.View collapsable={false} style={[StyleSheet.absoluteFill, face]}>
+    <Animated.View collapsable={false} pointerEvents={passTouches ? 'box-none' : undefined} style={[StyleSheet.absoluteFill, face]}>
       {children}
       <Animated.View collapsable={false} pointerEvents="none" style={[StyleSheet.absoluteFill, styles.cubeShade, shade]} />
     </Animated.View>
+  );
+}
+
+/** The reply field and heart of a story that is not in front: the same look, not interactive. */
+function StaticBar({ barH }: { barH: number }) {
+  return (
+    <View pointerEvents="none" style={[styles.bar, { height: barH }]}>
+      <View style={styles.pill}>
+        <Text style={styles.input}>Send message...</Text>
+      </View>
+      <View style={styles.heart}>
+        <Icon name="storyHeart" width={27} height={24} />
+      </View>
+    </View>
   );
 }
 
