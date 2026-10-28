@@ -97,31 +97,31 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         ) : null}
 
         <View style={styles.actions}>
-          {thought ? (
-            <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
-              <PopIcon active={liked}>
-                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.7290} height={14.7370} />
-              </PopIcon>
-            </PressableScale>
-          ) : (
-            // not pressable here: an article is liked and commented in the reader, after reading it
-            <View style={styles.like} accessibilityLabel="Likes">
-              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.7290} height={14.7370} />
-            </View>
-          )}
+          <View style={styles.like} accessibilityLabel="Likes">
+            {thought ? (
+              <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'}>
+                <PopIcon active={liked}>
+                  <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.729} height={14.737} />
+                </PopIcon>
+              </PressableScale>
+            ) : (
+              // not pressable here: an article is liked and commented in the reader, after reading it
+              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.729} height={14.737} />
+            )}
+          </View>
           {/* the count rolls to its new value */}
           <View style={[styles.countBox, styles.likeCount]}>
             <RollingLabel text={formatCount(likes)} style={[styles.countText, styles.countDark]} />
           </View>
-          {thought ? (
-            <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
+          <View style={styles.comment} accessibilityLabel="Comments">
+            {thought ? (
+              <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments">
+                <Icon name="feedCommentBlack" width={14.916} height={14.916} />
+              </PressableScale>
+            ) : (
               <Icon name="feedCommentBlack" width={14.916} height={14.916} />
-            </PressableScale>
-          ) : (
-            <View style={styles.comment} accessibilityLabel="Comments">
-              <Icon name="feedCommentBlack" width={14.916} height={14.916} />
-            </View>
-          )}
+            )}
+          </View>
           <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
           <View style={styles.views}>
             {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
