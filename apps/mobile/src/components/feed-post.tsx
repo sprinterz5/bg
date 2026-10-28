@@ -67,6 +67,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
     <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={styles.root}>
       <Pressable onPress={() => openProfile(post.author.username)} hitSlop={4} accessibilityRole="link" accessibilityLabel={`${post.author.username} profile`} style={styles.avatar}>
         <AuthorAvatar author={post.author} size={41} />
+        <View pointerEvents="none" style={styles.avatarEdge} />
       </Pressable>
 
       <View style={styles.column}>
@@ -82,11 +83,9 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         </Pressable>
 
         <Pressable onPress={openArticle} accessibilityRole="button">
-          {/* title and caption (after a blank line) both #0F1419 */}
-          <Text style={styles.text}>
-            {post.title}
-            {post.caption ? <Text style={styles.caption}>{`\n\n${post.caption}`}</Text> : null}
-          </Text>
+          {/* title and caption, 3 less than a blank line between them */}
+          <Text style={styles.text}>{post.title}</Text>
+          {post.caption ? <Text style={[styles.text, styles.captionGap]}>{post.caption}</Text> : null}
         </Pressable>
 
         {post.image ? (
@@ -172,6 +171,8 @@ const styles = StyleSheet.create({
   text: { marginTop: 8.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 15.05, lineHeight: 21.7, color: colors.text },
   media: { marginTop: 19.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
+  captionGap: { marginTop: 21.7 - 3 },
+  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 20.5, borderWidth: 0.25, borderColor: '#999999' },
   actionsThought: { marginTop: 14 },
   actions: { height: 18.5, marginTop: 12.9, marginLeft: 1.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
