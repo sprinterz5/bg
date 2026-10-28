@@ -185,8 +185,11 @@ function OwnItem({ index, count, x, max }: { index: number; count: number; x: Sh
       <PressableScale onPress={pickStoryPhoto} accessibilityRole="button" accessibilityLabel="Add to your story" style={styles.item}>
         <View collapsable={false} style={styles.ring}>
           <Image source={user?.avatarUri ? { uri: user.avatarUri } : require('@/assets/icons/avatar-placeholder.png')} style={styles.photo} contentFit="cover" transition={150} />
-          <View style={styles.add}>
-            <Icon name="homePlus" width={14} height={14} tintColor="#FFFFFF" />
+          {/* a white disc with the black one inside (a border on the black one let the black show under the white) */}
+          <View style={styles.addCut}>
+            <View style={styles.add}>
+              <Icon name="homePlus" width={14} height={14} tintColor="#FFFFFF" />
+            </View>
           </View>
         </View>
         <Text style={styles.name} numberOfLines={1}>
@@ -202,6 +205,7 @@ const styles = StyleSheet.create({
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
-  add: { position: 'absolute', right: 8, bottom: 8, width: ADD, height: ADD, borderRadius: ADD / 2, backgroundColor: '#000000', borderWidth: 2.5, borderColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+  addCut: { position: 'absolute', right: 6, bottom: 6, width: ADD + 5, height: ADD + 5, borderRadius: (ADD + 5) / 2, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+  add: { width: ADD, height: ADD, borderRadius: ADD / 2, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   name: { marginTop: 3.3, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 12.25, lineHeight: 15, letterSpacing: 0, color: colors.text },
 });

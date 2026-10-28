@@ -8,7 +8,7 @@ import { fetchArticle, fetchFeed, type FeedTab } from '@/lib/feed-api';
 import { uploadImage } from '@/lib/media';
 import { reportError } from '@/lib/report-errors';
 import { useSession } from '@/state/session';
-import { ARTICLES, FEED, HOME_STORIES, type Article, type Author, type Post, type Story } from '@/mock/data';
+import { ARTICLES, FEED, HOME_STORIES, MOCK_THOUGHTS, type Article, type Author, type Post, type Story } from '@/mock/data';
 import { fetchFriendStories, viewStory } from '@/lib/stories';
 import type { Picture } from '@/lib/picture';
 
@@ -305,7 +305,12 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     // own new posts show on "For you" only (they carry no topic, and you don't follow yourself)
     const mine = tab === 'For you' ? posts.filter((p) => p.id.startsWith('p_') && !fromServer.has(p.articleId)) : [];
     const rest = posts.filter((p) => !p.id.startsWith('p_'));
-    return [...mine, ...(user ? server : []), ...rest];
+    const base = [...mine, ...(user ? server : []), ...rest];
+    if (CAPTURE || tab !== 'For you' || !user) return base;
+    // mock thoughts between the posts (the first after the first post, then every third)
+    const out = [...base];
+    MOCK_THOUGHTS.forEach((t, i) => out.splice(Math.min(out.length, 1 + i * 3), 0, t));
+    return out;
   }, [posts, server, user, tab]);
 
   const value = useMemo(

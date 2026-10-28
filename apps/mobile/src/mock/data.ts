@@ -958,6 +958,29 @@ const parseCount = (s?: string) => {
   return Math.round(/m/i.test(s) ? n * 1e6 : /k/i.test(s) ? n * 1e3 : n);
 };
 
+/** Short text posts ("thoughts") mixed into "For you" until the server has enough of its own. */
+const thought = (n: number, author: Author, title: string, timeAgo: string, likes: number, comments: number, views: number): Post => ({
+  id: `p-thought-${n}`,
+  author,
+  image: null,
+  title,
+  caption: '',
+  timeAgo,
+  likes,
+  comments,
+  shares: 0,
+  views,
+  articleId: `thought-mock-${n}`,
+});
+
+export const MOCK_THOUGHTS: Post[] = [
+  thought(1, danielKraig, 'Nighty habits that helped Steve Jobs to rest and charge, and this is not even all to be said, also the fact the population is growing fast', '2 hours ago', 52, 8, 700),
+  thought(2, dinara, 'The best thing about slow mornings is that nobody asks you to be productive yet.', '5 hours ago', 214, 31, 3200),
+  thought(3, zhangir, 'Started reading one page of a real book before bed instead of scrolling. Day 12. My sleep is weirdly better.', '9 hours ago', 96, 14, 1500),
+  thought(4, boss, 'If an idea survives a week of you not talking about it, it is probably worth building.', '1 day ago', 341, 47, 5100),
+  thought(5, billijean, 'Small reminder: you do not have to answer the message right now.', '1 day ago', 128, 9, 2100),
+];
+
 // "1 day ago" of each derived article, for the author's profile list.
 const TIME_AGO: Record<string, string> = {};
 
