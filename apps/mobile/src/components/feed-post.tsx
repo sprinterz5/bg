@@ -66,7 +66,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   return (
     <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={styles.root}>
       <Pressable onPress={() => openProfile(post.author.username)} hitSlop={4} accessibilityRole="link" accessibilityLabel={`${post.author.username} profile`} style={styles.avatar}>
-        <AuthorAvatar author={post.author} size={41} />
+        <AuthorAvatar author={post.author} size={44} />
         <View pointerEvents="none" style={styles.avatarEdge} />
       </Pressable>
 
@@ -161,8 +161,8 @@ export const FeedSeparator = () => <View style={styles.separator} />;
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
   root: { paddingTop: 12.91, paddingBottom: 15.8 },
-  avatar: { position: 'absolute', left: 14.6, top: 16.3 },
-  column: { marginLeft: 64 },
+  avatar: { position: 'absolute', left: 14.6, top: 17.3 },
+  column: { marginLeft: 65 },
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 19, color: colors.text },
   handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.25, lineHeight: 19, color: GRAY, opacity: 0.95 },
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   media: { marginTop: 19.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   captionGap: { marginTop: 23 },
-  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 20.5, borderWidth: 0.25, borderColor: '#999999' },
+  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22, borderWidth: 0.25, borderColor: '#999999' },
   actionsThought: { marginTop: 14 },
   actions: { height: 18.5, marginTop: 12.9, marginLeft: 1.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
