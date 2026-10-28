@@ -21,7 +21,7 @@ import { useAddedComments } from '@/components/comments-sheet';
 
 const GRAY = '#999999';
 const INK = GRAY; // action icons and counts (asked for #999 again)
-const RADIUS = 13.2;
+const RADIUS = 25;
 
 function formatCount(n: number) {
   if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}K`;
