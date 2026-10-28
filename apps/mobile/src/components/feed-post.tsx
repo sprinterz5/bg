@@ -190,11 +190,11 @@ const styles = StyleSheet.create({
   views: { position: 'absolute', left: 181.04, top: 1.64 },
   bookmark: { position: 'absolute', left: 265.3, top: 0.6 },
   share: { position: 'absolute', left: 298.3, top: 1.2 },
-  count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
+  count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countDark: { color: '#424242' },
   countBox: { position: 'absolute', top: 1.9, height: 16, overflow: 'hidden' },
-  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
+  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
   viewsCount: { left: 200.46 }, // TH(2): 3K, bookmark and share 1 further left
