@@ -84,7 +84,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
 
         <Pressable onPress={openArticle} accessibilityRole="button">
           {/* title and caption, a blank line apart */}
-          <Text style={styles.text}>{post.title}</Text>
+          <Text style={styles.text}>{withEmoji(post.title)}</Text>
           {post.caption ? <Text style={[styles.text, styles.captionGap]}>{post.caption}</Text> : null}
         </Pressable>
 
@@ -158,6 +158,13 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
 // The separator between posts (and the top padding of the next one) is part of the list: see FEED_SEPARATOR.
 export const FeedSeparator = () => <View style={styles.separator} />;
 
+// iOS: an emoji falls back to another font and its run shifts the whole paragraph's first line. Each emoji is its own
+// span with the line height fixed, so every line of the text keeps the same height.
+const EMOJI = /(\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*)/u;
+function withEmoji(s: string) {
+  return s.split(EMOJI).map((part, i) => (i % 2 ? <Text key={i} style={styles.emoji}>{part}</Text> : part));
+}
+
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
   root: { paddingTop: 12.91, paddingBottom: 15.8 },
@@ -171,6 +178,7 @@ const styles = StyleSheet.create({
   text: { marginTop: 2.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.85, lineHeight: 23, color: colors.text },
   media: { marginTop: 19.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
+  emoji: { fontFamily: 'System', fontSize: 14.85, lineHeight: 23 },
   captionGap: { marginTop: 23 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22, borderWidth: 0.25, borderColor: '#999999' },
   actionsThought: { marginTop: 14 },
