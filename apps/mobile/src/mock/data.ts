@@ -76,12 +76,12 @@ export type Article = {
 };
 
 const bookgram: Author = { username: 'smarts', avatar: require('@/assets/mock/avatar-bookgram.jpg'), subtitle: 'Thoughts', verified: true };
-const sam: Author = { username: 'sam_altman', avatar: require('@/assets/mock/avatar-sam.png'), subtitle: 'Recommended' };
-const nori: Author = { username: 'j_nori_k', avatar: require('@/assets/mock/avatar-nori-2.jpg'), subtitle: 'Recommended' };
+const sam: Author = { username: 'sam_altman', name: 'Sam Altman', avatar: require('@/assets/mock/avatar-sam.png'), subtitle: 'Recommended' };
+const nori: Author = { username: 'j_nori_k', name: 'Nori K', avatar: require('@/assets/mock/avatar-nori-2.jpg'), subtitle: 'Recommended' };
 
-const mx: Author = { username: 'fintech_notes', avatar: require('@/assets/mock/avatar-fintech.png'), subtitle: 'Recommended' };
-const gadgets: Author = { username: 'gadget.daily', avatar: require('@/assets/mock/avatar-gadget.png'), subtitle: 'Recommended' };
-const stevejobs01: Author = { username: 'stevejobs.01', avatar: require('@/assets/mock/avatar-stevejobs01.png'), subtitle: 'His fans' };
+const mx: Author = { username: 'fintech_notes', name: 'Fintech Notes', avatar: require('@/assets/mock/avatar-fintech.png'), subtitle: 'Recommended' };
+const gadgets: Author = { username: 'gadget.daily', name: 'Gadget Daily', avatar: require('@/assets/mock/avatar-gadget.png'), subtitle: 'Recommended' };
+const stevejobs01: Author = { username: 'stevejobs.01', name: 'Steve Jobs', avatar: require('@/assets/mock/avatar-stevejobs01.png'), subtitle: 'His fans' };
 
 export const BOOKGRAM_AUTHOR = bookgram;
 
@@ -159,7 +159,7 @@ const boss: Author = { username: 'boss', name: 'Boss', avatar: require('@/assets
 const billijean: Author = { username: 'billijean', avatar: require('@/assets/mock/avatar-billijean.jpg'), subtitle: 'Recommended for you' };
 const danielKraig: Author = { username: 'daniel_kraig', name: 'Daniel Kraig', avatar: require('@/assets/mock/avatar-daniel.jpg'), subtitle: '' };
 const zhangir: Author = { username: 'lesbekov_zh', name: 'Zhangir Cool', avatar: require('@/assets/mock/avatar-zhangir.jpg'), subtitle: '' };
-const dinara: Author = { username: 'dinara_satzhan', avatar: require('@/assets/mock/avatar-dinara.jpg'), subtitle: '' };
+const dinara: Author = { username: 'dinara_satzhan', name: 'Dinara Satzhan', avatar: require('@/assets/mock/avatar-dinara.jpg'), subtitle: '' };
 
 /** Home feed "Your contacts" cards (AutoLayouted-39): people from the phone's contacts who are here. */
 export const CONTACTS: Author[] = [

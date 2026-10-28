@@ -55,7 +55,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     like();
   };
-  const name = post.author.name ?? post.author.username;
+  const name = post.author.name ?? post.author.username.replace(/[_.]+/g, ' ').trim().replace(/\b\w/g, (c) => c.toUpperCase());
   const toggleSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     save();
