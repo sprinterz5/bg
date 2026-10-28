@@ -974,11 +974,26 @@ const thought = (n: number, author: Author, title: string, timeAgo: string, like
 });
 
 export const MOCK_THOUGHTS: Post[] = [
-  thought(1, danielKraig, 'Nighty habits that helped Steve Jobs to rest and charge, and this is not even all to be said, also the fact the population is growing fast', '2 hours ago', 52, 8, 700),
-  thought(2, dinara, 'The best thing about slow mornings is that nobody asks you to be productive yet.', '5 hours ago', 214, 31, 3200),
-  thought(3, zhangir, 'Started reading one page of a real book before bed instead of scrolling. Day 12. My sleep is weirdly better.', '9 hours ago', 96, 14, 1500),
-  thought(4, boss, 'If an idea survives a week of you not talking about it, it is probably worth building.', '1 day ago', 341, 47, 5100),
-  thought(5, billijean, 'Small reminder: you do not have to answer the message right now.', '1 day ago', 128, 9, 2100),
+  thought(1, danielKraig, 'What a great day ! 🌞 wishing you all the best memories today', '2 hours ago', 52, 8, 700),
+  thought(
+    2,
+    dinara,
+    'Right Now I`m reading an amazing book called "Green light" - an adventurous book about a boy who accidentally broke his arm in a football game with friends. The funny thing about the book is how he fell into depression because of this broken arm. I`m just on 40th page out of 400, still more to read. What are you reading? Let`s celebrate each other\'s books.',
+    '5 hours ago',
+    214,
+    31,
+    3200,
+  ),
+  thought(
+    3,
+    zhangir,
+    'Today Apple is announcing its first ever OLED macbook Pro and rumors are going that it will a shining apple star, what a beginning for Ternus as a CEO. I already love him: Duo, HomeView, gorgeous iPhone 18 pro max color - Burghundi, upgraded iPad mini and now the OLED macpro! and its been just 2months of his tenure, what will then? Wow',
+    '9 hours ago',
+    96,
+    14,
+    1500,
+  ),
+  thought(4, boss, 'Today is my dad`s birthday, wish him all the best and most importantly a good health, cause at his age thats what a man needs 😂', '1 day ago', 341, 47, 5100),
 ];
 
 // "1 day ago" of each derived article, for the author's profile list.
