@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   actionsThought: { marginTop: 14 },
   actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
-  like: { position: 'absolute', left: 1.865, top: 2.96 },
+  like: { position: 'absolute', left: 1.865, top: 1.96 },
   comment: { position: 'absolute', left: 93.13, top: 1.93 },
   views: { position: 'absolute', left: 181.04, top: 1.64 },
   bookmark: { position: 'absolute', left: 265.3, top: 0.6 },
