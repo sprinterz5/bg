@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,8 +22,7 @@ export default function NewThought() {
   const { publishThought } = useFeed();
   const [text, setText] = useState('');
   const [audience, setAudience] = useState<(typeof AUDIENCES)[number]>('Everyone');
-  const [sending, setSending] = useState(false);
-  const canPost = text.trim().length > 0 && !sending;
+  const canPost = text.trim().length > 0;
 
   const author = {
     username: user?.username ?? '',
@@ -32,16 +31,11 @@ export default function NewThought() {
     subtitle: '',
   };
 
-  const post = async () => {
+  // Goes up like a post: the screen closes at once and the "Posting..." card takes over.
+  const post = () => {
     if (!canPost || !user) return;
-    setSending(true);
-    try {
-      await publishThought(text, author);
-      router.back();
-    } catch {
-      setSending(false);
-      Alert.alert("Couldn't post", 'Check the connection and try again.');
-    }
+    publishThought(text, author);
+    router.back();
   };
 
   return (

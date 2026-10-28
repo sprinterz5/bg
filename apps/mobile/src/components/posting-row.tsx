@@ -48,13 +48,15 @@ export function PostingRow({ publishing: p, bottom, onRetry, onCancel, onOpen }:
           <Icon name="coverClose" width={12} height={12} />
         </Pressable>
       ) : null}
-      <View style={styles.thumb} pointerEvents="none">
-        <Image source={p.cover} style={[StyleSheet.absoluteFill, styles.faded]} contentFit="cover" />
-        <Animated.View collapsable={false} style={[styles.fill, fillStyle]}>
-          <Image source={p.cover} style={styles.fillImage} contentFit="cover" />
-        </Animated.View>
-        <View style={styles.outline} />
-      </View>
+      {p.cover ? (
+        <View style={styles.thumb} pointerEvents="none">
+          <Image source={p.cover} style={[StyleSheet.absoluteFill, styles.faded]} contentFit="cover" />
+          <Animated.View collapsable={false} style={[styles.fill, fillStyle]}>
+            <Image source={p.cover} style={styles.fillImage} contentFit="cover" />
+          </Animated.View>
+          <View style={styles.outline} />
+        </View>
+      ) : null}
     </Animated.View>
   );
 }

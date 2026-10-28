@@ -26,7 +26,8 @@ export type ArticleDraft = {
 /** The post being sent, shown in the card over the tab bar: uploading the cover, sending the text, "Posted" (with the
  *  new article's id, tap opens it), or failed (Retry / ✕). `done`: the card is folding away. */
 export type Publishing = {
-  cover: Picture;
+  /** null: a thought (no picture). */
+  cover: Picture | null;
   title: string;
   subtitle?: string;
   stage: 'upload' | 'post' | 'posted' | 'error';
@@ -44,8 +45,8 @@ type FeedContextValue = {
   updateDraft: (patch: Partial<ArticleDraft>) => void;
   publishing: Publishing | null;
   publish: (author: Author) => void;
-  /** A "thought": a short text post without a picture. Resolves once the server has it; throws when it could not. */
-  publishThought: (text: string, author: Author) => Promise<void>;
+  /** A "thought": a short text post without a picture; goes up like a post (the "Posting..." card). */
+  publishThought: (text: string, author: Author) => void;
   /** After an error: send again (same request id, so a post that did reach the server isn't doubled). */
   retryPublish: () => void;
   /** After an error: drop the card and put the post back into the composer. */
@@ -124,7 +125,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const updateDraft = useCallback((patch: Partial<ArticleDraft>) => setDraft((d) => ({ ...d, ...patch })), []);
 
   // The post in flight: what to send, and the request id that makes retries safe.
-  const job = useRef<{ draft: ArticleDraft; author: Author; key: string; coverUrl?: string } | null>(null);
+  const job = useRef<{ draft: ArticleDraft; author: Author; key: string; coverUrl?: string; thought?: string } | null>(null);
 
   const run = useCallback(async () => {
     const j = job.current;
@@ -133,6 +134,37 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     const title = d.label.trim().slice(0, 80);
     const subtitle = d.subtitle.trim().slice(0, 240) || undefined;
     const paragraphs = d.body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+    if (j.thought !== undefined) {
+      // A thought goes the same way as a post, without the picture: the card says "Posting...", then the post comes
+      // up on top of the feed.
+      const text = j.thought;
+      try {
+        setPublishing((v) => v && { ...v, stage: 'post' });
+        let id = `a_${Date.now()}`;
+        if (CAPTURE) await new Promise((r) => setTimeout(r, 900));
+        else {
+          const created = await api<ApiArticleCreated>('/articles', {
+            body: { title: text.slice(0, 80), ...(text.length > 80 ? { subtitle: text.slice(80) } : {}), body: text, publish: true },
+            auth: true,
+            idempotent: true,
+            idempotencyKey: j.key,
+          });
+          id = created.id;
+        }
+        const author = j.author;
+        setPosts((p) => [{ id: `p_${id}`, author, image: null, title: text, caption: '', timeAgo: 'just now', likes: 0, comments: 0, shares: 0, articleId: id }, ...p]);
+        job.current = null;
+        setPublishing((v) => v && { ...v, stage: 'posted', articleId: id });
+        setTimeout(() => {
+          setPublishing((v) => v && v.articleId === id ? { ...v, done: true } : v);
+          setTimeout(() => setPublishing((v) => (v?.articleId === id ? null : v)), 450);
+        }, POSTED_MS);
+      } catch (e) {
+        reportError(new Error(`thought failed: ${e instanceof Error ? e.message : String(e)} ${e instanceof ApiError ? JSON.stringify(e.body).slice(0, 300) : ''}`), { level: 'warn' });
+        setPublishing((v) => v && { ...v, stage: 'error' });
+      }
+      return;
+    }
     try {
       setPublishing((v) => v && { ...v, stage: 'upload' });
       let id: string;
@@ -180,21 +212,14 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   }, [run]);
 
   // The text goes up as title (first 80 characters) + subtitle (the rest, up to 240) + body (all of it); a post
-  // without a cover is what the feed shows as a thought.
-  const publishThought = useCallback(async (text: string, author: Author) => {
+  // without a cover is what the feed shows as a thought. Starts at once (the composer closes), like a post.
+  const publishThought = useCallback((text: string, author: Author) => {
     const t = text.trim().slice(0, THOUGHT_MAX);
-    if (!t) return;
-    let id = `a_${Date.now()}`;
-    if (!CAPTURE) {
-      const created = await api<ApiArticleCreated>('/articles', {
-        body: { title: t.slice(0, 80), ...(t.length > 80 ? { subtitle: t.slice(80) } : {}), body: t, publish: true },
-        auth: true,
-        idempotent: true,
-      });
-      id = created.id;
-    }
-    setPosts((p) => [{ id: `p_${id}`, author, image: null, title: t, caption: '', timeAgo: 'just now', likes: 0, comments: 0, shares: 0, articleId: id }, ...p]);
-  }, []);
+    if (!t || job.current) return;
+    job.current = { draft: emptyDraft, author, key: `thought-${Date.now()}-${Math.random().toString(36).slice(2)}`, thought: t };
+    setPublishing({ cover: null, title: t, stage: 'post' });
+    run();
+  }, [run]);
 
   const retryPublish = useCallback(() => {
     if (job.current) run();
@@ -203,7 +228,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const cancelPublish = useCallback(() => {
     const j = job.current;
     job.current = null;
-    if (j) setDraft(j.draft);
+    if (j && j.thought === undefined) setDraft(j.draft);
     setPublishing(null);
   }, []);
 
