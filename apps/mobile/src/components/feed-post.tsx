@@ -85,7 +85,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         <Pressable onPress={openArticle} accessibilityRole="button">
           {/* title and caption, a blank line apart */}
           <Text style={styles.text}>{withEmoji(post.title)}</Text>
-          {post.caption ? <Text style={[styles.text, styles.captionGap]}>{post.caption}</Text> : null}
+          {post.caption ? <Text style={[styles.text, styles.captionGap]}>{withEmoji(post.caption)}</Text> : null}
         </Pressable>
 
         {post.image ? (
@@ -96,7 +96,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </PressableScale>
         ) : null}
 
-        <View style={[styles.actions, thought && styles.actionsThought]}>
+        <View style={styles.actions}>
           {thought ? (
             <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
               <PopIcon active={liked}>
@@ -182,7 +182,6 @@ const styles = StyleSheet.create({
   emoji: { fontFamily: Platform.OS === 'ios' ? 'Apple Color Emoji' : 'System', fontSize: 14.7, lineHeight: Platform.OS === 'ios' ? 17 : 23 },
   captionGap: { marginTop: 23 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.5, borderWidth: 0.25, borderColor: '#999999' },
-  actionsThought: { marginTop: 14 },
   actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
   like: { position: 'absolute', left: 1.865, top: 2.26 },
