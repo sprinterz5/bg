@@ -194,19 +194,6 @@ export const FEED: Post[] = [
     articleId: 'journal',
   },
   {
-    id: 'p-thought',
-    author: zhangir,
-    image: null,
-    title: 'Nighty habits that helped Steve Jobs to rest and charge, and this is not even all to be said, also the fact the population is growing fast',
-    caption: '',
-    timeAgo: '1 hour ago',
-    likes: 52,
-    comments: 8,
-    shares: 1,
-    views: 700,
-    articleId: 'thought-mock',
-  },
-  {
     id: 'p-armpits',
     author: zhangir,
     image: require('@/assets/mock/post-dodo.jpg'),
@@ -1000,7 +987,7 @@ export const MOCK_THOUGHTS: Post[] = [
 const TIME_AGO: Record<string, string> = {};
 
 for (const p of FEED) {
-  if (!p.image) continue; // a thought has no article to read
+  if (!p.image) continue; // (typing: FEED holds posts with a picture)
   const id = `a-${p.id}`;
   articleFrom(id, p.author, p.image, p.title, bodyFor(p.id), p.likes, p.comments, p.shares, p.caption);
   p.articleId = id;

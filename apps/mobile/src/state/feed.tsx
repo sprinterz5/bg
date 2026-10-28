@@ -306,7 +306,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     const mine = tab === 'For you' ? posts.filter((p) => p.id.startsWith('p_') && !fromServer.has(p.articleId)) : [];
     const rest = posts.filter((p) => !p.id.startsWith('p_'));
     const base = [...mine, ...(user ? server : []), ...rest];
-    if (CAPTURE || tab !== 'For you' || !user) return base;
+    if (tab !== 'For you' || (!user && !CAPTURE)) return base;
     // mock thoughts between the posts (the first after the first post, then every third)
     const out = [...base];
     MOCK_THOUGHTS.forEach((t, i) => out.splice(Math.min(out.length, 1 + i * 3), 0, t));
