@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { memo, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View, type HostInstance } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, View, type HostInstance } from 'react-native';
 
 import type { Post } from '@/mock/data';
 import { colors } from '@/theme';
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   text: { marginTop: 2.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.85, lineHeight: 23, color: colors.text },
   media: { marginTop: 19.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
-  emoji: { fontFamily: 'System', fontSize: 14.85, lineHeight: 23 },
+  emoji: { fontFamily: Platform.OS === 'ios' ? 'Apple Color Emoji' : 'System', fontSize: 14.85, lineHeight: 23 },
   captionGap: { marginTop: 23 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22, borderWidth: 0.25, borderColor: '#999999' },
   actionsThought: { marginTop: 14 },
