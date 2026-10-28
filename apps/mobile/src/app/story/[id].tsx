@@ -99,6 +99,18 @@ function StoryViewer() {
   // Only the opened page is mounted while the window grows; the pages next to it, the curl canvas and the
   // snapshots (a full software redraw of the page on Android) come once it's done, so nothing competes with it.
   const [settled, setSettled] = useState(false);
+  // The photos (and faces) of the stories either side are fetched ahead, so a turn never shows a page that is still
+  // loading.
+  const prefetchIndex = index;
+  useEffect(() => {
+    for (const d of [-2, -1, 1, 2]) {
+      const s = HOME_STORIES[prefetchIndex + d];
+      for (const src of [s?.image, s?.author.avatar]) {
+        const uri = src && typeof src === 'object' && 'uri' in src ? src.uri : null;
+        if (uri) Image.prefetch(uri).catch(() => {});
+      }
+    }
+  }, [prefetchIndex, HOME_STORIES]);
   // The window stays invisible (the photo on Home shows through) until the opened story's photo is loaded, so it
   // never grows as an empty black circle; a short wait is the fallback.
   const [photoShown, setPhotoShown] = useState(false);

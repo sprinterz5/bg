@@ -199,6 +199,7 @@ function Reader({ article }: { article: Article }) {
   const [origin] = useState(() => articleOrigin(article.id));
   const t = useSharedValue(0);
   const flying = useSharedValue(origin ? 1 : 0);
+  const landed = useSharedValue(0); // the flight is over
   const [opened, setOpened] = useState(false);
   // Where the preview's picture is (window coordinates), known after its first layout.
   const [picture, setPicture] = useState<Rect | null>(null);
@@ -220,11 +221,25 @@ function Reader({ article }: { article: Article }) {
   useEffect(() => {
     if (!coverReady || !picture) return;
     t.set(withTiming(1, { duration: origin ? OPEN_MS : 220, easing: OPEN_EASING }, (fin) => {
-      if (!fin) return;
-      flying.set(0);
-      runOnJS(setOpened)(true);
+      if (fin) landed.set(1);
     }));
-  }, [coverReady, picture, origin, t, flying]);
+  }, [coverReady, picture, origin, t, landed]);
+  // The flying copy only leaves once the real cover under it is on screen, or the picture would blink as they swap
+  // (a short wait is the fallback).
+  const coverShown = useSharedValue(origin ? 0 : 1);
+  useEffect(() => {
+    const timer = setTimeout(() => coverShown.set(1), 900);
+    return () => clearTimeout(timer);
+  }, [coverShown]);
+  useAnimatedReaction(
+    () => landed.get() === 1 && coverShown.get() === 1,
+    (go, was) => {
+      if (go && !was) {
+        flying.set(0);
+        runOnJS(setOpened)(true);
+      }
+    },
+  );
   const onCoverShown = useCallback(() => setCoverReady(true), []);
   const closing = useRef(false);
   const close = useCallback(() => {
@@ -472,7 +487,7 @@ function Reader({ article }: { article: Article }) {
           pointerEvents="none"
           onLayout={measurePicture}
           style={[styles.picture, { width: pictureW, height: pictureH, marginTop: article.subtitle ? 40.96 : 51.7 }, pictureVisible]}>
-          <Image source={article.cover} style={styles.fill} contentFit="cover" />
+          <Image source={article.cover} style={styles.fill} contentFit="cover" onDisplay={() => coverShown.set(1)} />
         </Animated.View>
         <Animated.View collapsable={false} pointerEvents="box-none" style={[styles.previewBar, { bottom: Math.max(insets.bottom, 12) + 55 }, chromeStyle]}>
           <PressableScale onPress={() => setSharing(true)} hitSlop={8} accessibilityLabel="Share" style={styles.previewShare}>
