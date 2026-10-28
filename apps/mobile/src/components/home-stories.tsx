@@ -6,7 +6,6 @@ import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, t
 
 import type { Story } from '@/mock/data';
 import { colors } from '@/theme';
-import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { RingSweep, SeenRing, StoryRing } from './ring-sweep';
 import { INTER_FAMILIES, Text } from '@/components/text';
@@ -166,8 +165,6 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
   );
 }
 
-const ADD = 28; // the black "+" under the own avatar
-
 /** "Your story": the own avatar (no ring) with a black "+" at its lower right; tapping it picks a photo for a new story. */
 function OwnItem({ index, count, x, max }: { index: number; count: number; x: SharedValue<number>; max: SharedValue<number> }) {
   const { user } = useSession();
@@ -185,10 +182,13 @@ function OwnItem({ index, count, x, max }: { index: number; count: number; x: Sh
       <PressableScale onPress={pickStoryPhoto} accessibilityRole="button" accessibilityLabel="Add to your story" style={styles.item}>
         <View collapsable={false} style={styles.ring}>
           <Image source={user?.avatarUri ? { uri: user.avatarUri } : require('@/assets/icons/avatar-placeholder.png')} style={styles.photo} contentFit="cover" transition={150} />
-          {/* a white disc with the black one inside (a border on the black one let the black show under the white) */}
+          {/* Figma (AutoLayouted, Ellipse 136): a #1E1E1E disc 25 across with a 3 white edge, centred 30 right and 33.5 below the
+              avatar's centre, a #FAFAFA plus 10 across (stroke 2, round); drawn as a white disc with the dark one inside,
+              since a border on the dark one let the dark show under the white. */}
           <View style={styles.addCut}>
             <View style={styles.add}>
-              <Icon name="homePlus" width={14} height={14} tintColor="#FFFFFF" />
+              <View style={styles.plusH} />
+              <View style={styles.plusV} />
             </View>
           </View>
         </View>
@@ -205,7 +205,9 @@ const styles = StyleSheet.create({
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
-  addCut: { position: 'absolute', right: 6, bottom: 6, width: ADD + 5, height: ADD + 5, borderRadius: (ADD + 5) / 2, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  add: { width: ADD, height: ADD, borderRadius: ADD / 2, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
+  addCut: { position: 'absolute', left: 64.5, top: 68, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+  add: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#1E1E1E', alignItems: 'center', justifyContent: 'center' },
+  plusH: { position: 'absolute', width: 12, height: 2, borderRadius: 1, backgroundColor: '#FAFAFA' },
+  plusV: { position: 'absolute', width: 2, height: 12, borderRadius: 1, backgroundColor: '#FAFAFA' },
   name: { marginTop: 3.3, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 12.25, lineHeight: 15, letterSpacing: 0, color: colors.text },
 });

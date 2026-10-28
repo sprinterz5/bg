@@ -961,7 +961,9 @@ const thought = (n: number, author: Author, title: string, timeAgo: string, like
 });
 
 export const MOCK_THOUGHTS: Post[] = [
-  thought(1, danielKraig, 'What a great day ! 🌞 wishing you all the best memories today', '2 hours ago', 52, 8, 700),
+  // the first post of the home frame (AutoLayouts TH): 7h, 520 / 270 / 3K
+  thought(1, danielKraig, 'Nighty habits that helped Steve Jobs to rest and charge and this is not even all to be said also the fact the population is growing fast 📈', '7 hours ago', 520, 270, 3000),
+  thought(5, dinara, 'What a great day ! 🌞 wishing you all the best memories today', '2 hours ago', 52, 8, 700),
   thought(
     2,
     dinara,
