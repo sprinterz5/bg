@@ -100,13 +100,13 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           {thought ? (
             <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
               <PopIcon active={liked}>
-                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={17.85} height={15.725} />
+                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={14.28} height={12.58} />
               </PopIcon>
             </PressableScale>
           ) : (
             // not pressable here: an article is liked and commented in the reader, after reading it
             <View style={styles.like} accessibilityLabel="Likes">
-              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={17.85} height={15.725} />
+              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={14.28} height={12.58} />
             </View>
           )}
           {/* the count rolls to its new value */}
@@ -115,17 +115,17 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </View>
           {thought ? (
             <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
-              <Icon name="feedCommentBlack" width={16.4} height={16.4} />
+              <Icon name="feedCommentBlack" width={13.94} height={13.94} />
             </PressableScale>
           ) : (
             <View style={styles.comment} accessibilityLabel="Comments">
-              <Icon name="feedCommentBlack" width={16.4} height={16.4} />
+              <Icon name="feedCommentBlack" width={13.94} height={13.94} />
             </View>
           )}
           <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
           <View style={styles.views}>
             {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
-            <Icon name="feedViewsBlack" width={14.86} height={15.8} />
+            <Icon name="feedViewsBlack" width={13.374} height={14.22} />
           </View>
           <Text style={[styles.count, styles.countDark, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
@@ -176,9 +176,9 @@ const styles = StyleSheet.create({
   actionsThought: { marginTop: 14 },
   actions: { height: 18.5, marginTop: 12.9, marginLeft: 1.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
-  like: { position: 'absolute', left: 0.08, top: 1.39 },
-  comment: { position: 'absolute', left: 91.9, top: 0.7 },
-  views: { position: 'absolute', left: 180.3, top: 0.85 },
+  like: { position: 'absolute', left: 1.865, top: 2.96 },
+  comment: { position: 'absolute', left: 93.13, top: 1.93 },
+  views: { position: 'absolute', left: 181.04, top: 1.64 },
   bookmark: { position: 'absolute', left: 265.3, top: 0.6 },
   share: { position: 'absolute', left: 298.3, top: 1.2 },
   count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 13.25, lineHeight: 16, color: INK },
