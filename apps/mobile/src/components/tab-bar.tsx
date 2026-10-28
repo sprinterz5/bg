@@ -116,7 +116,7 @@ function TabGlyph({ meta, focused, k }: { meta: (typeof TABS)[string]; focused: 
 const styles = StyleSheet.create({
   bar: {
     backgroundColor: colors.bg,
-    borderTopWidth: 0.35,
+    borderTopWidth: 0.75,
     borderTopColor: '#E5E5E5',
   },
   floating: { position: 'absolute', left: 0, right: 0, bottom: 0 },
