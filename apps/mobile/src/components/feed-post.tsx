@@ -84,7 +84,14 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
 
         <Pressable onPress={openArticle} accessibilityRole="button">
           {/* title and caption, a blank line apart */}
-          <Text style={styles.text}>{withEmoji(post.title)}</Text>
+          {thought ? (
+            // a thought sits in a dashed speech bubble (the corner by the avatar is the tail)
+            <View style={styles.bubble}>
+              <Text style={[styles.text, styles.bubbleText]}>{withEmoji(post.title)}</Text>
+            </View>
+          ) : (
+            <Text style={styles.text}>{withEmoji(post.title)}</Text>
+          )}
           {post.caption ? <Text style={[styles.text, styles.captionGap]}>{withEmoji(post.caption)}</Text> : null}
         </Pressable>
 
@@ -180,6 +187,8 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%' },
   emojiBox: { height: 17, justifyContent: 'center' },
   emoji: { fontFamily: Platform.OS === 'ios' ? 'Apple Color Emoji' : 'System', fontSize: 14.7, lineHeight: Platform.OS === 'ios' ? 17 : 23 },
+  bubble: { marginTop: 3.44, marginRight: 16, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 4 },
+  bubbleText: { marginTop: 0, marginRight: 0 },
   captionGap: { marginTop: 23 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.5, borderWidth: 0.25, borderColor: '#999999' },
   actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0 },
