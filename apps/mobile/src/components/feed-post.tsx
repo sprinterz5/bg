@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   captionGap: { marginTop: 23 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.5, borderWidth: 0.25, borderColor: '#999999' },
   actionsThought: { marginTop: 14 },
-  actions: { height: 18.5, marginTop: 11.9, marginLeft: 0.25, marginRight: 0 },
+  actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.25, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
   like: { position: 'absolute', left: 1.865, top: 2.96 },
   comment: { position: 'absolute', left: 93.13, top: 1.93 },
