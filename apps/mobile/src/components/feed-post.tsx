@@ -100,13 +100,13 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           {thought ? (
             <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
               <PopIcon active={liked}>
-                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={14.28} height={12.58} />
+                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={15.708} height={13.838} />
               </PopIcon>
             </PressableScale>
           ) : (
             // not pressable here: an article is liked and commented in the reader, after reading it
             <View style={styles.like} accessibilityLabel="Likes">
-              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={14.28} height={12.58} />
+              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={15.708} height={13.838} />
             </View>
           )}
           {/* the count rolls to its new value */}
@@ -115,11 +115,11 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </View>
           {thought ? (
             <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
-              <Icon name="feedCommentBlack" width={13.94} height={13.94} />
+              <Icon name="feedCommentBlack" width={14.916} height={14.916} />
             </PressableScale>
           ) : (
             <View style={styles.comment} accessibilityLabel="Comments">
-              <Icon name="feedCommentBlack" width={13.94} height={13.94} />
+              <Icon name="feedCommentBlack" width={14.916} height={14.916} />
             </View>
           )}
           <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
