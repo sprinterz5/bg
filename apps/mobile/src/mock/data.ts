@@ -46,7 +46,8 @@ export type Story = {
 export type Post = {
   id: string;
   author: Author;
-  image: Picture;
+  /** null: a "thought", a short text post without a picture (the text is `title`). */
+  image: Picture | null;
   title: string;
   caption: string;
   timeAgo: string;
@@ -191,6 +192,19 @@ export const FEED: Post[] = [
     shares: 39,
     views: 3000,
     articleId: 'journal',
+  },
+  {
+    id: 'p-thought',
+    author: zhangir,
+    image: null,
+    title: 'Nighty habits that helped Steve Jobs to rest and charge, and this is not even all to be said, also the fact the population is growing fast',
+    caption: '',
+    timeAgo: '1 hour ago',
+    likes: 52,
+    comments: 8,
+    shares: 1,
+    views: 700,
+    articleId: 'thought-mock',
   },
   {
     id: 'p-armpits',
@@ -948,6 +962,7 @@ const parseCount = (s?: string) => {
 const TIME_AGO: Record<string, string> = {};
 
 for (const p of FEED) {
+  if (!p.image) continue; // a thought has no article to read
   const id = `a-${p.id}`;
   articleFrom(id, p.author, p.image, p.title, bodyFor(p.id), p.likes, p.comments, p.shares, p.caption);
   p.articleId = id;

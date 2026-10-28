@@ -1,4 +1,4 @@
-import { useFocusEffect, useScrollToTop } from 'expo-router';
+import { useFocusEffect, useScrollToTop, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, RefreshControl, StyleSheet, useWindowDimensions, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -22,7 +22,6 @@ import { homeChromeHidden } from '@/lib/chrome';
 import { push } from '@/lib/nav';
 import { CAPTURE } from '@/lib/capture';
 import { unreadCount } from '@/lib/notifications';
-import { pickStoryPhoto } from '@/lib/pick-cover';
 
 export default function Home() {
   const insets = useSafeAreaInsets();
@@ -301,7 +300,7 @@ export default function Home() {
             {/* over the feed (not at the top of the page): a hairline under the logo row */}
             <Animated.View style={[styles.headerLine, headerLineStyle]} />
             <View style={styles.header}>
-              <PressableScale haptic onPress={pickStoryPhoto} hitSlop={12} accessibilityLabel="New story" style={styles.plus}>
+              <PressableScale haptic onPress={() => push('/new-thought' as Href)} hitSlop={12} accessibilityLabel="New thought" style={styles.plus}>
                 <Icon name="homePlus" width={20} height={20} />
               </PressableScale>
               {/* NBSPs on both sides: Android clips script glyphs at the line's advance width; symmetric keeps it centred. */}

@@ -23,13 +23,15 @@ export function shortAgo(iso: string | null) {
 }
 
 function toPost(i: ApiFeedItem): Post | null {
-  if (i.targetType !== 'ARTICLE' || !i.coverImageUrl) return null;
+  if (i.targetType !== 'ARTICLE') return null;
+  // No cover: a "thought". Its text went up as title (first 80 characters) + subtitle (the rest), so it joins back.
+  const thought = !i.coverImageUrl;
   return {
     id: `s_${i.targetId}`,
     author: authorOf(i.author),
-    image: { uri: i.coverImageUrl },
-    title: i.title,
-    caption: i.subtitle ?? '',
+    image: thought ? null : { uri: i.coverImageUrl! },
+    title: thought ? i.title + (i.subtitle ?? '') : i.title,
+    caption: thought ? '' : (i.subtitle ?? ''),
     timeAgo: shortAgo(i.publishedAt),
     likes: i.counts.likes,
     liked: i.viewer.liked,
@@ -43,7 +45,7 @@ function toPost(i: ApiFeedItem): Post | null {
 
 export type FeedTab = 'For you' | 'Following' | 'Saved' | 'History';
 
-/** One page of a Home tab (articles with a cover only: the card needs a picture). "For you" is ranked (cursor);
+/** One page of a Home tab (articles; one without a cover is a "thought"). "For you" is ranked (cursor);
  *  "Following" (people you follow) is newest first, "Saved" (own bookmarks) by bookmark time and "History" (posts
  *  opened) by last open; those three page with `before`. */
 export async function fetchFeed(cursor?: string | null, tab: FeedTab = 'For you') {

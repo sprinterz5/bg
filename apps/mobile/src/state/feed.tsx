@@ -34,6 +34,9 @@ export type Publishing = {
   done?: boolean;
 };
 
+/** Longest thought (title 80 + subtitle 240 on the server). */
+export const THOUGHT_MAX = 320;
+
 type FeedContextValue = {
   posts: Post[];
   articles: Record<string, Article>;
@@ -41,6 +44,8 @@ type FeedContextValue = {
   updateDraft: (patch: Partial<ArticleDraft>) => void;
   publishing: Publishing | null;
   publish: (author: Author) => void;
+  /** A "thought": a short text post without a picture. Resolves once the server has it; throws when it could not. */
+  publishThought: (text: string, author: Author) => Promise<void>;
   /** After an error: send again (same request id, so a post that did reach the server isn't doubled). */
   retryPublish: () => void;
   /** After an error: drop the card and put the post back into the composer. */
@@ -102,7 +107,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   // ?capture&posting=upload|post|posted|error shows the card in that state (design checks).
   const [publishing, setPublishing] = useState<Publishing | null>(() => {
     const stage = CAPTURE ? captureParam('posting') : null;
-    return stage ? { cover: FEED[0].image, title: FEED[0].title, stage: stage as Publishing['stage'], articleId: FEED[0].articleId } : null;
+    return stage ? { cover: FEED[0].image!, title: FEED[0].title, stage: stage as Publishing['stage'], articleId: FEED[0].articleId } : null;
   });
   const [seenStories, setSeenStories] = useState<ReadonlySet<string>>(() => new Set());
   const markStoriesSeen = useCallback(
@@ -173,6 +178,23 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     setDraft(emptyDraft);
     run();
   }, [run]);
+
+  // The text goes up as title (first 80 characters) + subtitle (the rest, up to 240) + body (all of it); a post
+  // without a cover is what the feed shows as a thought.
+  const publishThought = useCallback(async (text: string, author: Author) => {
+    const t = text.trim().slice(0, THOUGHT_MAX);
+    if (!t) return;
+    let id = `a_${Date.now()}`;
+    if (!CAPTURE) {
+      const created = await api<ApiArticleCreated>('/articles', {
+        body: { title: t.slice(0, 80), ...(t.length > 80 ? { subtitle: t.slice(80) } : {}), body: t, publish: true },
+        auth: true,
+        idempotent: true,
+      });
+      id = created.id;
+    }
+    setPosts((p) => [{ id: `p_${id}`, author, image: null, title: t, caption: '', timeAgo: 'just now', likes: 0, comments: 0, shares: 0, articleId: id }, ...p]);
+  }, []);
 
   const retryPublish = useCallback(() => {
     if (job.current) run();
@@ -287,8 +309,8 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   }, [posts, server, user, tab]);
 
   const value = useMemo(
-    () => ({ posts: merged, tab, setTab, loadedTab, stories, openedStory, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost }),
-    [merged, tab, setTab, loadedTab, stories, openedStory, articles, draft, updateDraft, publishing, publish, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost],
+    () => ({ posts: merged, tab, setTab, loadedTab, stories, openedStory, articles, draft, updateDraft, publishing, publish, publishThought, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost }),
+    [merged, tab, setTab, loadedTab, stories, openedStory, articles, draft, updateDraft, publishing, publish, publishThought, retryPublish, cancelPublish, loadMore, refresh, ensureArticle, hidePost],
   );
 
   return (

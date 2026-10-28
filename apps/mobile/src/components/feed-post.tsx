@@ -16,7 +16,7 @@ import { openArticle as openArticleFrom } from '@/lib/article-origin';
 import { openProfile } from '@/lib/nav';
 import { useReaction } from '@/lib/reactions';
 import { report } from '@/lib/moderation';
-import { openShare } from '@/components/share-host';
+import { openComments, openShare } from '@/components/share-host';
 import { useAddedComments } from '@/components/comments-sheet';
 
 const GRAY = '#999999';
@@ -41,11 +41,20 @@ function shortAge(ago: string) {
 // picture: like 520, comment 270, views 3K, bookmark, share (all #999, counts Inter 12.35); 16.3 to the separator.
 export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; onHide: (id: string) => void }) {
   const addedComments = useAddedComments(post.articleId);
-  const { liked, saved, likes, toggleSave: save } = useReaction(post.articleId, { liked: !!post.liked, saved: !!post.saved, likes: post.likes });
+  const { liked, saved, likes, toggleLike: like, toggleSave: save } = useReaction(post.articleId, { liked: !!post.liked, saved: !!post.saved, likes: post.likes });
   const [menu, setMenu] = useState(false);
   // The reader grows its cover out of this picture.
   const media = useRef<HostInstance>(null);
-  const openArticle = () => openArticleFrom(post.articleId, media.current, post.image, RADIUS);
+  // A "thought" has no picture: the whole text is on the card, so there is nothing to open and it can be liked and
+  // commented right here (an article is liked and commented in the reader, after reading it).
+  const thought = !post.image;
+  const openArticle = () => {
+    if (!thought) openArticleFrom(post.articleId, media.current, post.image, RADIUS);
+  };
+  const toggleLike = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    like();
+  };
   const name = post.author.name ?? post.author.username;
   const toggleSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -80,24 +89,40 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </Text>
         </Pressable>
 
-        <PressableScale onPress={openArticle} scaleTo={0.98} accessibilityRole="button" accessibilityLabel={post.title} style={styles.media}>
-          <View ref={media} collapsable={false} style={StyleSheet.absoluteFill}>
-            <Image source={post.image} recyclingKey={post.id} style={styles.image} contentFit="cover" transition={200} />
-          </View>
-        </PressableScale>
+        {post.image ? (
+          <PressableScale onPress={openArticle} scaleTo={0.98} accessibilityRole="button" accessibilityLabel={post.title} style={styles.media}>
+            <View ref={media} collapsable={false} style={StyleSheet.absoluteFill}>
+              <Image source={post.image} recyclingKey={post.id} style={styles.image} contentFit="cover" transition={200} />
+            </View>
+          </PressableScale>
+        ) : null}
 
-        <View style={styles.actions}>
-          {/* not pressable here: a post is liked and commented in the reader, after reading it */}
-          <View style={styles.like} accessibilityLabel="Likes">
-            <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={17.85} height={15.725} />
-          </View>
+        <View style={[styles.actions, thought && styles.actionsThought]}>
+          {thought ? (
+            <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
+              <PopIcon active={liked}>
+                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={17.85} height={15.725} />
+              </PopIcon>
+            </PressableScale>
+          ) : (
+            // not pressable here: an article is liked and commented in the reader, after reading it
+            <View style={styles.like} accessibilityLabel="Likes">
+              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={17.85} height={15.725} />
+            </View>
+          )}
           {/* the count rolls to its new value */}
           <View style={[styles.countBox, styles.likeCount]}>
             <RollingLabel text={formatCount(likes)} style={[styles.countText, styles.countDark]} />
           </View>
-          <View style={styles.comment} accessibilityLabel="Comments">
-            <Icon name="feedCommentBlack" width={16.4} height={16.4} />
-          </View>
+          {thought ? (
+            <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments" style={styles.comment}>
+              <Icon name="feedCommentBlack" width={16.4} height={16.4} />
+            </PressableScale>
+          ) : (
+            <View style={styles.comment} accessibilityLabel="Comments">
+              <Icon name="feedCommentBlack" width={16.4} height={16.4} />
+            </View>
+          )}
           <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
           <View style={styles.views}>
             {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
@@ -147,6 +172,7 @@ const styles = StyleSheet.create({
   text: { marginTop: 8.94, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 15.05, lineHeight: 21.7, color: colors.text },
   media: { marginTop: 19.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
+  actionsThought: { marginTop: 14 },
   actions: { height: 18.5, marginTop: 12.9, marginLeft: 1.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
   like: { position: 'absolute', left: 0.08, top: 1.39 },

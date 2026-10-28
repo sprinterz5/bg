@@ -89,6 +89,7 @@ export default function RootLayout() {
             />
             <Stack.Screen name="notifications" />
             <Stack.Screen name="new-article" />
+            <Stack.Screen name="new-thought" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           </Stack>
           </DesignOverlay>
         </FeedProvider>

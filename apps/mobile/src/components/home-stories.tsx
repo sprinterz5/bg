@@ -6,10 +6,13 @@ import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, t
 
 import type { Story } from '@/mock/data';
 import { colors } from '@/theme';
+import { Icon } from './icon';
 import { PressableScale } from './pressable-scale';
 import { RingSweep, SeenRing, StoryRing } from './ring-sweep';
 import { INTER_FAMILIES, Text } from '@/components/text';
 import { push } from '@/lib/nav';
+import { pickStoryPhoto } from '@/lib/pick-cover';
+import { useSession } from '@/state/session';
 import { onStoriesClosing, setStoryOrigin } from '@/lib/story-origin';
 import { useSeenStories } from '@/state/feed';
 
@@ -109,8 +112,9 @@ export function HomeStories({ stories }: { stories: Story[] }) {
       overScrollMode={Platform.OS === 'android' ? 'always' : undefined}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}>
+      <OwnItem index={0} count={stories.length + 1} x={x} max={max} />
       {stories.map((s, i) => (
-        <Item key={s.id} story={s} index={i} count={stories.length} x={x} max={max} grey={grey.has(s.id)} sweepDelay={sweeping.get(s.id) ?? null} onSweepDone={sweepDone} onOpen={openStory} registerRing={registerRing} />
+        <Item key={s.id} story={s} index={i + 1} count={stories.length + 1} x={x} max={max} grey={grey.has(s.id)} sweepDelay={sweeping.get(s.id) ?? null} onSweepDone={sweepDone} onOpen={openStory} registerRing={registerRing} />
       ))}
     </Animated.ScrollView>
   );
@@ -162,10 +166,42 @@ function Item({ story: s, index, count, x, max, grey, sweepDelay, onSweepDone, o
   );
 }
 
+const ADD = 28; // the black "+" under the own avatar
+
+/** "Your story": the own avatar (no ring) with a black "+" at its lower right; tapping it picks a photo for a new story. */
+function OwnItem({ index, count, x, max }: { index: number; count: number; x: SharedValue<number>; max: SharedValue<number> }) {
+  const { user } = useSession();
+  const style = useAnimatedStyle(() => {
+    const o = x.value < 0 ? x.value : x.value > max.value ? x.value - max.value : 0;
+    if (o === 0) return { transform: [{ translateX: 0 }, { scaleX: 1 }] };
+    const grow = STRETCH * Math.abs(o);
+    const extra = STEP * grow;
+    const fromEdge = o < 0 ? index : count - 1 - index;
+    const wave = (fromEdge * extra + (RING * grow) / 2) * (o < 0 ? 1 : -1);
+    return { transform: [{ translateX: o * (1 - GIVE) + wave }, { scaleX: 1 + grow }] };
+  });
+  return (
+    <Animated.View collapsable={false} style={style}>
+      <PressableScale onPress={pickStoryPhoto} accessibilityRole="button" accessibilityLabel="Add to your story" style={styles.item}>
+        <View collapsable={false} style={styles.ring}>
+          <Image source={user?.avatarUri ? { uri: user.avatarUri } : require('@/assets/icons/avatar-placeholder.png')} style={styles.photo} contentFit="cover" transition={150} />
+          <View style={styles.add}>
+            <Icon name="homePlus" width={14} height={14} tintColor="#FFFFFF" />
+          </View>
+        </View>
+        <Text style={styles.name} numberOfLines={1}>
+          Your story
+        </Text>
+      </PressableScale>
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
   row: { paddingLeft: 8.25, paddingRight: 8, gap: STEP - RING + 1 },
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
+  add: { position: 'absolute', right: 8, bottom: 8, width: ADD, height: ADD, borderRadius: ADD / 2, backgroundColor: '#000000', borderWidth: 2.5, borderColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
   name: { marginTop: 3.3, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 12.25, lineHeight: 15, letterSpacing: 0, color: colors.text },
 });
