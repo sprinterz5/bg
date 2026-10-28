@@ -100,13 +100,13 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           {thought ? (
             <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'} style={styles.like}>
               <PopIcon active={liked}>
-                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={17.8164} height={15.6954} />
+                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.7290} height={14.7370} />
               </PopIcon>
             </PressableScale>
           ) : (
             // not pressable here: an article is liked and commented in the reader, after reading it
             <View style={styles.like} accessibilityLabel="Likes">
-              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={17.8164} height={15.6954} />
+              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.7290} height={14.7370} />
             </View>
           )}
           {/* the count rolls to its new value */}
