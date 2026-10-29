@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.75,
     borderTopColor: '#E5E5E5',
   },
-  floating: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  floating: { position: 'absolute', left: 0, right: 0, bottom: 3 },
   homeBar: { backgroundColor: '#FAFAFA' },
   tab: { position: 'absolute', top: 1, width: TAB_W, height: BAR_H + 1 },
   layer: { position: 'absolute' },
