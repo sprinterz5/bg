@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
   block: { flexDirection: 'row', alignItems: 'flex-start' },
   // the comment block (and with it save and send) sits 2 right of the heart block
-  commentBlock: { marginLeft: 2 },
+  commentBlock: { marginLeft: 4},
   like: { marginTop: 0.9047},
   comment: { marginTop: 0.9363},
   bookmark: { marginTop: 1.9475},
