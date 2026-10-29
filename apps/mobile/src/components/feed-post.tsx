@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   block: { flexDirection: 'row', alignItems: 'flex-start' },
   // the comment block (and with it save and send) sits 2 right of the heart block
   commentBlock: { marginLeft: 5.5},
-  like: { marginTop: 0.9047, marginLeft: -1.25},
+  like: { marginTop: 0.9047, marginLeft: -1},
   comment: { marginTop: 0.9363},
   bookmark: { marginTop: 1.9475, marginLeft: 1.5},
   share: { marginTop: 2.5125, marginLeft: 4.5},
