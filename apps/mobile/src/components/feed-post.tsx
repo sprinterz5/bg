@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
   actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0, paddingLeft: 1.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18},
   // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
   block: { flexDirection: 'row', alignItems: 'flex-start' },
-  like: { marginTop: 1.1547 },
-  comment: { marginTop: 0.8113 },
+  like: { marginTop: 0.9047},
+  comment: { marginTop: 1.0613},
   bookmark: { marginTop: 1.9475},
   share: { marginTop: 2.3125, marginLeft: 2.5 },
   count: { marginTop: 2.4, marginLeft: 6.794, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
