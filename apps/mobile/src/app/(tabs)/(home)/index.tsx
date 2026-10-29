@@ -263,9 +263,10 @@ export default function Home() {
         }
         onEndReachedThreshold={1.5}
         // Posts are ~500pt tall: a few per batch keeps the JS thread free; Android detaches posts far off screen.
-        initialNumToRender={3}
-        maxToRenderPerBatch={3}
-        windowSize={7}
+        // Buffers ~30% larger than before so posts are ready before they scroll into view.
+        initialNumToRender={4}
+        maxToRenderPerBatch={4}
+        windowSize={9}
         removeClippedSubviews={!IOS}
         scrollEventThrottle={16}
         ListHeaderComponent={
