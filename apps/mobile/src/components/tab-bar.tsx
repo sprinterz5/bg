@@ -56,7 +56,8 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
 
   // On Home the bar floats over the feed and slides away with the top bar while scrolling down (lib/chrome).
   const onHome = state.routes[state.index]?.name === '(home)';
-  const height = BAR_H + bottom;
+  // On Home the bar is 3 taller: the buttons sit 3 higher, the background reaches the screen's bottom edge.
+  const height = BAR_H + bottom + (onHome ? 3 : 0);
   const slide = useAnimatedStyle(() => (onHome ? { transform: [{ translateY: homeChromeHidden.get() * (height + 1) }] } : {}));
 
   return (
