@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
-  addCut: { position: 'absolute', left: 64.5, top: 68, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+  addCut: { position: 'absolute', left: 64.5, top: 68, width: 28, height: 28, borderRadius: 14, backgroundColor: '#FAFAFA', alignItems: 'center', justifyContent: 'center' },
   add: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#1E1E1E', alignItems: 'center', justifyContent: 'center' },
   plusH: { position: 'absolute', width: 12, height: 2, borderRadius: 1, backgroundColor: '#FAFAFA' },
   plusV: { position: 'absolute', width: 2, height: 12, borderRadius: 1, backgroundColor: '#FAFAFA' },

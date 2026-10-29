@@ -60,7 +60,7 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const slide = useAnimatedStyle(() => (onHome ? { transform: [{ translateY: homeChromeHidden.get() * (height + 1) }] } : {}));
 
   return (
-    <Animated.View style={[styles.bar, { height }, onHome && styles.floating, slide]}>
+    <Animated.View style={[styles.bar, { height }, onHome && styles.floating, onHome && styles.homeBar, slide]}>
       {state.routes.map((route, index) => {
         const meta = TABS[route.name];
         if (!meta) return null;
@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5E5',
   },
   floating: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  homeBar: { backgroundColor: '#FAFAFA' },
   tab: { position: 'absolute', top: 1, width: TAB_W, height: BAR_H + 1 },
   layer: { position: 'absolute' },
 });

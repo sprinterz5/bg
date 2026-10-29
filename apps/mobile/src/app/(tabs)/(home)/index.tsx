@@ -347,13 +347,13 @@ const MAX_PULL = 64;
 const INTRO_MS = 1000;
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
+  root: { flex: 1, backgroundColor: '#FAFAFA' },
   list: { flex: 1 },
   // AutoLayouted-12: "Thoughts" (Caveat 37.2) ink centred on x 192.3 (Caveat's ink sits 4.7 right of its advance), ink top at y 62.4; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
   // first avatar at 240.5.
   headerWrap: { position: 'absolute', left: 0, right: 0 },
   // stops 7 short of the header's bottom: the story rings start 2 above it and their tops were cut off
-  headerBg: { position: 'absolute', left: 0, right: 0, top: 0, height: HEADER_H - 7, backgroundColor: colors.bg },
+  headerBg: { position: 'absolute', left: 0, right: 0, top: 0, height: HEADER_H - 7, backgroundColor: '#FAFAFA' },
   headerLine: { position: 'absolute', left: 0, right: 0, top: HEADER_H - 6, height: 0.5, backgroundColor: '#E9E9E9' },
   header: { height: HEADER_H, alignItems: 'center' },
   // AutoLayouted-34 (BG(2)): plus at (22.5, 61.5), bell at (343.5, 61) incl. their strokes; logo ink 107.3 wide from
@@ -362,15 +362,15 @@ const styles = StyleSheet.create({
   bell: { position: 'absolute', left: 347.5, top: 15 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
   logo: { marginTop: -1.3, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39, lineHeight: 50, color: colors.text, transform: [{ translateX: -1.85 }] },
-  fade: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: colors.bg },
+  fade: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: '#FAFAFA' },
   content: { paddingBottom: 24 },
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
-  headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.bg },
+  headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: '#FAFAFA' },
   storiesGap: { marginBottom: 0.7 },
   // 1 more between the stories and the tabs (everything below moves down with them)
   tabsGap: { marginTop: 0 },
-  pinnedCap: { position: 'absolute', left: 0, right: 0, top: -6, height: 6, backgroundColor: colors.bg },
-  pinnedTabs: { position: 'absolute', top: 0, left: 0, right: 0, height: TABS_H, backgroundColor: colors.bg },
-  bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: colors.bg },
+  pinnedCap: { position: 'absolute', left: 0, right: 0, top: -6, height: 6, backgroundColor: '#FAFAFA' },
+  pinnedTabs: { position: 'absolute', top: 0, left: 0, right: 0, height: TABS_H, backgroundColor: '#FAFAFA' },
+  bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: '#FAFAFA' },
   empty: { marginTop: 60, marginHorizontal: 40, textAlign: 'center', fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 20, color: colors.textMuted },
 });
