@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   count: { marginTop: 2.4, marginLeft: 7.894, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countDark: { color: '#424242' },
-  countBox: { marginTop: 1.9, marginLeft: 1.916, height: 16, overflow: 'hidden' },
+  countBox: { marginTop: 1.9, marginLeft: 3.416, height: 16, overflow: 'hidden' },
   countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   separator: { height: 0.75, backgroundColor: '#E9E9E9' },
 });
