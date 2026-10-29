@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   like: { marginTop: 1.1547 },
   comment: { marginTop: 0.8113 },
   bookmark: { marginTop: 1.1975 },
-  share: { marginTop: 1.8125 },
+  share: { marginTop: 1.8125, marginLeft: 2.5 },
   count: { marginTop: 2.4, marginLeft: 6.794, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countDark: { color: '#424242' },
