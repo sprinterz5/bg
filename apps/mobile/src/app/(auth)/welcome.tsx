@@ -107,7 +107,7 @@ export default function Welcome() {
 
       <Animated.View collapsable={false} entering={FadeIn.delay(300).duration(450)} style={[styles.bottom, { bottom: insets.bottom + 60 }]}>
         <PressableScale scaleTo={0.97} onPress={createAccount} accessibilityRole="button" style={styles.create}>
-          <Text style={styles.createText}>Create account</Text>
+          <Text style={styles.createText}>Create new account</Text>
         </PressableScale>
       </Animated.View>
     </View>
