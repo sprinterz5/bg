@@ -123,6 +123,6 @@ const styles = StyleSheet.create({
   },
   floating: { position: 'absolute', left: 0, right: 0, bottom: 0},
   homeBar: { backgroundColor: '#FAFAFA' },
-  tab: { position: 'absolute', top: 1, width: TAB_W, height: BAR_H + 1 },
+  tab: { position: 'absolute', top: 2, width: TAB_W, height: BAR_H + 1 },
   layer: { position: 'absolute' },
 });
