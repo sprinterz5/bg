@@ -28,13 +28,6 @@ function formatCount(n: number) {
   return String(n);
 }
 
-/** "7h" style age: the design's short form; mock posts may still carry "1 day ago". */
-function shortAge(ago: string) {
-  const m = ago.match(/^(\d+)\s*(second|minute|hour|day|week|month|year)/);
-  if (!m) return ago;
-  return m[1] + { second: 's', minute: 'm', hour: 'h', day: 'd', week: 'w', month: 'mo', year: 'y' }[m[2]];
-}
-
 // AutoLayouted-34 (BG(2)) home post, tweet-like. From the post top (13.05 under the 0.75 #E9E9E9 separator):
 // avatar 42 at x 7.5; name Inter Bold 14.7 at x 57.5, "@handle · 7h" Inter 14.6 #999; text Inter 13.8 / 20.5 from
 // x 57.5, ~305 wide; picture 325.5×226.5 (r 13.2, #999 0.5 outline) 14.3 under it; the action row 10.4 under the
@@ -75,11 +68,6 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           <Text style={styles.name} numberOfLines={1}>
             {name}
           </Text>
-          <Text style={styles.handle} numberOfLines={1}>
-            @{post.author.username}
-          </Text>
-          <View style={styles.dot} />
-          <Text style={styles.age}>{shortAge(post.timeAgo)}</Text>
         </Pressable>
 
         <Pressable onPress={openArticle} accessibilityRole="button">
@@ -179,9 +167,6 @@ const styles = StyleSheet.create({
   column: { marginLeft: 63},
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 19, color: '#000000'},
-  handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.25, lineHeight: 19, color: GRAY, opacity: 0.95 },
-  dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
-  age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 15.25, lineHeight: 19, color: GRAY, opacity: 0.95 },
   text: { marginTop: 3.44, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.7, lineHeight: 25, color: '#000000'},
   media: { marginTop: 16.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
