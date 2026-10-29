@@ -104,12 +104,12 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
             {thought ? (
               <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'}>
                 <PopIcon active={liked}>
-                  <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={14.2197} height={12.5265} />
+                  <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.729} height={14.737} />
                 </PopIcon>
               </PressableScale>
             ) : (
               // not pressable here: an article is liked and commented in the reader, after reading it
-              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={14.2197} height={12.5265} />
+              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.729} height={14.737} />
             )}
           </View>
           {/* the count rolls to its new value */}
@@ -119,25 +119,25 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           <View style={styles.comment} accessibilityLabel="Comments">
             {thought ? (
               <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments">
-                <Icon name="feedCommentBlack" width={12.6786} height={12.6786} />
+                <Icon name="feedCommentBlack" width={14.916} height={14.916} />
               </PressableScale>
             ) : (
-              <Icon name="feedCommentBlack" width={12.6786} height={12.6786} />
+              <Icon name="feedCommentBlack" width={14.916} height={14.916} />
             )}
           </View>
           <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
           <View style={styles.views}>
             {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
-            <Icon name="feedViewsBlack" width={11.3679} height={12.087} />
+            <Icon name="feedViewsBlack" width={13.374} height={14.22} />
           </View>
           <Text style={[styles.count, styles.countDark, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
             <PopIcon active={saved}>
-              <Icon name={saved ? 'feedBookmarkFilledInk' : 'feedBookmarkBlack'} width={12.325} height={13.685} />
+              <Icon name={saved ? 'feedBookmarkFilledInk' : 'feedBookmarkBlack'} width={14.5} height={16.1} />
             </PopIcon>
           </PressableScale>
           <PressableScale onPress={share} hitSlop={10} accessibilityLabel="Share" style={styles.share}>
-            <Icon name="feedShareBlack" width={13.175} height={13.175} />
+            <Icon name="feedShareBlack" width={15.5} height={15.5} />
           </PressableScale>
         </View>
       </View>
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 14, lineHeight: 19, color: '#000000'},
   age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 13.5, lineHeight: 19, color: GRAY, opacity: 0.95 },
-  text: { marginTop: 4, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.575, lineHeight: 24, color: '#000000'},
+  text: { marginTop: 4, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.575, lineHeight: 24.5, color: '#000000'},
   media: { marginTop: 16.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   emojiBox: { height: 17, justifyContent: 'center' },
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   caption: { color: colors.text },
   countDark: { color: '#424242' },
   countBox: { position: 'absolute', top: 1.9, height: 16, overflow: 'hidden' },
-  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 10.965, lineHeight: 13.6, color: INK },
+  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
   viewsCount: { left: 200.46 }, // TH(2): 3K, bookmark and share 1 further left
