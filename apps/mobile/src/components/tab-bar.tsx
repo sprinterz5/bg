@@ -33,8 +33,8 @@ const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
   },
   '(search)': {
     label: 'Search',
-    off: { icon: 'tabSearch', w: 21.15, h: 21.15, cx: 272.75, cy: 22.63 },
-    on: { icon: 'tabSearchActive', w: 22.06, h: 22.06, cx: 272.75, cy: 22.63 },
+    off: { icon: 'tabSearch', w: 21.15, h: 21.15, cx: 272.75, cy: 23.13 },
+    on: { icon: 'tabSearchActive', w: 22.06, h: 22.06, cx: 272.75, cy: 23.13 },
   },
   // No new selected profile icon yet: the old filled one, its glyph centred where the outline one is.
   '(profile)': {
@@ -56,9 +56,9 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
 
   // On Home the bar floats over the feed and slides away with the top bar while scrolling down (lib/chrome).
   const onHome = state.routes[state.index]?.name === '(home)';
-  // 3 taller on every tab (the buttons sit 3 higher): the same height everywhere, so the bar doesn't move when
-  // switching tabs; on Home the background reaches the screen's bottom edge.
-  const height = BAR_H + bottom + 3;
+  // 4 taller on every tab (the buttons sit 4 higher): the same height everywhere, so the bar doesn't move when
+  // switching tabs; the background reaches the screen's bottom edge.
+  const height = BAR_H + bottom + 4;
   const slide = useAnimatedStyle(() => (onHome ? { transform: [{ translateY: homeChromeHidden.get() * (height + 1) }] } : {}));
 
   return (
