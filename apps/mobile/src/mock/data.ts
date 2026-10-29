@@ -115,7 +115,7 @@ export const ARTICLES: Record<string, Article> = {
     id: 'journal',
     author: sam,
     cover: require('@/assets/mock/post-spiderman.jpg'),
-    title: 'Why I Journal Every Day for 1-2 Hours in This Small Pocket Diary TEST',
+    title: 'Why I Journal Every Day for 1-2 Hours in This Small Pocket Diary',
     likes: 2084,
     comments: 463,
     shares: 185,
