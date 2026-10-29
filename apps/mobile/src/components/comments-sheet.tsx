@@ -275,7 +275,7 @@ export function CommentsSheet({ articleId, onClose }: Props) {
             {text.trim() ? (
               <Animated.View collapsable={false} entering={FadeIn.duration(140)} exiting={FadeOut.duration(120)}>
                 <PressableScale haptic onPress={send} disabled={sending} scaleTo={0.9} hitSlop={6} style={[styles.send, sending && styles.sendOff]} accessibilityRole="button" accessibilityLabel="Post comment">
-                  <Icon name="chatSend" width={20.82} height={18.16} />
+                  <Icon name="chatSend" width={19.779} height={17.252} />
                 </PressableScale>
               </Animated.View>
             ) : null}

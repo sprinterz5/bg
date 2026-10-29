@@ -123,10 +123,10 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
             <View style={styles.comment} accessibilityLabel="Comments">
               {thought ? (
                 <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments">
-                  <Icon name="feedCommentBlack" width={18.0106} height={18.0106} />
+                  <Icon name="feedCommentBlack" width={17.3802} height={17.3802} />
                 </PressableScale>
               ) : (
-                <Icon name="feedCommentBlack" width={18.0106} height={18.0106} />
+                <Icon name="feedCommentBlack" width={17.3802} height={17.3802} />
               )}
             </View>
             <Text style={[styles.count, styles.countDark]}>{formatCount(post.comments + addedComments)}</Text>
