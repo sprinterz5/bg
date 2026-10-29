@@ -33,8 +33,8 @@ const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
   },
   '(search)': {
     label: 'Search',
-    off: { icon: 'tabSearch', w: 20.53, h: 20.53, cx: 272.75, cy: 23.63 },
-    on: { icon: 'tabSearchActive', w: 21.42, h: 21.42, cx: 272.75, cy: 23.63 },
+    off: { icon: 'tabSearch', w: 21.15, h: 21.15, cx: 272.75, cy: 22.63 },
+    on: { icon: 'tabSearchActive', w: 22.06, h: 22.06, cx: 272.75, cy: 22.63 },
   },
   // No new selected profile icon yet: the old filled one, its glyph centred where the outline one is.
   '(profile)': {
