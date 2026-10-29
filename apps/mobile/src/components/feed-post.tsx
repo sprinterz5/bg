@@ -66,7 +66,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   return (
     <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={styles.root}>
       <Pressable onPress={() => openProfile(post.author.username)} hitSlop={4} accessibilityRole="link" accessibilityLabel={`${post.author.username} profile`} style={styles.avatar}>
-        <AuthorAvatar author={post.author} size={45} />
+        <AuthorAvatar author={post.author} size={43.5} />
         <View pointerEvents="none" style={styles.avatarEdge} />
       </Pressable>
 
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   bubble: { marginTop: 5.44, marginLeft: -1, marginRight: 16, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
   bubbleText: { marginTop: 0, marginRight: 0 },
   captionGap: { marginTop: 23 },
-  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.5, borderWidth: 0.5, borderColor: '#CCCCCC' },
+  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 21.75, borderWidth: 0.5, borderColor: '#CCCCCC' },
   actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
   like: { position: 'absolute', left: 1.865, top: 2.26 },
