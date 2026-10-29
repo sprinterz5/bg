@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   comment: { marginTop: 0.9363},
   bookmark: { marginTop: 1.9475},
   share: { marginTop: 2.5125, marginLeft: 4.5},
-  count: { marginTop: 2.4, marginLeft: 6.794, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
+  count: { marginTop: 2.4, marginLeft: 7.294, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countDark: { color: '#424242' },
   countBox: { marginTop: 1.9, marginLeft: 3.666, height: 16, overflow: 'hidden' },
