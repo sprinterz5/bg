@@ -126,11 +126,6 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
             )}
           </View>
           <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
-          <View style={styles.views}>
-            {/* drawn at 13×14 (the frame's glyph is 14×15.5) */}
-            <Icon name="feedViewsBlack" width={13.374} height={14.22} />
-          </View>
-          <Text style={[styles.count, styles.countDark, styles.viewsCount]}>{formatCount(post.views ?? post.likes)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
             <PopIcon active={saved}>
               <Icon name={saved ? 'feedBookmarkFilledInk' : 'feedBookmarkBlack'} width={14.5} height={16.1} />
@@ -189,9 +184,8 @@ const styles = StyleSheet.create({
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
   like: { position: 'absolute', left: 1.865, top: 2.26 },
   comment: { position: 'absolute', left: 93.13, top: 1.93 },
-  views: { position: 'absolute', left: 181.04, top: 1.64 },
-  bookmark: { position: 'absolute', left: 265.3, top: 0.6 },
-  share: { position: 'absolute', left: 298.3, top: 1.2 },
+  bookmark: { position: 'absolute', left: 181.04, top: 0.6 },
+  share: { position: 'absolute', left: 214.04, top: 1.2 },
   count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countDark: { color: '#424242' },
@@ -199,6 +193,5 @@ const styles = StyleSheet.create({
   countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
-  viewsCount: { left: 200.46 }, // TH(2): 3K, bookmark and share 1 further left
   separator: { height: 0.75, backgroundColor: '#E9E9E9' },
 });
