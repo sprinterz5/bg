@@ -18,7 +18,7 @@ const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
   '(home)': {
     label: 'Home',
     off: { icon: 'tabHomeInactive', w: 20.82, h: 19.92, cx: 38.25, cy: 22.5 },
-    on: { icon: 'tabHome', w: 20.82, h: 19.92, cx: 39.25, cy: 22.5 },
+    on: { icon: 'tabHome', w: 20.82, h: 19.92, cx: 39.25, cy: 22},
   },
   // The messages icon has a single variant in the design.
   '(chat)': {
