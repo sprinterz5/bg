@@ -8,7 +8,7 @@ import { fetchArticle, fetchFeed, type FeedTab } from '@/lib/feed-api';
 import { uploadImage } from '@/lib/media';
 import { reportError } from '@/lib/report-errors';
 import { useSession } from '@/state/session';
-import { ARTICLES, FEED, HOME_STORIES, MOCK_THOUGHTS, type Article, type Author, type Post, type Story } from '@/mock/data';
+import { ARTICLES, FEED, HOME_STORIES, MOCK_THOUGHTS, NEW_POSTS, type Article, type Author, type Post, type Story } from '@/mock/data';
 import { fetchFriendStories, viewStory } from '@/lib/stories';
 import type { Picture } from '@/lib/picture';
 
@@ -335,6 +335,8 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     // mock thoughts among the posts: the first one on top (as in the design), then every third place
     const out = [...base];
     MOCK_THOUGHTS.forEach((t, i) => out.splice(Math.min(out.length, i * 3), 0, t));
+    // the extra mock articles go right under the first post, so they are on the Home feed straight away
+    out.splice(Math.min(out.length, 1), 0, ...NEW_POSTS);
     return out;
   }, [posts, server, user, tab]);
 

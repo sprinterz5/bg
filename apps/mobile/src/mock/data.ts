@@ -243,6 +243,10 @@ export const FEED: Post[] = [
     shares: 80,
     articleId: 'timcook',
   },
+];
+
+/** Extra mock articles: shown near the top of "For you" (mixed in by state/feed.tsx). */
+export const NEW_POSTS: Post[] = [
   {
     id: 'p-classroom',
     author: billijean,
@@ -1063,6 +1067,9 @@ const thought = (n: number, author: Author, title: string, timeAgo: string, like
 export const MOCK_THOUGHTS: Post[] = [
   // the first post of the home frame (AutoLayouts TH): 7h, 520 / 270 / 3K
   thought(1, danielKraig, 'Nighty habits that helped Steve Jobs to rest and charge and this is not even all to be said also the fact the population is growing fast 📈', '7 hours ago', 520, 270, 3000),
+  thought(6, dinara, 'A quiet morning, a cup of coffee and absolutely no plans for the day. Sometimes that is the whole plan ☕️', '4 hours ago', 73, 6, 900),
+  thought(7, zhangir, 'Read an old interview with Steve Jobs today. He said focus is saying no to a hundred good ideas. Still the hardest advice to follow.', '8 hours ago', 128, 17, 2100),
+  thought(8, boss, 'Moved my desk next to the window and my afternoon productivity doubled. Sunlight is the cheapest upgrade there is ☀️', '1 day ago', 64, 9, 1100),
   thought(5, dinara, 'What a great day ! 🌞 wishing you all the best memories today', '2 hours ago', 52, 8, 700),
   thought(
     2,
@@ -1083,16 +1090,13 @@ export const MOCK_THOUGHTS: Post[] = [
     1500,
   ),
   thought(4, boss, 'Today is my dad`s birthday, wish him all the best and most importantly a good health, cause at his age thats what a man needs 😂', '1 day ago', 341, 47, 5100),
-  thought(6, dinara, 'A quiet morning, a cup of coffee and absolutely no plans for the day. Sometimes that is the whole plan ☕️', '4 hours ago', 73, 6, 900),
-  thought(7, zhangir, 'Read an old interview with Steve Jobs today. He said focus is saying no to a hundred good ideas. Still the hardest advice to follow.', '8 hours ago', 128, 17, 2100),
-  thought(8, boss, 'Moved my desk next to the window and my afternoon productivity doubled. Sunlight is the cheapest upgrade there is ☀️', '1 day ago', 64, 9, 1100),
 ];
 
 // "1 day ago" of each derived article, for the author's profile list.
 const TIME_AGO: Record<string, string> = {};
 
-for (const p of FEED) {
-  if (!p.image) continue; // (typing: FEED holds posts with a picture)
+for (const p of [...FEED, ...NEW_POSTS]) {
+  if (!p.image) continue; // (typing: these all have a picture)
   const id = `a-${p.id}`;
   articleFrom(id, p.author, p.image, p.title, bodyFor(p.id), p.likes, p.comments, p.shares, p.caption);
   p.articleId = id;
