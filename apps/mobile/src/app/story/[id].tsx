@@ -581,7 +581,7 @@ function StoryViewer() {
               {likedStories.has(story.id) ? (
                 <Icon name="feedLikeFilled" width={27} height={24} tintColor="#FF3040" />
               ) : (
-                <Icon name="storyHeart" width={27} height={24} />
+                <Icon name="storyHeart" width={28.89} height={25.68} />
               )}
             </PopIcon>
           </PressableScale>
@@ -687,7 +687,7 @@ function StaticBar({ barH, at, idx, mode, progress }: { barH: number; at: number
         <Text style={styles.input}>Send message...</Text>
       </View>
       <View style={styles.heart}>
-        <Icon name="storyHeart" width={27} height={24} />
+        <Icon name="storyHeart" width={28.89} height={25.68} />
       </View>
     </Animated.View>
   );
