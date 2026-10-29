@@ -17,30 +17,30 @@ type Glyph = { icon: IconName; w: number; h: number; cx: number; cy: number };
 const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
   '(home)': {
     label: 'Home',
-    off: { icon: 'tabHomeInactive', w: 19.8296, h: 18.9674, cx: 38.25, cy: 24.5 },
-    on: { icon: 'tabHome', w: 19.8296, h: 18.9674, cx: 39.25, cy: 24.5 },
+    off: { icon: 'tabHomeInactive', w: 20.82, h: 19.92, cx: 38.25, cy: 22.5 },
+    on: { icon: 'tabHome', w: 20.82, h: 19.92, cx: 39.25, cy: 22.5 },
   },
   // The messages icon has a single variant in the design.
   '(chat)': {
     label: 'Messages',
-    off: { icon: 'tabMessages', w: 19.91, h: 19.24, cx: 109.27, cy: 25.9 },
-    on: { icon: 'tabMessages', w: 19.91, h: 19.24, cx: 109.27, cy: 25.9 },
+    off: { icon: 'tabMessages', w: 20.91, h: 20.2, cx: 109.27, cy: 23.9 },
+    on: { icon: 'tabMessages', w: 20.91, h: 20.2, cx: 109.27, cy: 23.9 },
   },
   create: {
     label: 'New article',
-    off: { icon: 'tabCreate', w: 21.68, h: 21.68, cx: 192, cy: 26.25 },
-    on: { icon: 'tabCreateActive', w: 22.53, h: 22.53, cx: 192.5, cy: 26.25 },
+    off: { icon: 'tabCreate', w: 22.76, h: 22.76, cx: 192, cy: 24.25 },
+    on: { icon: 'tabCreateActive', w: 23.66, h: 23.66, cx: 192.5, cy: 24.25 },
   },
   '(search)': {
     label: 'Search',
-    off: { icon: 'tabSearch', w: 19.55, h: 19.55, cx: 272.75, cy: 25.63 },
-    on: { icon: 'tabSearchActive', w: 20.4, h: 20.4, cx: 272.75, cy: 25.63 },
+    off: { icon: 'tabSearch', w: 20.53, h: 20.53, cx: 272.75, cy: 23.63 },
+    on: { icon: 'tabSearchActive', w: 21.42, h: 21.42, cx: 272.75, cy: 23.63 },
   },
   // No new selected profile icon yet: the old filled one, its glyph centred where the outline one is.
   '(profile)': {
     label: 'Profile',
-    off: { icon: 'tabProfile', w: 22.1, h: 21.15, cx: 348.25, cy: 25.32 },
-    on: { icon: 'tabProfileActive', w: 24.65, h: 24.65, cx: 349.25, cy: 25.67 },
+    off: { icon: 'tabProfile', w: 23.21, h: 22.21, cx: 348.25, cy: 23.32 },
+    on: { icon: 'tabProfileActive', w: 25.88, h: 25.88, cx: 349.25, cy: 23.67 },
   },
 };
 
