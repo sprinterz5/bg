@@ -100,39 +100,44 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
         ) : null}
 
         <View style={styles.actions}>
-          <View style={styles.like} accessibilityLabel="Likes">
-            {thought ? (
-              <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'}>
-                <PopIcon active={liked}>
-                  <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.729} height={14.737} />
-                </PopIcon>
-              </PressableScale>
-            ) : (
-              // not pressable here: an article is liked and commented in the reader, after reading it
-              <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={16.729} height={14.737} />
-            )}
+          {/* an icon with its count is one block; the blocks sit 7 apart */}
+          <View style={styles.block}>
+            <View style={styles.like} accessibilityLabel="Likes">
+              {thought ? (
+                <PressableScale onPress={toggleLike} hitSlop={10} accessibilityLabel={liked ? 'Unlike' : 'Like'}>
+                  <PopIcon active={liked}>
+                    <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={19.238} height={16.948} />
+                  </PopIcon>
+                </PressableScale>
+              ) : (
+                // not pressable here: an article is liked and commented in the reader, after reading it
+                <Icon name={liked ? 'feedLikeFilledInk' : 'feedLikeBlack'} width={19.238} height={16.948} />
+              )}
+            </View>
+            {/* the count rolls to its new value */}
+            <View style={styles.countBox}>
+              <RollingLabel text={formatCount(likes)} style={[styles.countText, styles.countDark]} />
+            </View>
           </View>
-          {/* the count rolls to its new value */}
-          <View style={[styles.countBox, styles.likeCount]}>
-            <RollingLabel text={formatCount(likes)} style={[styles.countText, styles.countDark]} />
+          <View style={styles.block}>
+            <View style={styles.comment} accessibilityLabel="Comments">
+              {thought ? (
+                <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments">
+                  <Icon name="feedCommentBlack" width={17.153} height={17.153} />
+                </PressableScale>
+              ) : (
+                <Icon name="feedCommentBlack" width={17.153} height={17.153} />
+              )}
+            </View>
+            <Text style={[styles.count, styles.countDark]}>{formatCount(post.comments + addedComments)}</Text>
           </View>
-          <View style={styles.comment} accessibilityLabel="Comments">
-            {thought ? (
-              <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments">
-                <Icon name="feedCommentBlack" width={14.916} height={14.916} />
-              </PressableScale>
-            ) : (
-              <Icon name="feedCommentBlack" width={14.916} height={14.916} />
-            )}
-          </View>
-          <Text style={[styles.count, styles.countDark, styles.commentCount]}>{formatCount(post.comments + addedComments)}</Text>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
             <PopIcon active={saved}>
-              <Icon name={saved ? 'feedBookmarkFilledInk' : 'feedBookmarkBlack'} width={14.5} height={16.1} />
+              <Icon name={saved ? 'feedBookmarkFilledInk' : 'feedBookmarkBlack'} width={15.225} height={16.905} />
             </PopIcon>
           </PressableScale>
           <PressableScale onPress={share} hitSlop={10} accessibilityLabel="Share" style={styles.share}>
-            <Icon name="feedShareBlack" width={15.5} height={15.5} />
+            <Icon name="feedShareBlack" width={16.275} height={16.275} />
           </PressableScale>
         </View>
       </View>
@@ -180,18 +185,18 @@ const styles = StyleSheet.create({
   bubbleText: { marginTop: 0, marginRight: 0 },
   captionGap: { marginTop: 23 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22, borderWidth: 0.5, borderColor: '#CCCCCC' },
-  actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0 },
-  // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
-  like: { position: 'absolute', left: 1.865, top: 2.26 },
-  comment: { position: 'absolute', left: 93.13, top: 1.93 },
-  bookmark: { position: 'absolute', left: 181.04, top: 0.6 },
-  share: { position: 'absolute', left: 214.04, top: 1.2 },
-  count: { position: 'absolute', top: 2.4, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
+  // an icon and its count are one block, the blocks 7 apart; the heart starts where the row started
+  actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0, paddingLeft: 1.865, flexDirection: 'row', alignItems: 'flex-start', gap: 7 },
+  // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
+  block: { flexDirection: 'row', alignItems: 'flex-start' },
+  like: { marginTop: 1.1547 },
+  comment: { marginTop: 0.8113 },
+  bookmark: { marginTop: 0.1975 },
+  share: { marginTop: 0.8125 },
+  count: { marginTop: 2.4, marginLeft: 6.794, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countDark: { color: '#424242' },
-  countBox: { position: 'absolute', top: 1.9, height: 16, overflow: 'hidden' },
+  countBox: { marginTop: 1.9, marginLeft: 4.666, height: 16, overflow: 'hidden' },
   countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
-  likeCount: { left: 23.26 },
-  commentCount: { left: 114.84 },
   separator: { height: 0.75, backgroundColor: '#E9E9E9' },
 });
