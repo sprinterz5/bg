@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   tab: { position: 'absolute', top: 19.15 },
   // "For you" alone sits 1 higher (asked for)
   firstTab: { top: 18.15 },
-  label: { fontFamily: INTER_FAMILIES['500'], fontSize: 15, lineHeight: 19, color: '#999999' },
+  label: { fontFamily: INTER_FAMILIES['500'], fontSize: 15, lineHeight: 19, color: '#000000'},
   line: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 0.75, backgroundColor: '#E9E9E9' },
   bar: { position: 'absolute', left: 0, bottom: 0.25, width: BAR, height: 2.5, borderRadius: 1.25, backgroundColor: '#2A2121' },
 });
