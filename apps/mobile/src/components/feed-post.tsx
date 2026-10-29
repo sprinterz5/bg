@@ -75,7 +75,6 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           <Text style={styles.name} numberOfLines={1}>
             {name}
           </Text>
-          <View style={styles.dot} />
           <Text style={styles.age}>{shortAge(post.timeAgo)}</Text>
         </Pressable>
 
@@ -176,7 +175,6 @@ const styles = StyleSheet.create({
   column: { marginLeft: 63},
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['700'], fontSize: 14.8, lineHeight: 19, color: '#000000'},
-  dot: { width: 2.2, height: 2.2, borderRadius: 1.1, marginLeft: 2, marginTop: 1.3, backgroundColor: GRAY },
   age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 15.25, lineHeight: 19, color: GRAY, opacity: 0.95 },
   text: { marginTop: 4, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.575, lineHeight: 24.5, color: '#000000'},
   media: { marginTop: 16.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
