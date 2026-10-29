@@ -1,8 +1,8 @@
 import { useFocusEffect, useScrollToTop, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Platform, RefreshControl, StyleSheet, useWindowDimensions, View, type FlatList } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View, type FlatList } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeIn, FadeInDown, ZoomIn, ZoomOut, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, ZoomIn, ZoomOut, runOnJS, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icon';
@@ -40,10 +40,9 @@ export default function Home() {
     }, []),
   );
   const { posts, tab, setTab, loadedTab, publishing, retryPublish, cancelPublish, loadMore, refresh, hidePost } = useFeed();
-  // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the stories
-  // and posts come down and our spinner shows between them and the header. iOS pulls with its own bounce and
-  // a RefreshControl with an invisible tint (it holds the list open while refreshing); Android lists don't
-  // overscroll, so there a pan gesture drags the list down past the top.
+  // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the feed is dragged
+  // down past the top by a pan gesture on both platforms, the categories stay where they are and the spinner shows
+  // in the gap right under them.
   // Header and list sit 1 above the design's status-bar line (asked for after checking on the phone).
   const headerTop = insets.top - 2;
   const top = headerTop + HEADER_H;
@@ -118,17 +117,10 @@ export default function Home() {
 
   const drag = useSharedValue(0);
   const base = useSharedValue(0);
-  const pull = useDerivedValue(() => (IOS ? Math.max(0, -y.value) : drag.value));
-  // The feed only moves this far down: past MAX_PULL the excess is damped, so a pull never drags it far.
-  const pullVisual = useDerivedValue(() => {
-    const p = pull.value;
-    return p <= MAX_PULL ? p : MAX_PULL + (p - MAX_PULL) * 0.2;
-  });
   useEffect(() => {
-    if (!IOS) drag.set(withTiming(refreshing ? HOLD : 0, { duration: 220 }));
+    drag.set(withTiming(refreshing ? HOLD : 0, { duration: 220 }));
   }, [refreshing, drag]);
   const pan = Gesture.Pan()
-    .enabled(!IOS)
     .activeOffsetY(8)
     .failOffsetX([-12, 12])
     .onBegin(() => {
@@ -141,7 +133,8 @@ export default function Home() {
         return;
       }
       const d = Math.max(0, e.translationY - base.value);
-      drag.set(Math.min(MAX_PULL, d * 0.8));
+      // 0.9: the feed follows the finger almost 1:1, so a short pull is enough
+      drag.set(Math.min(MAX_PULL, d * 0.9));
     })
     .onFinalize(() => {
       if (drag.value >= THRESHOLD) {
@@ -153,9 +146,9 @@ export default function Home() {
     });
   const native = Gesture.Native();
 
-  const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: IOS ? pullVisual.value - pull.value : drag.value }] }));
+  const listStyle = useAnimatedStyle(() => ({ transform: [{ translateY: drag.value }] }));
   // Pull-to-refresh: the feed moves down, the categories stay put, so the gap (with the spinner) opens between them.
-  const tabsStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -pullVisual.value }] }));
+  const tabsStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -drag.value }] }));
   // The status-bar cover is for posts passing under the status bar: it goes as the top bar comes back over it.
   const fadeStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(y.get(), 0) / top) }));
 
@@ -247,7 +240,7 @@ export default function Home() {
 
   return (
     <View style={styles.root}>
-      <PullSpinner pull={pullVisual} threshold={THRESHOLD} refreshing={refreshing} top={top + TABS_H} />
+      <PullSpinner pull={drag} threshold={THRESHOLD} refreshing={refreshing} top={top + TABS_H} />
       <Animated.View collapsable={false} style={[styles.list, listStyle]}>
       {/* The native gesture goes on the list itself: on a wrapping view Android forwards touches to it and the scroll got stuck. */}
       <GestureDetector gesture={Gesture.Simultaneous(pan, native)}>
@@ -292,7 +285,8 @@ export default function Home() {
         // the tab bar floats over Home (it slides away), so the feed leaves room for it at the end
         contentContainerStyle={[styles.content, { paddingTop: top, paddingBottom: 24 + 48 + insets.bottom, minHeight: hold }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={IOS ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="transparent" /> : undefined}
+        // no native top bounce: the pull is ours, so the categories can stay put while the feed moves
+        bounces={false}
       />
       </GestureDetector>
       </Animated.View>
@@ -345,8 +339,8 @@ const IOS = Platform.OS === 'ios';
 const HEADER_H = 60;
 // Pull-to-refresh: spokes complete and release refreshes at THRESHOLD, the list waits at HOLD meanwhile.
 const TABS_H = 51.5;
-const THRESHOLD = 38;
-const HOLD = 34;
+const THRESHOLD = 34;
+const HOLD = 36;
 const MAX_PULL = 64;
 // Posts first mounted within this time after the screen opens get the staggered entrance.
 const INTRO_MS = 1000;
