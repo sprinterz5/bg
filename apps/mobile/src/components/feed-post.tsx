@@ -200,5 +200,5 @@ const styles = StyleSheet.create({
   likeCount: { left: 23.26 },
   commentCount: { left: 114.84 },
   viewsCount: { left: 200.46 }, // TH(2): 3K, bookmark and share 1 further left
-  separator: { height: 0.5, backgroundColor: '#E9E9E9' },
+  separator: { height: 0.675, backgroundColor: '#E9E9E9' },
 });
