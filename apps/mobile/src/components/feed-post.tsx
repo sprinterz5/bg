@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   bubble: { marginTop: 3.44, marginLeft: -1, marginRight: 16, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
   bubbleText: { marginTop: 0, marginRight: 0 },
   captionGap: { marginTop: 23 },
-  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.5, borderWidth: 0.325, borderColor: '#CCCCCC' },
+  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.5, borderWidth: 0.5, borderColor: '#CCCCCC' },
   actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
   like: { position: 'absolute', left: 1.865, top: 2.26 },
