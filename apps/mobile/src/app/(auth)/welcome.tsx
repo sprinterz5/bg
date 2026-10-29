@@ -96,8 +96,8 @@ export default function Welcome() {
           style={[styles.field, styles.second]}
           accessibilityLabel="Password"
         />
-        <PressableScale haptic scaleTo={0.97} onPress={submit} accessibilityRole="button" accessibilityLabel="Log in" style={styles.login}>
-          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginText}>Log in</Text>}
+        <PressableScale haptic scaleTo={0.97} onPress={submit} accessibilityRole="button" accessibilityLabel="Sign in" style={styles.login}>
+          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginText}>Sign in</Text>}
         </PressableScale>
         {/* Not designed: a failed sign-in replaces the recovery link with the error for a moment */}
         <Pressable onPress={forgot} hitSlop={8} style={styles.forgot} accessibilityRole="button">
