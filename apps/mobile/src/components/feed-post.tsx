@@ -133,11 +133,11 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
           </View>
           <PressableScale onPress={toggleSave} hitSlop={10} accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark'} style={styles.bookmark}>
             <PopIcon active={saved}>
-              <Icon name={saved ? 'feedBookmarkFilledInk' : 'feedBookmarkBlack'} width={14.4638} height={16.0598} />
+              <Icon name={saved ? 'feedBookmarkFilledInk' : 'feedBookmarkBlack'} width={13.7406} height={15.2568} />
             </PopIcon>
           </PressableScale>
           <PressableScale onPress={share} hitSlop={10} accessibilityLabel="Share" style={styles.share}>
-            <Icon name="feedShareBlack" width={15.4613} height={15.4613} />
+            <Icon name="feedShareBlack" width={14.6882} height={14.6882} />
           </PressableScale>
         </View>
       </View>
