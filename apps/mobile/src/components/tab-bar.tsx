@@ -4,7 +4,6 @@ import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { homeChromeHidden } from '@/lib/chrome';
 import { colors, motion } from '@/theme';
 import { Icon, type IconName } from './icon';
 import { PressableScale } from './pressable-scale';
@@ -59,10 +58,8 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   // 4 taller on every tab (the buttons sit 4 higher): the same height everywhere, so the bar doesn't move when
   // switching tabs; the background reaches the screen's bottom edge.
   const height = BAR_H + bottom + 4;
-  const slide = useAnimatedStyle(() => (onHome ? { transform: [{ translateY: homeChromeHidden.get() * (height + 1) }] } : {}));
-
   return (
-    <Animated.View style={[styles.bar, { height }, onHome && styles.floating, onHome && styles.homeBar, slide]}>
+    <Animated.View style={[styles.bar, { height }, onHome && styles.floating, onHome && styles.homeBar]}>
       {state.routes.map((route, index) => {
         const meta = TABS[route.name];
         if (!meta) return null;
