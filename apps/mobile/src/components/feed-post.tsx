@@ -119,7 +119,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
               <RollingLabel text={formatCount(likes)} style={[styles.countText, styles.countDark]} />
             </View>
           </View>
-          <View style={styles.block}>
+          <View style={[styles.block, styles.commentBlock]}>
             <View style={styles.comment} accessibilityLabel="Comments">
               {thought ? (
                 <PressableScale onPress={() => openComments(post.articleId)} hitSlop={10} accessibilityLabel="Comments">
@@ -189,6 +189,8 @@ const styles = StyleSheet.create({
   actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0, paddingLeft: 1.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18},
   // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
   block: { flexDirection: 'row', alignItems: 'flex-start' },
+  // the comment block (and with it save and send) sits 2 right of the heart block
+  commentBlock: { marginLeft: 2 },
   like: { marginTop: 0.9047},
   comment: { marginTop: 0.9363},
   bookmark: { marginTop: 1.9475},
