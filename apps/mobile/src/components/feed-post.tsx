@@ -208,6 +208,3 @@ const styles = StyleSheet.create({
   viewsCount: { left: 200.46 }, // TH(2): 3K, bookmark and share 1 further left
   separator: { height: 0.5, backgroundColor: '#E9E9E9' },
 });
-
-// @ts-expect-error
-export const brokenTest: number = "abc";
