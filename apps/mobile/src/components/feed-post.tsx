@@ -175,8 +175,8 @@ function withEmoji(s: string) {
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
   root: { paddingTop: 12.91, paddingBottom: 16.8 },
-  avatar: { position: 'absolute', left: 13.1, top: 17.3 },
-  column: { marginLeft: 66 },
+  avatar: { position: 'absolute', left: 10.1, top: 17.3 },
+  column: { marginLeft: 63},
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 19, color: colors.text },
   handle: { flexShrink: 2, marginLeft: 4, fontFamily: INTER_FAMILIES['400'], fontSize: 15.25, lineHeight: 19, color: GRAY, opacity: 0.95 },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   bubble: { marginTop: 3.44, marginLeft: -1, marginRight: 16, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
   bubbleText: { marginTop: 0, marginRight: 0 },
   captionGap: { marginTop: 23 },
-  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.5, borderWidth: 0.25, borderColor: '#CCCCCC' },
+  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.5, borderWidth: 0.325, borderColor: '#CCCCCC' },
   actions: { height: 18.5, marginTop: 11.9, marginLeft: -0.75, marginRight: 0 },
   // 15% smaller than the frame's 21×18.5, same line weight (stroke 2.12 in the SVG), centred where it was
   like: { position: 'absolute', left: 1.865, top: 2.26 },
