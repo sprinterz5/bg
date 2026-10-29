@@ -17,30 +17,30 @@ type Glyph = { icon: IconName; w: number; h: number; cx: number; cy: number };
 const TABS: Record<string, { label: string; off: Glyph; on: Glyph }> = {
   '(home)': {
     label: 'Home',
-    off: { icon: 'tabHomeInactive', w: 23, h: 22, cx: 38.25, cy: 24.5 },
-    on: { icon: 'tabHome', w: 23, h: 22, cx: 39.25, cy: 24.5 },
+    off: { icon: 'tabHomeInactive', w: 19.55, h: 18.7, cx: 38.25, cy: 24.5 },
+    on: { icon: 'tabHome', w: 19.55, h: 18.7, cx: 39.25, cy: 24.5 },
   },
   // The messages icon has a single variant in the design.
   '(chat)': {
     label: 'Messages',
-    off: { icon: 'tabMessages', w: 23.42, h: 22.64, cx: 109.27, cy: 25.9 },
-    on: { icon: 'tabMessages', w: 23.42, h: 22.64, cx: 109.27, cy: 25.9 },
+    off: { icon: 'tabMessages', w: 19.91, h: 19.24, cx: 109.27, cy: 25.9 },
+    on: { icon: 'tabMessages', w: 19.91, h: 19.24, cx: 109.27, cy: 25.9 },
   },
   create: {
     label: 'New article',
-    off: { icon: 'tabCreate', w: 25.5, h: 25.5, cx: 192, cy: 26.25 },
-    on: { icon: 'tabCreateActive', w: 26.5, h: 26.5, cx: 192.5, cy: 26.25 },
+    off: { icon: 'tabCreate', w: 21.68, h: 21.68, cx: 192, cy: 26.25 },
+    on: { icon: 'tabCreateActive', w: 22.53, h: 22.53, cx: 192.5, cy: 26.25 },
   },
   '(search)': {
     label: 'Search',
-    off: { icon: 'tabSearch', w: 23, h: 23, cx: 272.75, cy: 25.63 },
-    on: { icon: 'tabSearchActive', w: 24, h: 24, cx: 272.75, cy: 25.63 },
+    off: { icon: 'tabSearch', w: 19.55, h: 19.55, cx: 272.75, cy: 25.63 },
+    on: { icon: 'tabSearchActive', w: 20.4, h: 20.4, cx: 272.75, cy: 25.63 },
   },
   // No new selected profile icon yet: the old filled one, its glyph centred where the outline one is.
   '(profile)': {
     label: 'Profile',
-    off: { icon: 'tabProfile', w: 26, h: 24.88, cx: 348.25, cy: 25.32 },
-    on: { icon: 'tabProfileActive', w: 29, h: 29, cx: 349.25, cy: 25.67 },
+    off: { icon: 'tabProfile', w: 22.1, h: 21.15, cx: 348.25, cy: 25.32 },
+    on: { icon: 'tabProfileActive', w: 24.65, h: 24.65, cx: 349.25, cy: 25.67 },
   },
 };
 
