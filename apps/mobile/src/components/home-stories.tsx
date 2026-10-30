@@ -201,7 +201,7 @@ function OwnItem({ index, count, x, max }: { index: number; count: number; x: Sh
 }
 
 const styles = StyleSheet.create({
-  row: { paddingLeft: 7.25, paddingRight: 8, gap: STEP - RING + 0.25 },
+  row: { paddingLeft: 6.25, paddingRight: 8, gap: STEP - RING + 0.25 },
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.surfaceSoft },
