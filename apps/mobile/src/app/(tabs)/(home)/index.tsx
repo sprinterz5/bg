@@ -352,7 +352,7 @@ const MAX_PULL = 64;
 const INTRO_MS = 1000;
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#FFFFFF', transform: [{ translateY: 1.5 }] },
+  root: { flex: 1, backgroundColor: '#FFFFFF', transform: [{ translateY: 2.5 }] },
   list: { flex: 1 },
   // AutoLayouted-12: "Thoughts" (Caveat 37.2) ink centred on x 192.3 (Caveat's ink sits 4.7 right of its advance), ink top at y 62.4; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
   // first avatar at 240.5.
