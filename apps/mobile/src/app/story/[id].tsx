@@ -552,7 +552,9 @@ function StoryViewer() {
       ) : null}
       {/* the field and the heart turn with their story (the neighbours carry a still copy) */}
       <CubeFace at={index} idx={idx} mode={mode} progress={progress} width={width} passTouches follow>
-      <KeyboardStickyView style={[styles.bar, { height: barH }, replying && styles.barTyping]} offset={{ closed: 0, opened: barH - 65 }}>
+      {/* follows the keyboard only while this field is being typed in: a keyboard left open elsewhere (or a stale height)
+          used to lift the bar into the middle of the photo */}
+      <KeyboardStickyView enabled={replying} style={[styles.bar, { height: barH }, replying && styles.barTyping]} offset={{ closed: 0, opened: barH - 65 }}>
         <Animated.View style={[styles.pill, replying && [styles.pillTyping, { bottom: barH - 53 }], pillGrow]}>
           <TextInput
             value={reply}
