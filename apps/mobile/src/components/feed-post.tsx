@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   emojiBox: { height: 17, justifyContent: 'center' },
   emoji: { fontFamily: Platform.OS === 'ios' ? 'Apple Color Emoji' : 'System', fontSize: 14.7, lineHeight: Platform.OS === 'ios' ? 17 : 23 },
   bubble: { marginTop: 7.44, marginLeft: -1, marginRight: 16, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
-  bubbleText: { marginTop: 0, marginRight: 0, lineHeight: 24},
+  bubbleText: { marginTop: 0, marginRight: 0, lineHeight: 24, transform: [{ translateY: -1 }] },
   captionGap: { marginTop: 18 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.25, borderWidth: 0.5, borderColor: '#CCCCCC' },
   // an icon and its count are one block, the blocks 7 apart; the heart starts where the row started
