@@ -211,5 +211,5 @@ const styles = StyleSheet.create({
   add: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#1E1E1E', alignItems: 'center', justifyContent: 'center' },
   plusH: { position: 'absolute', width: 12, height: 2, borderRadius: 1, backgroundColor: '#FAFAFA' },
   plusV: { position: 'absolute', width: 2, height: 12, borderRadius: 1, backgroundColor: '#FAFAFA' },
-  name: { marginTop: 3.3, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 12.25, lineHeight: 15, letterSpacing: 0, color: colors.text },
+  name: { marginTop: 3.3, maxWidth: 92, fontFamily: INTER_FAMILIES['400'], fontSize: 12.25, lineHeight: 15, letterSpacing: -0.0184, color: colors.text },
 });
