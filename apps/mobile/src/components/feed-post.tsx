@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 19, letterSpacing: -0.2, color: '#000000', transform: [{ translateY: -1 }] },
   age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 19, letterSpacing: 0, color: GRAY, opacity: 0.95, transform: [{ translateY: -0.25 }] },
-  text: { marginTop: 6, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.575, lineHeight: 23, letterSpacing: 0.022, color: '#000000'},
+  text: { marginTop: 5, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.575, lineHeight: 23, letterSpacing: 0.022, color: '#000000'},
   media: { marginTop: 15.8, marginLeft: 0.1, width: 315.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   emojiBox: { height: 17, justifyContent: 'center' },
