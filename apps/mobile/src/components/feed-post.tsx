@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
   root: { paddingTop: 12.91, paddingBottom: 16.8 },
   avatar: { position: 'absolute', left: 9.1, top: 15.8},
-  column: { marginLeft: 61},
+  column: { marginLeft: 63},
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['600'], fontSize: 15.1, lineHeight: 19, color: '#000000'},
   age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 14.25, lineHeight: 19, color: GRAY, opacity: 0.95 },
