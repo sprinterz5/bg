@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   avatar: { position: 'absolute', left: 9.6, top: 15.8, transform: [{ translateX: 3 }, { translateY: -3 }] },
   column: { marginLeft: 62.5},
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
-  name: { flexShrink: 1, fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 19, letterSpacing: -0.2, color: '#000000', transform: [{ translateY: -1 }] },
+  name: { flexShrink: 1, fontFamily: INTER_FAMILIES['600'], fontSize: 14.75, lineHeight: 19, letterSpacing: -0.2, color: '#000000', transform: [{ translateY: -1 }] },
   age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 13.75, lineHeight: 19, letterSpacing: 0, color: GRAY, opacity: 0.95, transform: [{ translateY: -0.25 }] },
   text: { marginTop: 5, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.575, lineHeight: 23, letterSpacing: 0.022, color: '#000000'},
   media: { marginTop: 17.8, marginLeft: 0.1, width: 315.5, height: 229.5, borderRadius: RADIUS, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
