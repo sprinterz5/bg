@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 24 },
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: '#FAFAFA' },
-  storiesGap: { marginBottom: 0.7 },
+  storiesGap: { marginBottom: 0.7},
   // 1 more between the stories and the tabs (everything below moves down with them)
   tabsGap: { marginTop: 1 },
   pinnedCap: { position: 'absolute', left: 0, right: 0, top: -6, height: 6, backgroundColor: '#FAFAFA' },
