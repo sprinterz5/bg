@@ -201,5 +201,5 @@ const styles = StyleSheet.create({
   countDark: { color: '#424242' },
   countBox: { marginTop: 1.9, marginLeft: 3.916, height: 16, overflow: 'hidden' },
   countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 16, color: '#424242'},
-  separator: { height: 0.75, backgroundColor: '#EEEEEE'},
+  separator: { height: 0.75, backgroundColor: '#D9D9D9'},
 });
