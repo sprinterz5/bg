@@ -66,7 +66,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   return (
     <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={styles.root}>
       <Pressable onPress={() => openProfile(post.author.username)} hitSlop={4} accessibilityRole="link" accessibilityLabel={`${post.author.username} profile`} style={styles.avatar}>
-        <AuthorAvatar author={post.author} size={46} />
+        <AuthorAvatar author={post.author} size={44.5} />
         <View pointerEvents="none" style={styles.avatarEdge} />
       </Pressable>
 
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   bubble: { marginTop: 5.44, marginLeft: -1, marginRight: 16, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
   bubbleText: { marginTop: 0, marginRight: 0 },
   captionGap: { marginTop: 23 },
-  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22, borderWidth: 0.5, borderColor: '#CCCCCC' },
+  avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.25, borderWidth: 0.5, borderColor: '#CCCCCC' },
   // an icon and its count are one block, the blocks 7 apart; the heart starts where the row started
   actions: { height: 18.5, marginTop: 11.9, marginLeft: 1.25, marginRight: 0, paddingLeft: 1.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18},
   // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
