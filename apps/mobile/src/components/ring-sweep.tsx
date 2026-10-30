@@ -15,7 +15,7 @@ export function SeenRing({ size, color = SEEN_COLOR }: { size: number; color?: s
 }
 
 export function StoryRing({ size }: { size: number }) {
-  // Instagram-style diagonal: #171717 at the bottom left, through #FF453A, to #FF9500 at the top right.
+  // Instagram-style diagonal: #111111 at the bottom left, through #FF304F and #FF6535, to #FFC247 at the top right.
   return <Image pointerEvents="none" source={require('@/assets/icons/story-ring-gradient.svg')} style={{ position: 'absolute', left: 0, top: 0, width: size, height: size }} contentFit="fill" transition={0} />;
 }
 
