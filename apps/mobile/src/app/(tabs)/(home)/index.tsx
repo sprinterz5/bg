@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: '#FFFFFF'},
   storiesGap: { marginBottom: 0.7},
   // stories 1 closer to the "Thoughts" row
-  storiesTop: { marginTop: -4},
+  storiesTop: { marginTop: -5},
   // 1 less between the stories and the tabs (everything below moves with them)
   tabsGap: { marginTop: -3.5},
   pinnedCap: { position: 'absolute', left: 0, right: 0, top: -6, height: 6, backgroundColor: '#FFFFFF'},
