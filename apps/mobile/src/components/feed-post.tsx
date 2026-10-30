@@ -21,7 +21,7 @@ import { useAddedComments } from '@/components/comments-sheet';
 
 const GRAY = '#999999';
 const INK = GRAY; // action icons and counts (asked for #999 again)
-const RADIUS = 25;
+const RADIUS = 15;
 
 function formatCount(n: number) {
   if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}K`;
@@ -176,14 +176,14 @@ const styles = StyleSheet.create({
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
   name: { flexShrink: 1, fontFamily: INTER_FAMILIES['600'], fontSize: 15, lineHeight: 19, letterSpacing: -0.2, color: '#000000'},
   age: { marginLeft: 3.2, fontFamily: INTER_FAMILIES['400'], fontSize: 14, lineHeight: 19, letterSpacing: 0, color: GRAY, opacity: 0.95 },
-  text: { marginTop: 6, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 23, letterSpacing: -0.25, color: '#000000'},
-  media: { marginTop: 14.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', borderWidth: 0.5, borderColor: GRAY, backgroundColor: colors.surfaceSoft },
+  text: { marginTop: 4, marginRight: 16, fontFamily: INTER_FAMILIES['400'], fontSize: 14.5, lineHeight: 21, letterSpacing: -0.25, color: '#000000'},
+  media: { marginTop: 14.3, marginLeft: 0.7, width: 317.5, height: 226.5, borderRadius: RADIUS, overflow: 'hidden', backgroundColor: colors.surfaceSoft },
   image: { width: '100%', height: '100%' },
   emojiBox: { height: 17, justifyContent: 'center' },
   emoji: { fontFamily: Platform.OS === 'ios' ? 'Apple Color Emoji' : 'System', fontSize: 14.7, lineHeight: Platform.OS === 'ios' ? 17 : 23 },
   bubble: { marginTop: 5.44, marginLeft: -1, marginRight: 16, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
   bubbleText: { marginTop: 0, marginRight: 0, lineHeight: 24},
-  captionGap: { marginTop: 23 },
+  captionGap: { marginTop: 18 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.25, borderWidth: 0.5, borderColor: '#CCCCCC' },
   // an icon and its count are one block, the blocks 7 apart; the heart starts where the row started
   actions: { height: 18.5, marginTop: 11.9, marginLeft: 1.25, marginRight: 0, paddingLeft: 3.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18, transform: [{ translateX: -1 }] },
@@ -191,10 +191,10 @@ const styles = StyleSheet.create({
   block: { flexDirection: 'row', alignItems: 'flex-start', transform: [{ translateX: 2 }] },
   // the comment block (and with it save and send) sits 2 right of the heart block
   commentBlock: { marginLeft: 5.5},
-  like: { marginTop: 0.9047, marginLeft: -1},
-  comment: { marginTop: 0.9363},
-  bookmark: { marginTop: 1.9475, marginLeft: 5.5},
-  share: { marginTop: 2.5125, marginLeft: 9.5},
+  like: { marginTop: 0.9047, marginLeft: -1, transform: [{ scale: 0.93 }] },
+  comment: { marginTop: 0.9363, transform: [{ scale: 0.93 }] },
+  bookmark: { marginTop: 1.9475, marginLeft: 5.5, transform: [{ scale: 0.93 }] },
+  share: { marginTop: 2.5125, marginLeft: 9.5, transform: [{ scale: 0.93 }] },
   count: { marginTop: 2.4, marginLeft: 6.394, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
   caption: { color: colors.text },
   countDark: { color: '#424242' },
