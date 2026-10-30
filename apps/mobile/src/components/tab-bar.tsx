@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
     borderTopWidth: 0.75,
     borderTopColor: '#E5E5E5',
+    transform: [{ translateY: 1 }],
   },
   floating: { position: 'absolute', left: 0, right: 0, bottom: -2},
   homeBar: { backgroundColor: '#FFFFFF' },
