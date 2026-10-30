@@ -9,6 +9,7 @@ import { Icon } from '@/components/icon';
 import { FeedPost, FeedSeparator } from '@/components/feed-post';
 import { FeedTabs } from '@/components/feed-tabs';
 import { GrowIn } from '@/components/grow-in';
+import { HomeStories } from '@/components/home-stories';
 import { PostingRow } from '@/components/posting-row';
 import { ContactsBlock } from '@/components/contacts-block';
 import { PressableScale } from '@/components/pressable-scale';
@@ -39,7 +40,7 @@ export default function Home() {
       };
     }, []),
   );
-  const { posts, tab, setTab, loadedTab, publishing, retryPublish, cancelPublish, loadMore, refresh, hidePost } = useFeed();
+  const { posts, stories, tab, setTab, loadedTab, publishing, retryPublish, cancelPublish, loadMore, refresh, hidePost } = useFeed();
   // The header sits over the list and scrolls away with it, but stays put on pull-to-refresh: the feed is dragged
   // down past the top by a pan gesture on both platforms, the categories stay where they are and the spinner shows
   // in the gap right under them.
@@ -271,6 +272,10 @@ export default function Home() {
         scrollEventThrottle={16}
         ListHeaderComponent={
           <>
+            {/* The stories stay put on pull-to-refresh, like the categories under them. */}
+            <Animated.View style={tabsStyle}>
+              <HomeStories stories={stories} />
+            </Animated.View>
             <Animated.View style={[styles.tabsGap, tabsStyle]} onLayout={(e) => tabsY.set(top + e.nativeEvent.layout.y)}>
               <FeedTabs
                 value={tab}
@@ -368,7 +373,7 @@ const styles = StyleSheet.create({
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: '#FAFAFA' },
   storiesGap: { marginBottom: 0.7 },
   // 1 more between the stories and the tabs (everything below moves down with them)
-  tabsGap: { marginTop: 0 },
+  tabsGap: { marginTop: 1 },
   pinnedCap: { position: 'absolute', left: 0, right: 0, top: -6, height: 6, backgroundColor: '#FAFAFA' },
   pinnedTabs: { position: 'absolute', top: 0, left: 0, right: 0, height: TABS_H, backgroundColor: '#FAFAFA' },
   bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: '#FAFAFA' },
