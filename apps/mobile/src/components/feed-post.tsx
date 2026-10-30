@@ -195,10 +195,10 @@ const styles = StyleSheet.create({
   comment: { marginTop: 0.9363, transform: [{ scale: 0.9021 }] },
   bookmark: { marginTop: 1.9475, marginLeft: 5.5, transform: [{ translateX: 2 }, { scale: 0.93 }] },
   share: { marginTop: 2.5125, marginLeft: 9.5, transform: [{ translateX: 3 }, { scale: 0.93 }] },
-  count: { marginTop: 2.4, marginLeft: 6.044, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: '#484848'},
+  count: { marginTop: 2.4, marginLeft: 6.044, fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 16, color: '#484848'},
   caption: { color: colors.text },
   countDark: { color: '#424242' },
   countBox: { marginTop: 1.9, marginLeft: 3.916, height: 16, overflow: 'hidden' },
-  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: '#484848'},
+  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.5, lineHeight: 16, color: '#484848'},
   separator: { height: 0.5, backgroundColor: '#EEEEEE'},
 });
