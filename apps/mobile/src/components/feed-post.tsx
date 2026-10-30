@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   captionGap: { marginTop: 23 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.25, borderWidth: 0.5, borderColor: '#CCCCCC' },
   // an icon and its count are one block, the blocks 7 apart; the heart starts where the row started
-  actions: { height: 18.5, marginTop: 11.9, marginLeft: 1.25, marginRight: 0, paddingLeft: 1.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18, transform: [{ translateX: 2.5}] },
+  actions: { height: 18.5, marginTop: 11.9, marginLeft: 1.25, marginRight: 0, paddingLeft: 1.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18, transform: [{ translateX: 9.5 }] },
   // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
   block: { flexDirection: 'row', alignItems: 'flex-start' },
   // the comment block (and with it save and send) sits 2 right of the heart block
