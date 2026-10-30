@@ -202,7 +202,7 @@ function OwnItem({ index, count, x, max }: { index: number; count: number; x: Sh
 }
 
 const styles = StyleSheet.create({
-  block: { transform: [{ translateX: 0.5 }] },
+  block: { transform: [{ translateX: 1 }] },
   row: { paddingLeft: 5.25, paddingRight: 8, gap: STEP - RING + 0.25 },
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
