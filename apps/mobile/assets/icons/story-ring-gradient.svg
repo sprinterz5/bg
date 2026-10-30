@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="97" height="97" viewBox="0 0 97 97" fill="none">
+<defs>
+<linearGradient id="story-ring" x1="0" y1="97" x2="97" y2="0" gradientUnits="userSpaceOnUse">
+<stop stop-color="#171717"/>
+<stop offset="0.5" stop-color="#FF453A"/>
+<stop offset="1" stop-color="#FF9500"/>
+</linearGradient>
+</defs>
+<circle cx="48.5" cy="48.5" r="47" fill="none" stroke="url(#story-ring)" stroke-width="3"/>
+</svg>

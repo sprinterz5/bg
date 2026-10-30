@@ -1,21 +1,22 @@
+import { Image } from 'expo-image';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useDerivedValue, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-// Story rings, drawn as bordered circles (AutoLayouted-12: 97 wide, stroke 3 inside the edge; black, #999 once
-// watched). Not SVGs: as an image inside the half-clips below it rasterized at a different size on Android, so the
-// sweeping band didn't match the ring.
+// Story rings, drawn as bordered circles (AutoLayouted-12: 97 wide, stroke 3 inside the edge; #999 once watched).
+// Unwatched rings are the gradient SVG (it needs a gradient stroke); the watched ring and the sweep stay views: as an
+// image inside the half-clips below it rasterized at a different size on Android, so the sweeping band didn't match.
 const SEEN_STROKE = 3;
 const SEEN_BASE = 97;
 const SEEN_COLOR = '#999999';
-const RING_COLOR = '#000000';
 
 export function SeenRing({ size, color = SEEN_COLOR }: { size: number; color?: string }) {
   return <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: size, height: size, borderRadius: size / 2, borderWidth: (SEEN_STROKE * size) / SEEN_BASE, borderColor: color }} />;
 }
 
 export function StoryRing({ size }: { size: number }) {
-  return <SeenRing size={size} color={RING_COLOR} />;
+  // Instagram-style diagonal: #171717 at the bottom left, through #FF453A, to #FF9500 at the top right.
+  return <Image pointerEvents="none" source={require('@/assets/icons/story-ring-gradient.svg')} style={{ position: 'absolute', left: 0, top: 0, width: size, height: size }} contentFit="fill" transition={0} />;
 }
 
 // A watched story's ring turning grey, like a loading spinner finishing: a grey line with round ends runs
