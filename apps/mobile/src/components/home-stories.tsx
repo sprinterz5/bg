@@ -110,6 +110,7 @@ export function HomeStories({ stories }: { stories: Story[] }) {
       onContentSizeChange={(w) => (contentW.set(w))}
       overScrollMode={Platform.OS === 'android' ? 'always' : undefined}
       showsHorizontalScrollIndicator={false}
+      style={styles.block}
       contentContainerStyle={styles.row}>
       <OwnItem index={0} count={stories.length + 1} x={x} max={max} />
       {stories.map((s, i) => (
@@ -201,6 +202,7 @@ function OwnItem({ index, count, x, max }: { index: number; count: number; x: Sh
 }
 
 const styles = StyleSheet.create({
+  block: { transform: [{ translateX: 1 }] },
   row: { paddingLeft: 5.25, paddingRight: 8, gap: STEP - RING + 0.25 },
   item: { width: RING, alignItems: 'center' },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
