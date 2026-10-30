@@ -273,7 +273,7 @@ export default function Home() {
         ListHeaderComponent={
           <>
             {/* The stories stay put on pull-to-refresh, like the categories under them. */}
-            <Animated.View style={tabsStyle}>
+            <Animated.View style={[styles.storiesTop, tabsStyle]}>
               <HomeStories stories={stories} />
             </Animated.View>
             <Animated.View style={[styles.tabsGap, tabsStyle]} onLayout={(e) => tabsY.set(top + e.nativeEvent.layout.y)}>
@@ -352,7 +352,7 @@ const MAX_PULL = 64;
 const INTRO_MS = 1000;
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#FFFFFF'},
+  root: { flex: 1, backgroundColor: '#FFFFFF', transform: [{ translateY: 1 }] },
   list: { flex: 1 },
   // AutoLayouted-12: "Thoughts" (Caveat 37.2) ink centred on x 192.3 (Caveat's ink sits 4.7 right of its advance), ink top at y 62.4; Frame 1198: plus at (21, 65), bell 20x23 at (342, 63.8); AutoLayouted-12: story rings at y 107;
   // first avatar at 240.5.
@@ -372,8 +372,10 @@ const styles = StyleSheet.create({
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
   headerCap: { position: 'absolute', left: 0, right: 0, backgroundColor: '#FFFFFF'},
   storiesGap: { marginBottom: 0.7},
-  // 1 more between the stories and the tabs (everything below moves down with them)
-  tabsGap: { marginTop: 0},
+  // stories 1 closer to the "Thoughts" row
+  storiesTop: { marginTop: -1 },
+  // 1 less between the stories and the tabs (everything below moves with them)
+  tabsGap: { marginTop: -1},
   pinnedCap: { position: 'absolute', left: 0, right: 0, top: -6, height: 6, backgroundColor: '#FFFFFF'},
   pinnedTabs: { position: 'absolute', top: 0, left: 0, right: 0, height: TABS_H, backgroundColor: '#FFFFFF'},
   bellDot: { position: 'absolute', right: -1, top: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3040', borderWidth: 1.5, borderColor: '#FAFAFA' },
