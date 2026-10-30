@@ -170,7 +170,7 @@ function withEmoji(s: string) {
 
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
-  root: { paddingTop: 11.91, paddingBottom: 13.3, transform: [{ translateX: -1 }] },
+  root: { paddingTop: 10.91, paddingBottom: 13.3, transform: [{ translateX: -1 }] },
   rootPhoto: { paddingBottom: 11.3 },
   avatar: { position: 'absolute', left: 9.6, top: 15.8, transform: [{ translateX: 3 }, { translateY: -3 }] },
   column: { marginLeft: 62.5},
