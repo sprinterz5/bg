@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   // an icon and its count are one block, the blocks 7 apart; the heart starts where the row started
   actions: { height: 18.5, marginTop: 11.9, marginLeft: 1.25, marginRight: 0, paddingLeft: 3.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18, transform: [{ translateX: 11.5 }] },
   // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
-  block: { flexDirection: 'row', alignItems: 'flex-start' },
+  block: { flexDirection: 'row', alignItems: 'flex-start', transform: [{ translateX: 2 }] },
   // the comment block (and with it save and send) sits 2 right of the heart block
   commentBlock: { marginLeft: 5.5},
   like: { marginTop: 0.9047, marginLeft: -1},
