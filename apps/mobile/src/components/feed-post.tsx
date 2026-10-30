@@ -64,7 +64,7 @@ export const FeedPost = memo(function FeedPost({ post, onHide }: { post: Post; o
   const share = () => openShare({ id: post.articleId, title: post.title });
 
   return (
-    <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={styles.root}>
+    <Pressable onLongPress={() => setMenu(true)} delayLongPress={350} style={[styles.root, thought ? null : styles.rootPhoto]}>
       <Pressable onPress={() => openProfile(post.author.username)} hitSlop={4} accessibilityRole="link" accessibilityLabel={`${post.author.username} profile`} style={styles.avatar}>
         <AuthorAvatar author={post.author} size={44} />
         <View pointerEvents="none" style={styles.avatarEdge} />
@@ -171,6 +171,7 @@ function withEmoji(s: string) {
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
   root: { paddingTop: 11.91, paddingBottom: 13.3, transform: [{ translateX: -1 }] },
+  rootPhoto: { paddingBottom: 11.3 },
   avatar: { position: 'absolute', left: 9.6, top: 15.8, transform: [{ translateX: 3 }, { translateY: -3 }] },
   column: { marginLeft: 62.5},
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.25, borderWidth: 0.5, borderColor: '#CCCCCC' },
   // an icon and its count are one block, the blocks 7 apart; the heart starts where the row started
   actions: { height: 18.5, marginTop: 11.4, marginLeft: -3.5, marginRight: 0, paddingLeft: 3.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18, transform: [{ translateX: -1 }, { translateY: 1 }] },
-  actionsPhoto: { transform: [{ translateX: -1 }, { translateY: -1 }] },
+  actionsPhoto: { transform: [{ translateX: -1 }, { translateY: -2 }] },
   // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
   block: { flexDirection: 'row', alignItems: 'flex-start', transform: [{ translateX: 2 }] },
   // the comment block (and with it save and send) sits 2 right of the heart block
