@@ -181,12 +181,12 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%' },
   emojiBox: { height: 17, justifyContent: 'center' },
   emoji: { fontFamily: Platform.OS === 'ios' ? 'Apple Color Emoji' : 'System', fontSize: 14.7, lineHeight: Platform.OS === 'ios' ? 17 : 23 },
-  bubble: { marginTop: 7.44, marginLeft: -1, marginRight: 17.5, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
+  bubble: { marginTop: 6.44, marginLeft: -1, marginRight: 17.5, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#F3F3F3', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
   bubbleText: { marginTop: 0, marginRight: 0, lineHeight: 25, transform: [{ translateX: -1.5 }, { translateY: -1 }] },
   captionGap: { marginTop: 18 },
   avatarEdge: { ...StyleSheet.absoluteFill, borderRadius: 22.25, borderWidth: 0.5, borderColor: '#CCCCCC' },
   // an icon and its count are one block, the blocks 7 apart; the heart starts where the row started
-  actions: { height: 18.5, marginTop: 12.9, marginLeft: 1.25, marginRight: 0, paddingLeft: 3.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18, transform: [{ translateX: -1 }, { translateY: 1 }] },
+  actions: { height: 18.5, marginTop: 12.9, marginLeft: -0.25, marginRight: 0, paddingLeft: 3.865, flexDirection: 'row', alignItems: 'flex-start', gap: 18, transform: [{ translateX: -1 }, { translateY: 1 }] },
   // each glyph grew around its centre (heart and comment 15%, save and send 5%); the strokes in the SVGs are 12.5% lighter
   block: { flexDirection: 'row', alignItems: 'flex-start', transform: [{ translateX: 2 }] },
   // the comment block (and with it save and send) sits 2 right of the heart block
