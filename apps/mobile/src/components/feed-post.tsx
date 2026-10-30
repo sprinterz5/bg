@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   like: { marginTop: 0.9047, marginLeft: -1, transform: [{ scale: 0.8835 }] },
   comment: { marginTop: 0.9363, transform: [{ scale: 0.9021 }] },
   bookmark: { marginTop: 1.9475, marginLeft: 5.5, transform: [{ translateX: 2 }, { scale: 0.93 }] },
-  share: { marginTop: 2.5125, marginLeft: 9.5, transform: [{ translateX: 2 }, { scale: 0.93 }] },
+  share: { marginTop: 2.5125, marginLeft: 9.5, transform: [{ translateX: 3 }, { scale: 0.93 }] },
   count: { marginTop: 2.4, marginLeft: 6.044, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: '#484848'},
   caption: { color: colors.text },
   countDark: { color: '#424242' },
