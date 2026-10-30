@@ -191,8 +191,8 @@ const styles = StyleSheet.create({
   block: { flexDirection: 'row', alignItems: 'flex-start', transform: [{ translateX: 2 }] },
   // the comment block (and with it save and send) sits 2 right of the heart block
   commentBlock: { marginLeft: 5.5},
-  like: { marginTop: 0.9047, marginLeft: -1, transform: [{ scale: 0.93 }] },
-  comment: { marginTop: 0.9363, transform: [{ scale: 0.93 }] },
+  like: { marginTop: 0.9047, marginLeft: -1, transform: [{ scale: 0.8835 }] },
+  comment: { marginTop: 0.9363, transform: [{ scale: 0.9021 }] },
   bookmark: { marginTop: 1.9475, marginLeft: 5.5, transform: [{ scale: 0.93 }] },
   share: { marginTop: 2.5125, marginLeft: 9.5, transform: [{ scale: 0.93 }] },
   count: { marginTop: 2.4, marginLeft: 6.394, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: '#484848'},
