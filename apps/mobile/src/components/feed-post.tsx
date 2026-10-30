@@ -170,7 +170,7 @@ function withEmoji(s: string) {
 
 const styles = StyleSheet.create({
   // name text box 2.14 above the avatar top (ink 280.9 for an avatar at 280)
-  root: { paddingTop: 11.91, paddingBottom: 16.8, transform: [{ translateX: 1 }] },
+  root: { paddingTop: 10.91, paddingBottom: 13.8, transform: [{ translateX: 1 }] },
   avatar: { position: 'absolute', left: 9.1, top: 15.8, transform: [{ translateX: 2 }, { translateY: -1 }] },
   column: { marginLeft: 63},
   head: { height: 19, flexDirection: 'row', alignItems: 'center', paddingRight: 20 },
@@ -195,10 +195,10 @@ const styles = StyleSheet.create({
   comment: { marginTop: 0.9363, transform: [{ scale: 0.93 }] },
   bookmark: { marginTop: 1.9475, marginLeft: 5.5, transform: [{ scale: 0.93 }] },
   share: { marginTop: 2.5125, marginLeft: 9.5, transform: [{ scale: 0.93 }] },
-  count: { marginTop: 2.4, marginLeft: 6.394, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
+  count: { marginTop: 2.4, marginLeft: 6.394, fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: '#484848'},
   caption: { color: colors.text },
   countDark: { color: '#424242' },
   countBox: { marginTop: 1.9, marginLeft: 3.916, height: 16, overflow: 'hidden' },
-  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: INK },
-  separator: { height: 0.75, backgroundColor: '#E9E9E9' },
+  countText: { fontFamily: INTER_FAMILIES['400'], fontSize: 12.9, lineHeight: 16, color: '#484848'},
+  separator: { height: 0.5, backgroundColor: '#EEEEEE'},
 });
