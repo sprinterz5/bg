@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   plus: { position: 'absolute', left: 19.5, top: 15.5 },
   bell: { position: 'absolute', left: 347.5, top: 15 },
   // Fixed box well wider/taller than the glyphs (Caveat overhangs its advance box; Android clips at the view edge).
-  logo: { marginTop: -1.3, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 39, lineHeight: 50, color: colors.text, transform: [{ translateX: -1.85 }] },
+  logo: { marginTop: -1.3, width: 166, height: 50, textAlign: 'center', fontFamily: fonts.logoMedium, fontSize: 37.05, lineHeight: 50, color: colors.text, transform: [{ translateX: -1.85 }] },
   fade: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: '#FFFFFF'},
   content: { paddingBottom: 24 },
   // first post's avatar 12.25 under the tabs' line (the post's own top is 13.05)
