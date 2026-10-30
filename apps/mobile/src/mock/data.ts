@@ -1066,7 +1066,7 @@ const thought = (n: number, author: Author, title: string, timeAgo: string, like
 
 export const MOCK_THOUGHTS: Post[] = [
   // the first post of the home frame (AutoLayouts TH): 7h, 520 / 270 / 3K
-  thought(1, danielKraig, 'Nighty habits that helped Steve Jobs to rest and charge and this is not even all to be said also the fact the population is growing fast 📈', '7 hours ago', 520, 270, 3000),
+  thought(1, danielKraig, 'Nighty habits that helped Steve Jobs to rest and charge and this is not even all to be said also the fact the population is growing fast', '7 hours ago', 520, 270, 3000),
   thought(6, dinara, 'A quiet morning, a cup of coffee and absolutely no plans for the day. Sometimes that is the whole plan ☕️', '4 hours ago', 73, 6, 900),
   thought(7, zhangir, 'Read an old interview with Steve Jobs today. He said focus is saying no to a hundred good ideas. Still the hardest advice to follow.', '8 hours ago', 128, 17, 2100),
   thought(8, boss, 'Moved my desk next to the window and my afternoon productivity doubled. Sunlight is the cheapest upgrade there is ☀️', '1 day ago', 64, 9, 1100),
