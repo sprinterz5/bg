@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%' },
   emojiBox: { height: 17, justifyContent: 'center' },
   emoji: { fontFamily: Platform.OS === 'ios' ? 'Apple Color Emoji' : 'System', fontSize: 14.7, lineHeight: Platform.OS === 'ios' ? 17 : 23 },
-  bubble: { marginTop: 5.44, marginLeft: -0.55, marginRight: 16, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#F0EFED', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
+  bubble: { marginTop: 6.44, marginLeft: -0.55, marginRight: 16, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#F0EFED', borderWidth: 1, borderStyle: 'dashed', borderColor: '#B8B8B8', borderRadius: 22, borderTopLeftRadius: 0 },
   bubbleText: { marginTop: -0.5, marginRight: 0, fontSize: 14.575, lineHeight: 26.5, letterSpacing: 0, transform: [{ translateX: -1.5 }, { translateY: -1 }] },
   captionGap: { marginTop: 18 },
   captionGapPhoto: { marginTop: 19.5 },
